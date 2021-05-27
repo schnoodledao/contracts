@@ -2,41 +2,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "abdk-libraries-solidity/ABDKMathQuad.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetMinterPauserUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-contract Schnoodle is ERC20PresetMinterPauser {
-    constructor() ERC20PresetMinterPauser("Schnoodle", "SNOOD") {
+contract Schnoodle is ERC20PresetMinterPauserUpgradeable {
+    address private _feesWallet;
+    uint256 private _feeRate;
+
+    function initialize() initializer public {
+        super.initialize("Schnoodle", "SNOOD");
         _feesWallet = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
+        _feeRate = 3;
     }
 
-    address private _feesWallet;
-    bytes16 private _totalSupply;
-    uint256 private _feeRate = 3;
-
     function balanceOf(address account) public view override returns (uint256) {
-        // Reflect the balance as a sum of the underlying balance and a proportionate amount of all fees in the fees wallet
-        bytes16 balance = ABDKMathQuad.fromUInt(super.balanceOf(account));
-        bytes16 fees = ABDKMathQuad.fromUInt(super.balanceOf(_feesWallet));
+        uint256 balance = super.balanceOf(account);
+        uint256 fees = super.balanceOf(_feesWallet);
+        uint256 totalSupply = totalSupply();
 
-        return ABDKMathQuad.toUInt(
-            ABDKMathQuad.add(
-                balance,
-                ABDKMathQuad.mul(
-                    ABDKMathQuad.eq(_totalSupply, bytes16(0))
-                        ? bytes16(0)
-                        : ABDKMathQuad.div(
-                            balance,
-                            ABDKMathQuad.sub(
-                                _totalSupply,
-                                fees
-                            )
-                        ),
-                    fees
-                )
-            )
-        );
+        // Reflect the balance as a sum of the underlying balance and a proportionate amount of all fees in the fees wallet
+        return balance + (totalSupply == 0 ? 0 : fees * balance / (totalSupply - fees));
     }
 
     function balanceOfBurnable(address account) public view returns (uint256) {
@@ -58,7 +43,7 @@ contract Schnoodle is ERC20PresetMinterPauser {
         uint256 balanceFee = balance - super.balanceOf(sender);
 
         // Take net amount from the fee part of balance first
-        uint256 netAmountFromBalanceFee = Math.min(balanceFee, netAmount);
+        uint256 netAmountFromBalanceFee = MathUpgradeable.min(balanceFee, netAmount);
         if (netAmountFromBalanceFee > 0) super._transfer(_feesWallet, recipient, netAmountFromBalanceFee);
 
         // Reduce amount available to use from fee part of balance, and reduce net amount left to transfer
@@ -66,24 +51,10 @@ contract Schnoodle is ERC20PresetMinterPauser {
         netAmount -= netAmountFromBalanceFee;
 
         // Consider any remaining fee part of balance as being towards the fee (no actual transfer required, of course), and reduce fee left to transfer accordingly
-        fee -= Math.min(balanceFee, fee);
+        fee -= MathUpgradeable.min(balanceFee, fee);
 
         // Pay any remaining net amount and fee from the sender's wallet
         if (netAmount > 0) super._transfer(sender, recipient, netAmount);
         if (fee > 0) super._transfer(sender, _feesWallet, fee);
-    }
-
-    function _mint(address account, uint256 amount) internal override virtual {
-        super._mint(account, amount);
-        _updateTotalSupply();
-    }
-
-    function _burn(address account, uint256 amount) internal override virtual {
-        super._burn(account, amount);
-        _updateTotalSupply();
-    }
-
-    function _updateTotalSupply() private {
-        _totalSupply = ABDKMathQuad.fromUInt(totalSupply());
     }
 }

@@ -1,7 +1,9 @@
 // migrations/2_deploy.js
 
-const Token = artifacts.require('Schnoodle');
+const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 
-module.exports = function(deployer) {
-  deployer.deploy(Token);
+const Schnoodle = artifacts.require('Schnoodle');
+
+module.exports = async function (deployer) {
+  await deployProxy(Schnoodle, { deployer });
 };
