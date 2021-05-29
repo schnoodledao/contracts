@@ -3,17 +3,17 @@
 const Schnoodle = artifacts.require("Schnoodle");
 const SchnoodleTimelock = artifacts.require("SchnoodleTimelock");
 
-const { assert, expect } = require("chai");
+const { assert } = require("chai");
 const Chance = require("chance");
 const truffleAssert = require("truffle-assertions");
 const moment = require("moment");
 
 contract("SchnoodleTimelock", accounts => {
+  const chance = new Chance();
   const timelockSeconds = 2;
   let schnoodleTimelock;
 
   beforeEach(async function () {
-    const chance = new Chance();
     beneficiary = chance.pickone(accounts);
     schnoodleTimelock = await SchnoodleTimelock.new((await Schnoodle.deployed()).address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
   });
@@ -21,7 +21,6 @@ contract("SchnoodleTimelock", accounts => {
   it("should release tokens to the beneficiary after the timelock period", async () => {
     const schnoodle = await Schnoodle.deployed();
 
-    const chance = new Chance();
     const mintAmount = chance.integer({min: 1});
     const lockAmount = chance.integer({min: 1, max: mintAmount});
 
@@ -30,7 +29,7 @@ contract("SchnoodleTimelock", accounts => {
 
     // Attempt to release tokens before the timelock period
     await truffleAssert.reverts(schnoodleTimelock.release(), "TokenTimelock: current time is before release time");
-    assert.equal(0, await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()));
+    assert.equal(0, await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()), "Beneficiary balance is not zero before timelock release");
 
     await sleep(timelockSeconds * 1000);
 

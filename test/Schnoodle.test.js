@@ -2,16 +2,16 @@
 
 const Schnoodle = artifacts.require("Schnoodle");
 
-const { assert, expect } = require("chai");
+const { assert } = require("chai");
 const Chance = require("chance");
 const truffleAssert = require("truffle-assertions");
 
 contract("Schnoodle", accounts => {
+  const chance = new Chance();
   const feeRate = 3 / 100;
 
   afterEach(async () => {
     const instance = await Schnoodle.deployed();
-
     // Burn all remaining tokens after each test
     for (const account of accounts) {
       await instance.burn(await instance.balanceOfBurnable(account), {from: account});
@@ -20,7 +20,6 @@ contract("Schnoodle", accounts => {
   
   it("should show an initial balance of zero for all accounts", async () => {
     const instance = await Schnoodle.deployed();
-
     for (const account of accounts) {
       assert.equal((await instance.balanceOf(account)).valueOf(), 0, `Account ${account} doesn't have a zero balance`);
     }
@@ -29,24 +28,30 @@ contract("Schnoodle", accounts => {
   describe("Minting", () => {
     it("should mint tokens increasing the account's balance and total supply by the same amounts", async () => {
       const instance = await Schnoodle.deployed();
+      await _testMinting(chance.integer({min: 1, max: await instance.cap()}));
+    });
 
-      const chance = new Chance();
-      const amount = chance.integer({min: 1});
+    it("should revert on attempt to mint tokens above the supply cap", async () => {
+      const instance = await Schnoodle.deployed();
+      await truffleAssert.reverts(_testMinting(await instance.cap() + 1), "ERC20Capped: cap exceeded")
+    });
+
+    async function _testMinting(amount) {
+      const instance = await Schnoodle.deployed();
       account = chance.pickone(accounts);
 
-      await instance.mint(account, amount);
+      await instance.mint(account, BigInt(amount));
 
       const totalSupply = await instance.totalSupply();
       assert.equal(totalSupply, amount, "Total supply wasn't affected correctly by minting");
 
       const balance = await instance.balanceOf(account);
       assert.equal(balance, amount, "Owner's account wasn't affected correctly by minting");
-    });
+    }
   });
 
   describe("Transfer", () => {
     it("should transfer from the sender to the recipient and distribute a fee to all accounts", async() => {
-      const chance = new Chance();
       await _testTransfer(amount => chance.integer({min: 1, max: amount}));
     });
 
@@ -55,16 +60,11 @@ contract("Schnoodle", accounts => {
     });
 
     it("should revert on attempt to transfer without enough balance", async() => {
-      await truffleAssert.reverts(
-        _testTransfer(amount => amount * 2),
-        "Schnoodle: transfer amount exceeds balance"
-      )
+      await truffleAssert.reverts(_testTransfer(amount => amount * 2), "Schnoodle: transfer amount exceeds balance")
     });
 
     async function _testTransfer(transferAmountCallback) {
       const instance = await Schnoodle.deployed();
-      const chance = new Chance();
-
       let amounts = {};
 
       // Populate all accounts with some tokens

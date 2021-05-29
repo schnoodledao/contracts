@@ -3,14 +3,16 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetMinterPauserUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-contract Schnoodle is ERC20PresetMinterPauserUpgradeable {
+contract Schnoodle is ERC20PresetMinterPauserUpgradeable, ERC20CappedUpgradeable {
     address private _feesWallet;
     uint256 private _feeRate;
 
     function initialize() initializer public {
         super.initialize("Schnoodle", "SNOOD");
+        __ERC20Capped_init(1000000000 * 10 ** decimals());
         _feesWallet = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
         _feeRate = 3;
     }
@@ -32,7 +34,7 @@ contract Schnoodle is ERC20PresetMinterPauserUpgradeable {
         return super.balanceOf(_feesWallet);
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal override virtual {
+    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
         uint256 balance = balanceOf(sender);
         require(balance >= amount, "Schnoodle: transfer amount exceeds balance");
 
@@ -56,5 +58,13 @@ contract Schnoodle is ERC20PresetMinterPauserUpgradeable {
         // Pay any remaining net amount and fee from the sender's wallet
         if (netAmount > 0) super._transfer(sender, recipient, netAmount);
         if (fee > 0) super._transfer(sender, _feesWallet, fee);
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override (ERC20PresetMinterPauserUpgradeable, ERC20Upgradeable) {
+        super._beforeTokenTransfer(from, to, amount);
+    }
+
+    function _mint(address account, uint256 amount) internal virtual override (ERC20Upgradeable, ERC20CappedUpgradeable) {
+        super._mint(account, amount);
     }
 }
