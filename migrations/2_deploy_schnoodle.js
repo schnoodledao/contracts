@@ -1,4 +1,4 @@
-// migrations/2_deploy.js
+// migrations/2_deploy_schnoodle.js
 
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 

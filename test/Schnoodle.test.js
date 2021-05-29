@@ -9,6 +9,15 @@ const truffleAssert = require("truffle-assertions");
 contract("Schnoodle", accounts => {
   const feeRate = 3 / 100;
 
+  afterEach(async () => {
+    const instance = await Schnoodle.deployed();
+
+    // Burn all remaining tokens after each test
+    for (const account of accounts) {
+      await instance.burn(await instance.balanceOfBurnable(account), {from: account});
+    }
+  });
+  
   it("should show an initial balance of zero for all accounts", async () => {
     const instance = await Schnoodle.deployed();
 
@@ -33,15 +42,6 @@ contract("Schnoodle", accounts => {
       const balance = await instance.balanceOf(account);
       assert.equal(balance, amount, "Owner's account wasn't affected correctly by minting");
     });
-  });
-
-  afterEach(async () => {
-    const instance = await Schnoodle.deployed();
-
-    // Burn all remaining tokens after each test
-    for (const account of accounts) {
-      await instance.burn(await instance.balanceOfBurnable(account), {from: account});
-    }
   });
 
   describe("Transfer", () => {
@@ -101,13 +101,4 @@ contract("Schnoodle", accounts => {
       }
     }
   });
-
-  // ...    
-  // it("Should not change balances of irrelative accounts(neither sender nor recipient).", async() => {
-  //   ...
-  // });    
-  
-  // it("Should not change total supply at all after transfers.", async() => {
-  //   ...
-  // });
 });
