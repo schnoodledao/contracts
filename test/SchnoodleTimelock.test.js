@@ -11,16 +11,17 @@ const moment = require("moment");
 contract("SchnoodleTimelock", accounts => {
   const chance = new Chance();
   const timelockSeconds = 2;
+  let schnoodle;
   let schnoodleTimelock;
 
   beforeEach(async function () {
+    schnoodle = await Schnoodle.new();
+    schnoodle.initialize();
     beneficiary = chance.pickone(accounts);
-    schnoodleTimelock = await SchnoodleTimelock.new((await Schnoodle.deployed()).address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
+    schnoodleTimelock = await SchnoodleTimelock.new(schnoodle.address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
   });
 
   it("should release tokens to the beneficiary after the timelock period", async () => {
-    const schnoodle = await Schnoodle.deployed();
-
     const mintAmount = chance.integer({min: 1});
     const lockAmount = chance.integer({min: 1, max: mintAmount});
 

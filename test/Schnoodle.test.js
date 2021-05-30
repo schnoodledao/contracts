@@ -9,43 +9,37 @@ const truffleAssert = require("truffle-assertions");
 contract("Schnoodle", accounts => {
   const chance = new Chance();
   const feeRate = 3 / 100;
+  let schnoodle;
 
-  afterEach(async () => {
-    const instance = await Schnoodle.deployed();
-    // Burn all remaining tokens after each test
-    for (const account of accounts) {
-      await instance.burn(await instance.balanceOfBurnable(account), {from: account});
-    }
+  beforeEach(async function () {
+    schnoodle = await Schnoodle.new();
+    schnoodle.initialize();
   });
   
   it("should show an initial balance of zero for all accounts", async () => {
-    const instance = await Schnoodle.deployed();
     for (const account of accounts) {
-      assert.equal((await instance.balanceOf(account)).valueOf(), 0, `Account ${account} doesn't have a zero balance`);
+      assert.equal((await schnoodle.balanceOf(account)).valueOf(), 0, `Account ${account} doesn't have a zero balance`);
     }
   });
 
   describe("Minting", () => {
     it("should mint tokens increasing the account's balance and total supply by the same amounts", async () => {
-      const instance = await Schnoodle.deployed();
-      await _testMinting(chance.integer({min: 1, max: await instance.cap()}));
+      await _testMinting(chance.integer({min: 1, max: await schnoodle.cap()}));
     });
 
     it("should revert on attempt to mint tokens above the supply cap", async () => {
-      const instance = await Schnoodle.deployed();
-      await truffleAssert.reverts(_testMinting(await instance.cap() + 1), "ERC20Capped: cap exceeded")
+      await truffleAssert.reverts(_testMinting(await schnoodle.cap() + 1), "ERC20Capped: cap exceeded")
     });
 
     async function _testMinting(amount) {
-      const instance = await Schnoodle.deployed();
       account = chance.pickone(accounts);
 
-      await instance.mint(account, BigInt(amount));
+      await schnoodle.mint(account, BigInt(amount));
 
-      const totalSupply = await instance.totalSupply();
+      const totalSupply = await schnoodle.totalSupply();
       assert.equal(totalSupply, amount, "Total supply wasn't affected correctly by minting");
 
-      const balance = await instance.balanceOf(account);
+      const balance = await schnoodle.balanceOf(account);
       assert.equal(balance, amount, "Owner's account wasn't affected correctly by minting");
     }
   });
@@ -64,13 +58,12 @@ contract("Schnoodle", accounts => {
     });
 
     async function _testTransfer(transferAmountCallback) {
-      const instance = await Schnoodle.deployed();
       let amounts = {};
 
       // Populate all accounts with some tokens
       for (const account of accounts) {
         amounts[account] = chance.integer({min: 1, max: Number.MAX_SAFE_INTEGER / 3}); // Limit the max amount to prevent summation overflows later
-        await instance.mint(account, amounts[account]);
+        await schnoodle.mint(account, amounts[account]);
       }
 
       sender = chance.pickone(accounts);
@@ -80,13 +73,14 @@ contract("Schnoodle", accounts => {
       const transferAmount = transferAmountCallback(amounts[sender]);
 
       // Capture the fee part of the sender's balance before transfer as this is used up first in the transfer, and must be factored into the assert algorithm later
-      const balanceFee = await instance.balanceOf(sender) - await instance.balanceOfBurnable(sender);
+      const balanceFee = await schnoodle.balanceOf(sender) - await schnoodle.balanceOfBurnable(sender);
 
-      await instance.approve(sender, transferAmount, {from: sender});
-      await instance.transfer(recipient, transferAmount, {from: sender});
+      await schnoodle.approve(sender, transferAmount, {from: sender});
+      await schnoodle.transfer(recipient, transferAmount, {from: sender});
 
-      const totalFees = await instance.totalFees();
-      const totalSupply = await instance.totalSupply();
+      const totalFees = await schnoodle.totalFees();
+      assert.equal(Number(totalFees), Math.floor(transferAmount * feeRate));
+      const totalSupply = await schnoodle.totalSupply();
 
       // Check the balances of all accounts to ensure they match the expected algorithm
       for (const account of accounts) {
@@ -96,7 +90,7 @@ contract("Schnoodle", accounts => {
         const newAmount = oldAmount + (account == sender ? -1 : (account == recipient ? 1 - feeRate : 0)) * transferAmount + (account == sender? balanceFee : 0);
 
         // The expected balance should also include a distribution of the total fees in proportion to the total supply
-        const balance = await instance.balanceOf(account);
+        const balance = await schnoodle.balanceOf(account);
         assert.approximately(Number(balance), newAmount + newAmount / (totalSupply - totalFees) * totalFees, 2, `Account ${account}${account == sender ? ' (sender)' : (account == recipient ? ' (recipient)' : '')} incorrect after transfer`);
       }
     }
