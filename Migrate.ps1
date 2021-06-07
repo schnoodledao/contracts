@@ -27,7 +27,9 @@ If (!(Test-Path $LogsPath)) {
 $process = Start-Process npx -ArgumentList $NpxArgs -RedirectStandardOutput $LogsPath\migrate-$Network.log -PassThru -Wait -WindowStyle Hidden
 
 If (($process.ExitCode -eq 0) -and ($Network -ne "development")) {
+    "Waiting till $((Get-Date).AddMinutes(5)) to verify contracts."
     Start-Sleep -s 300
+    
     ForEach ($Contract in Get-Content $ContractsFile) {
         npx truffle run verify $Contract --network $Network
     }

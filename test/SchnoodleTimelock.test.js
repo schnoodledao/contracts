@@ -1,47 +1,50 @@
 // test/SchnoodleTimelock.test.js
 
-const Schnoodle = artifacts.require("Schnoodle");
-const SchnoodleTimelock = artifacts.require("SchnoodleTimelock");
+const { accounts, contract } = require('@openzeppelin/test-environment');
+const [ owner ] = accounts;
+const { BN } = require('@openzeppelin/test-helpers');
 
-const { assert } = require("chai");
-const Chance = require("chance");
-const truffleAssert = require("truffle-assertions");
-const moment = require("moment");
+const Schnoodle = contract.fromArtifact('Schnoodle');
+const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
 
-contract("SchnoodleTimelock", accounts => {
-  const chance = new Chance();
-  const timelockSeconds = 2;
-  let schnoodle;
-  let schnoodleTimelock;
+const { initialization } = require('../migrations-config.js');
+const { assert } = require('chai');
+require('chai').should();
+const Chance = require('chance');
+const bigInt = require('big-integer')
+const truffleAssert = require('truffle-assertions');
+const moment = require('moment');
 
-  beforeEach(async function () {
-    schnoodle = await Schnoodle.new();
-    schnoodle.initialize();
-    beneficiary = chance.pickone(accounts);
-    schnoodleTimelock = await SchnoodleTimelock.new(schnoodle.address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
-  });
+const chance = new Chance();
+const timelockSeconds = 2;
+let schnoodle;
+let schnoodleTimelock;
 
-  it("should release tokens to the beneficiary after the timelock period", async () => {
-    const mintAmount = chance.integer({min: 1});
-    const lockAmount = chance.integer({min: 1, max: mintAmount});
+beforeEach(async function () {
+  schnoodle = await Schnoodle.new();
+  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent);
+  beneficiary = chance.pickone(accounts);
+  schnoodleTimelock = await SchnoodleTimelock.new(schnoodle.address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
+});
 
-    await schnoodle.mint(accounts[0], mintAmount);
-    await schnoodle.transfer(schnoodleTimelock.address, lockAmount);
+it('should release tokens to the beneficiary after the timelock period', async () => {
+  const lockAmount = BigInt(bigInt.randBetween(1, initialization.initialTokens * 10 ** await schnoodle.decimals()));
 
-    // Attempt to release tokens before the timelock period
-    await truffleAssert.reverts(schnoodleTimelock.release(), "TokenTimelock: current time is before release time");
-    assert.equal(0, await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()), "Beneficiary balance is not zero before timelock release");
+  await schnoodle.transfer(schnoodleTimelock.address, lockAmount, { from: owner });
 
-    await sleep(timelockSeconds * 1000);
+  // Attempt to release tokens before the timelock period
+  await truffleAssert.reverts(schnoodleTimelock.release(), 'TokenTimelock: current time is before release time');
+  (await schnoodle.balanceOfBurnable(await schnoodleTimelock.beneficiary())).should.be.bignumber.equal(new BN(0), 'Beneficiary balance is not zero before timelock release');
 
-    // Attempt to release tokens after the timelock period
-    await schnoodleTimelock.release();
+  await sleep(timelockSeconds * 1000);
 
-    currentBalance = await schnoodle.balanceOf(await schnoodleTimelock.beneficiary());
-    assert.approximately(Number(currentBalance), lockAmount, lockAmount * 0.1, "Locked amount wasn't released by the timelock");
+  // Attempt to release tokens after the timelock period
+  await schnoodleTimelock.release();
 
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-  });
+  currentBalance = BigInt(await schnoodle.balanceOfBurnable(await schnoodleTimelock.beneficiary()));
+  assert.isTrue(currentBalance - lockAmount < lockAmount * BigInt(10) / BigInt(100), 'Locked amount wasn\'t released by the timelock');
+
+  function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+  }
 });
