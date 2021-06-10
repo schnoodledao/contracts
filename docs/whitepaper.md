@@ -26,6 +26,10 @@ The key idea behind this code is that it contains a complex algorithm using lots
 
 Copies of this code were then used as the basis of [SAFEMOON](https://www.bscscan.com/address/0x8076c74c5e3f5852037f31ff0093eeb8c8add8d3#code), and the dog meme coin [HOKK](https://etherscan.io/address/0xc40af1e4fecfa05ce6bab79dcd8b373d2e436c4e#code).
 
+_**So, lemme guess. Neo wanted to kick Morpheus' ass?**_
+
+![Neo dawg vs Morpheus dawg](.gitbook/assets/neo-vs-morpheus.png)
+
 In analysing this code, Neo noticed that there were numerous inexcusable flaws that simply indicated laziness and haste on the part of the devs. Absolutely no care had been taken to ensure hodlers were given the best deal in terms of gas fees and potential ruggability. There are functions that allow the contract owner to include and exclude addresses from the fee process at will. How is this fair to other hodlers? And the code for SAFEMOON was compiled with Solidity 0.6.12 which was already over 7 months old at the time of launch when Solidity was _already_ at version 0.8.1. This may not sound hugely important, but it takes very little effort to use a more recent version, and this would have afforded some code tweaks that would result in less gas fees for hodlers.
 
 Not only that, but the devs didn't even enable optimisation on deployment \(as can be seen at the top of the contract page\). Again, highly lazy, or just plain incompetence, and it's the hodlers who suffer.
@@ -143,11 +147,11 @@ With this comprehensive and highly sophisticated process, it now means we have t
 
 _**I love it. But I still have a niggle. What if the whole team mutinies or goes rogue?**_
 
+Well, in reality, this would only happen if we were savagely attacked by flesh-eating dog zombies, and we turned into said dog zombies ourselves bent on destroying all humans. But we hear you. Enter, Schnoodle DAO...
+
 ### Schnoodle DAO
 
-Well, in reality, this would only happen if we were savagely attacked by flesh-eating dog zombies, and we turned into said dog zombies ourselves bent on destroying all humans.
-
-But this is where we will be turning our attention to the long-term roadmap of Schnoodle and making it into the first true DAO of the blockchain where upgrades will only be permitted if the hodlers vote in favour of them. And this will be a fully automated process to really put the 'A' in DAO.
+This is where we will be turning our attention to the long-term roadmap of Schnoodle and making it into the first true DAO of the blockchain where upgrades will only be permitted if the hodlers vote in favour of them. And this will be a fully automated process to really put the 'A' in DAO.
 
 This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
 
