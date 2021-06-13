@@ -24,7 +24,7 @@ If (!(Test-Path $LogsPath)) {
     New-Item -Name $LogsPath -ItemType "directory"
 }
 
-$process = Start-Process npx -ArgumentList $NpxArgs -RedirectStandardOutput $LogsPath\migrate-$Network.log -PassThru -Wait -WindowStyle Hidden
+$process = Start-Process npx -ArgumentList $NpxArgs -RedirectStandardOutput $LogsPath\migrate-$Network-$(Get-Date -Format FileDateTimeUniversal).log -PassThru -Wait -WindowStyle Hidden
 
 If (($process.ExitCode -eq 0) -and ($Network -ne "development")) {
     "Waiting till $((Get-Date).AddMinutes(5)) to verify contracts."
