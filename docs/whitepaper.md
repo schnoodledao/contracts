@@ -72,7 +72,7 @@ As already mentioned, existing RFI-based tokens and dog meme coins use archaic t
 
 This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC20PresetFixedSupplyUpgradeable` which provides OOTB standardised ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract \(more on that later\). This means that hodlers can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
 
-And the way the contracts are deployed as separate files under the same contract \(not flattened\) which makes it easier for you \(if you want to\) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
+And the way the contracts are deployed is as separate files under the same contract \(not flattened\), which makes it easier for you \(if you want to\) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
 
 _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
@@ -114,7 +114,7 @@ _**But the blockchain is immutable. Upgrading a smart contract means all hodlers
 
 Not quite. Using the OpenZeppelin Contracts, we utilise a concept known as a proxy contract known as `TransparentUpgradeableProxy`. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will even notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract \(`Schnoodle`\) to which there is a link on the respective 'proxy' pages.
 
-The beauty of this is that the `Schnoodle` smart contract can be upgraded in the future without changing the contract address because the proxy contract never changes. And due to the immutability of blockchain, the existing state can never be changed. We can only add a new state.
+The beauty of this is that the `Schnoodle` smart contract can be upgraded in the future without changing the contract address because the proxy contract never changes. And due to the immutability of blockchain, the existing state can never be changed. We can only add new state.
 
 And the linchpin to the proxy contract and the implementation contract is a third contract known as the `ProxyAdmin` contract. It is through this contract that all upgrades are conducted.
 
