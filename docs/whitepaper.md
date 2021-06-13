@@ -22,7 +22,7 @@ _**Tell me more...**_
 
 Last year, a DeFi project known as RFI was incepted by [Reflect Foundation](https://reflect.finance/) for which the contract code was developed by the notorious developer known as Morpheus. Do you see where we're going with this? 😉 The project became controversial as the code was copyrighted, but he eventually [open-sourced](https://github.com/reflectfinance/reflect-contracts/blob/main/contracts/REFLECT.sol) it. The contract can be found [here](https://etherscan.io/address/0xa1afffe3f4d611d252010e3eaf6f4d77088b0cd7#code).
 
-The key idea behind this code is that it contains a complex algorithm using lots of complex state to "reflect" a different balance to holders that includes a distribution of fees from other transfers. In other words, whenever the token is sold, a fee is charged and distributed algorithmically to all other holders.
+The key idea behind this code is that it contains a complex algorithm using lots of complex states to "reflect" a different balance to holders that includes a distribution of fees from other transfers. In other words, whenever the token is sold, a fee is charged and distributed algorithmically to all other holders.
 
 Copies of this code were then used as the basis of [SAFEMOON](https://www.bscscan.com/address/0x8076c74c5e3f5852037f31ff0093eeb8c8add8d3#code), and the dog meme coin [HOKK](https://etherscan.io/address/0xc40af1e4fecfa05ce6bab79dcd8b373d2e436c4e#code).
 
@@ -34,7 +34,7 @@ In analysing this code, Neo noticed that there were numerous inexcusable flaws t
 
 Not only that, but the devs didn't even enable optimisation on deployment \(as can be seen at the top of the contract page\). Again, highly lazy, or just plain incompetence, and it's the hodlers who suffer.
 
-HOKK was released more than a month later, and made no such improvements. Just a straight copy of the RFI code, and another marketing campaign to get another batch of unsuspecting dog meme coin hunters aping into their dog poo coin.
+HOKK was released more than a month later and made no such improvements. Just a straight copy of the RFI code, and another marketing campaign to get another batch of unsuspecting dog meme coin hunters aping into their dog poo coin.
 
 _**OK, sounds like a gravy chain, but dogs love gravy on their food, right?**_
 
@@ -72,7 +72,7 @@ As already mentioned, existing RFI-based tokens and dog meme coins use archaic t
 
 This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC20PresetFixedSupplyUpgradeable` which provides OOTB standardised ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract \(more on that later\). This means that hodlers can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
 
-And the way the contracts are deployed are as separate files under the same contract \(not flattened\) which makes it easier for you \(if you want to\) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
+And the way the contracts are deployed as separate files under the same contract \(not flattened\) which makes it easier for you \(if you want to\) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
 
 _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
@@ -96,7 +96,7 @@ _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won'
 
 Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustless. This means that there is no requirement for you to trust that the team will do what it promises, as we ensure that everything is in the code. This ensures that you have the confidence to use Schnoodle without being concerned about promises not being fulfilled.
 
-This is why we use the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract to lock the initial liquidity for a minimum of 6 months. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including Telegram.
+This is why we use the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract to lock the initial liquidity for a minimum of 6 months. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
 
 Locked liquidity for 6 months gives peace of mind for hodlers, and eliminates ruggability even further.
 
@@ -112,9 +112,9 @@ We have made it upgradeable.
 
 _**But the blockchain is immutable. Upgrading a smart contract means all hodlers must undergo a token swap, right?**_
 
-Not quite. Using the OpenZeppelin Contracts, we utilise a concept know as a proxy contract known as `TransparentUpgradeableProxy`. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will even notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract \(`Schnoodle`\) to which there is a link on the respective 'proxy' pages.
+Not quite. Using the OpenZeppelin Contracts, we utilise a concept known as a proxy contract known as `TransparentUpgradeableProxy`. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will even notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract \(`Schnoodle`\) to which there is a link on the respective 'proxy' pages.
 
-The beauty of this is that the `Schnoodle` smart contract can be upgraded in the future without changing the contract address because the proxy contract never changes. And due to the immutability of blockchain, existing state can never be changed. We can only add new state.
+The beauty of this is that the `Schnoodle` smart contract can be upgraded in the future without changing the contract address because the proxy contract never changes. And due to the immutability of blockchain, the existing state can never be changed. We can only add a new state.
 
 And the linchpin to the proxy contract and the implementation contract is a third contract known as the `ProxyAdmin` contract. It is through this contract that all upgrades are conducted.
 
@@ -167,7 +167,7 @@ Right. But they all serve an important purpose. Our Snapshot space is where prop
 
 _**Free as in beer? But doesn't that come at the expense of a measure of decentralization?**_
 
-Right. Which is where reality.eth comes in. This is essentially a very cool escalation-game-based oracle which SafeSnap uses to allow trustless, on-chain execution based on the outcome of the off-chain votes.
+Right. Which is where reality.eth comes in. This is essentially a very cool escalation-game-based oracle that SafeSnap uses to allow trustless, on-chain execution based on the outcome of the off-chain votes.
 
 The science bit... _**\(Huh? I thought we'd passed the science bit!\)**_
 
