@@ -1,4 +1,4 @@
-// migrations/5_deploy_schnoodle_governance.js
+// migrations/3_deploy_schnoodle_governance.js
 
 const { governance } = require('../migrations-config.js');
 const { admin } = require('@openzeppelin/truffle-upgrades');

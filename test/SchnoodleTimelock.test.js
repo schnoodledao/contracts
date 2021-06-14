@@ -5,7 +5,7 @@ const [ owner ] = accounts;
 const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('Schnoodle');
-const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
+const SchnoodleTimelock = contract.fromArtifact('SchnoodleStakingTimelock'); // Can be any of the timelock contracts
 
 const { initialization } = require('../migrations-config.js');
 const { assert } = require('chai');
