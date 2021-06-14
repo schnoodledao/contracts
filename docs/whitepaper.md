@@ -74,7 +74,7 @@ And the way the contracts are deployed is as separate files under the same contr
 
 _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
-Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity \(0.8.4 at the time of writing\) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit \(unlikely, but the safety of hodlers' funds is Schnoodle's absolute priority, no matter how remote any given risk is\). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
+Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity \(0.8.5 at the time of writing\) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit \(unlikely, but the safety of hodlers' funds is Schnoodle's absolute priority, no matter how remote any given risk is\). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
 
 ```text
 x = x.sub(y)
