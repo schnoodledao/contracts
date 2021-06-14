@@ -46,9 +46,7 @@ Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to rewrit
 
 Neo's algorithm does away with the complexities of the RFI algorithm which stores two sets of balances for hodlers, in `_rOwned` and `_tOwned`. Instead, it uses a simple global fees wallet created during contract deployment with a random address whose private key can never be known \(and therefore inaccessible to anyone or anything but the contract\), and then simply adds a proportion of this wallet to the hodler's balance in an overridden implementation of the `balanceOf` function. The algorithm is simple but smart:
 
-```text
-balance + fees × balance ÷ (totalSupply - fees)
-```
+$$balance + fees × balance ÷ (totalSupply - fees)$$ 
 
 `balance` is your burnable balance \(can be retrieved with the `balanceOfBurnable` function\). `fees` is the value of the global fees wallet. The formula basically ensures that you are dynamically allocated a portion of the fees wallet proportionate to your burnable balance relative to the total supply less fees. And the fees wallet of course accumulates tokens on each transfer where a fee percentage is charged.
 
@@ -96,11 +94,13 @@ _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won'
 
 Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustless. This means that there is no requirement for you to trust that the team will do what it promises, as we ensure that everything is in the code. This ensures that you have the confidence to use Schnoodle without being concerned about promises not being fulfilled.
 
-This is why we use the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract to lock the initial liquidity for a minimum of 6 months. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
+This is why we use the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract to lock the initial liquidity for a minimum of 6 months in our `SchnoodleLiquidityTimelock` contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
 
 Locked liquidity for 6 months gives peace of mind for hodlers, and eliminates ruggability even further.
 
-Schnoodle is now destined to be man's best friend.
+And for completeness, we use the same technique to lock staking pool and community tokens in our `SchnoodleStakingTimelock` and `SchnoodleCommunityTimelock` contracts respectively.
+
+Schnoodle is now truly destined to be man's best friend.
 
 _**I'm sold. But you said something earlier about upgradeability...**_
 
