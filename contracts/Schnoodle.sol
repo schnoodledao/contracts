@@ -40,21 +40,18 @@ contract Schnoodle is ERC20PresetFixedSupplyUpgradeable {
         uint256 fee = amount * _feePercent / 100;
         uint256 netAmount = amount - fee;
 
-        uint256 balanceFee = balance - super.balanceOf(sender);
+        // The amount to transfer from the fee part of the balance is as much of the net amount as possible
+        uint256 maxFeePart = MathUpgradeable.min(balance - balanceOfBurnable(sender), netAmount);
 
-        // Take net amount from the fee part of balance first
-        uint256 netAmountFromBalanceFee = MathUpgradeable.min(balanceFee, netAmount);
-        if (netAmountFromBalanceFee > 0) super._transfer(_feesWallet, recipient, netAmountFromBalanceFee);
-
-        // Reduce amount available to use from fee part of balance, and reduce net amount left to transfer
-        balanceFee -= netAmountFromBalanceFee;
-        netAmount -= netAmountFromBalanceFee;
-
-        // Consider any remaining fee part of balance as being towards the fee (no actual transfer required, of course), and reduce fee left to transfer accordingly
-        fee -= MathUpgradeable.min(balanceFee, fee);
-
-        // Pay any remaining net amount and fee from the sender's wallet
-        if (netAmount > 0) super._transfer(sender, recipient, netAmount);
-        if (fee > 0) super._transfer(sender, _feesWallet, fee);
+        // Perform the appropriate transfers depending on the amount available in the fee part of the balance
+        if (maxFeePart > fee) {
+            maxFeePart -= fee;
+            super._transfer(sender, recipient, netAmount - maxFeePart);
+            super._transfer(_feesWallet, recipient, maxFeePart);
+        }
+        else {
+            super._transfer(sender, recipient, netAmount - maxFeePart + fee);
+            if (fee > maxFeePart) super._transfer(recipient, _feesWallet, fee - maxFeePart);
+        }
     }
 }
