@@ -44,11 +44,11 @@ Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to rewrit
 
 ### The BARK Algorithm
 
-Neo's algorithm does away with the complexities of the RFI algorithm which stores two sets of balances for hodlers, in `_rOwned` and `_tOwned`. Instead, it uses a simple global fees wallet created during contract deployment with a random address whose private key can never be known \(and therefore inaccessible to anyone or anything but the contract\), and then simply adds a proportion of this wallet to the hodler's balance in an overridden implementation of the `balanceOf` function. The algorithm is simple but smart:
+Neo's algorithm does away with the complexities of the RFI algorithm which stores two sets of balances for hodlers, in `_rOwned` and `_tOwned`. Instead, it uses a simple global rewards wallet created during contract deployment with a random address whose private key can never be known \(and therefore inaccessible to anyone or anything but the contract\), and then simply adds a proportion of this wallet to the hodler's balance in an overridden implementation of the `balanceOf` function. The algorithm is simple but smart:
 
-$$balance + fees × balance ÷ (totalSupply - fees)$$ 
+$$balance + fees × balance ÷ (totalSupply - fees) - rewardsSpent$$ 
 
-`balance` is your burnable balance \(can be retrieved with the `balanceOfBurnable` function\). `fees` is the value of the global fees wallet. The formula basically ensures that you are dynamically allocated a portion of the fees wallet proportionate to your burnable balance relative to the total supply less fees. And the fees wallet of course accumulates tokens on each transfer where a fee percentage is charged.
+`balance` is your burnable balance \(can be retrieved with the `balanceOfBurnable` function\). `fees` is the value of the global rewards wallet. `rewardsSpent` are of course the rewards you've already spent \(you can't benefit from them twice, you greedy dog 😉\). The formula basically ensures that you are dynamically allocated a portion of the rewards wallet proportionate to your burnable balance relative to the total supply less fees. And the rewards wallet of course accumulates tokens on each transfer where a fee percentage is charged.
 
 _**Simple but effective. But how do we spend our fee rewards instead of our burnable balance?**_
 
@@ -58,7 +58,7 @@ As the distribution of **rewards** to hodlers is completely **automated** within
 
 _**OK, it's neat, but it's not exactly the same as the RFI algorithm, right?**_
 
-Correct. The effect is different to the RFI code insofar as new hodlers immediately get a proportion of the rewards, but the normal liquidity pool algorithms will ensure that the benefit of rewards and the positive price impact to existing hodlers outweigh any reduction in their reward tokens. And a hodler selling their tokens will of course deplete the fees wallet, but they are incentivised to not do so because 1\) they pay a fee, and 2\) more importantly, their stash will grow organically when other hodlers sell _their_ tokens. And so long as the number of hodlers continues to grow, the continuous redistribution of fees to hodlers combined with the increasing token value will of course benefit hodlers more generously the longer they have held. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
+Correct. The effect is different to the RFI code insofar as new hodlers immediately get a proportion of the rewards, but the normal liquidity pool algorithms will ensure that the benefit of rewards and the positive price impact to existing hodlers outweigh any reduction in their reward tokens. And a hodler selling their tokens will of course deplete the rewards wallet, but they are incentivised to not do so because 1\) they pay a fee, and 2\) more importantly, their stash will grow organically when other hodlers sell _their_ tokens. And so long as the number of hodlers continues to grow, the continuous redistribution of fees to hodlers combined with the increasing token value will of course benefit hodlers more generously the longer they have held. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
 
 The above effectively results in a completely fair cat-and-mouse game, game theory built into the tokenomics of the contract if you will, where ultimately and ironically the dog wins. And that means anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern \(more on that later as we talk about it becoming a true DAO in its future roadmap\).
 
