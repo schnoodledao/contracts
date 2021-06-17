@@ -4,7 +4,7 @@ const { initialization } = require('../migrations-config.js');
 const { deployProxy, admin } = require('@openzeppelin/truffle-upgrades');
 const contractsFile = require('../scripts/contracts-file.js');
 
-const contractName = 'Schnoodle';
+const contractName = 'SchnoodleV1';
 const Schnoodle = artifacts.require(contractName);
 
 module.exports = async function (deployer) {

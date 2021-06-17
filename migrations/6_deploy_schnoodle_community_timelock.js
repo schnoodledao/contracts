@@ -6,7 +6,7 @@ const contractsFile = require('../scripts/contracts-file.js');
 
 const contractName = 'SchnoodleCommunityTimelock';
 const SchnoodleCommunityTimelock = artifacts.require(contractName);
-const Schnoodle = artifacts.require("Schnoodle");
+const Schnoodle = artifacts.require("SchnoodleV1");
 
 module.exports = async function (deployer) {
   await deployer.deploy(
