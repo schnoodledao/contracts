@@ -94,11 +94,13 @@ _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won'
 
 Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustless. This means that there is no requirement for you to trust that the team will do what it promises, as we ensure that everything is in the code. This ensures that you have the confidence to use Schnoodle without being concerned about promises not being fulfilled.
 
-This is why we use the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract to lock the initial liquidity for a minimum of 6 months in our `SchnoodleLiquidityTimelock` contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
+This is why we lock the initial liquidity for a minimum of 6 months in our `SchnoodleTimelock` contract which is based on the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
 
 Locked liquidity for 6 months gives peace of mind for hodlers, and eliminates ruggability even further.
 
-And for completeness, we use the same technique to lock staking pool and community tokens in our `SchnoodleStakingTimelock` and `SchnoodleCommunityTimelock` contracts respectively.
+### Locked Pool Tokens
+
+Schnoodle uses the [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) standard to allow us to deploy as many `SchnoodleTimelock` contracts as required. These are known as minimal proxy contracts, or simply "clones", and are created through our `SchnoodleTimelockFactory` contract. As well as liquidity, we use these clones to lock the staking pool and community tokens. This is an extremely gas-efficient method to create timelock contracts, which means we can lock tokens from the community pool later for individuals such as influencers who will help promote Schnoodle.
 
 Schnoodle is now truly destined to be man's best friend.
 
