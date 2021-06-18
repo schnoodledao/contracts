@@ -151,7 +151,7 @@ In the event of an upgrade, the following steps take place:
 
 With this comprehensive and highly sophisticated process, it now means we have two solid layers of protection for our hodlers: upgrade timelock protection and multisig.
 
-![Architecture Diagram](.gitbook/assets/Architecture.svg)
+![](.gitbook/assets/architecture.svg)
 
 _**I love it. But I still have a niggle. What if the whole team mutinies or goes rogue?**_
 
