@@ -70,7 +70,6 @@ describe('Transfer', () => {
     // Capture the fee part of the sender's balance before transfer as this is used up first in the transfer, and must be factored into the assert algorithm later
     const balanceFee = senderBalance - BigInt(await schnoodle.balanceOfBurnable(sender));
 
-    await schnoodle.approve(sender, transferAmount, {from: sender});
     await schnoodle.transfer(recipient, transferAmount, {from: sender});
 
     const totalFees = BigInt(await schnoodle.totalFees());

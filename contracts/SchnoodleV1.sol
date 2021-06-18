@@ -56,8 +56,7 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable {
             maxRewardsPart -= fee;
             super._transfer(sender, recipient, netAmount - maxRewardsPart);
             super._transfer(_rewardsWallet, recipient, maxRewardsPart);
-        }
-        else {
+        } else {
             super._transfer(sender, recipient, netAmount - maxRewardsPart + fee);
             if (fee > maxRewardsPart) super._transfer(recipient, _rewardsWallet, fee - maxRewardsPart);
         }

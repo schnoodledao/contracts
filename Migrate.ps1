@@ -9,7 +9,7 @@ If (Test-Path $ContractsFile) {
     Remove-Item $ContractsFile
 }
 
-$NpxArgs = @("truffle", "migrate", "--network", $Network)
+$NpxArgs = @("truffle", "migrate", "--network", $Network, "--compile-all")
 If ($Reset) {
     $NpxArgs += "--reset"
 }
