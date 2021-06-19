@@ -1,8 +1,8 @@
 ---
-description: The world's first dog-themed token white paper
+description: The world's first dog-themed token whitepaper
 ---
 
-# White Paper
+# Whitepaper
 
 ## The Schnoodle Story...
 
@@ -201,7 +201,7 @@ _**WOOF!!**_
 
 ## Future Roadmap
 
-As if all that isn't enough, we also have other plans for Schnoodle, but the details of this are still being fleshed out and will be in a subsequent version of the white paper. But in short, these are the two main milestones you can look forward to in 2021:
+As if all that isn't enough, we also have other plans for Schnoodle, but the details of this are still being fleshed out and will be in a subsequent version of the whitepaper. But in short, these are the two main milestones you can look forward to in 2021:
 
 1. Staking – stake your SNOOD tokens for additional rewards.
 2. NFT rewards – receive Schnoodle NFTs just for staking your SNOOD tokens.
