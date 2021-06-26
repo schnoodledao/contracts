@@ -20,9 +20,9 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable {
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        uint256 amount = super.balanceOf(account);
-        require(amount <= super.totalSupply(), "Schnoodle: Amount must be less than total reflections");
-        return amount / _getRate();
+        uint256 reflectedBalance = super.balanceOf(account);
+        require(reflectedBalance <= super.totalSupply(), "Schnoodle: Reflected balance must be less than total reflections");
+        return reflectedBalance / _getRate();
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
@@ -37,10 +37,12 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable {
 
     function burn(uint256 amount) public virtual override {
         super.burn(amount * _getRate());
+        _totalSupply -= amount;
     }
 
     function burnFrom(address account, uint256 amount) public virtual override {
         super.burnFrom(account, amount * _getRate());
+        _totalSupply -= amount;
     }
 
     function allowance(address owner, address spender) public view virtual override returns (uint256) {

@@ -11,6 +11,7 @@ const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');
 const bigInt = require('big-integer')
+const truffleAssert = require('truffle-assertions');
 
 const chance = new Chance();
 let schnoodle;
@@ -32,6 +33,31 @@ describe('Balance', () => {
       }
     }
   });
+});
+
+describe("Burning", () => {
+  it("should burn tokens decreasing the account's balance and total supply by the same amounts", async () => {
+    await _testBurning(BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(owner)))));
+  });
+
+  it("should revert on attempt to burn more tokens than are available", async () => {
+    // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
+    await schnoodle.burn(1, { from: owner })
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(owner)) + BigInt(1)), "ERC20: burn amount exceeds balance")
+  });
+
+  async function _testBurning(amount) {
+    const totalSupply = BigInt(await schnoodle.totalSupply());
+    const balance = BigInt(await schnoodle.balanceOf(owner));
+    
+    await schnoodle.burn(amount, { from: owner });
+
+    const newTotalSupply = BigInt(await schnoodle.totalSupply());
+    assert.equal(newTotalSupply, totalSupply - amount, "Total supply wasn't affected correctly by burning");
+
+    const newBalance = BigInt(await schnoodle.balanceOf(owner));
+    assert.equal(newBalance, balance - amount, "Owner's account wasn't affected correctly by burning");
+  }
 });
 
 describe('Transfer', () => {
