@@ -1,7 +1,7 @@
 // test/Schnoodle.test.js
 
 const { accounts, contract } = require('@openzeppelin/test-environment');
-const [ owner ] = accounts;
+const [ owner, eleemosynary ] = accounts;
 const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
@@ -18,7 +18,7 @@ let schnoodle;
 
 beforeEach(async function () {
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent);
+  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent, initialization.eleemosynaryPercent, eleemosynary);
 });
 
 describe('Balance', () => {
@@ -80,8 +80,10 @@ describe('Transfer', () => {
       amounts[account] = BigInt(await schnoodle.balanceOf(account));
     }
 
-    sender = chance.pickone(accounts);
-    recipient = chance.pickone(accounts);
+    // Randomly pick different sender and recipient accounts ensuring they're not the eleemosynary account
+    senderCandidates = accounts.filter(a => a != eleemosynary);
+    sender = chance.pickone(senderCandidates);
+    recipient = chance.pickone(senderCandidates.filter(a => a != sender));
 
     // Invoke the callback function to get the desired transfer amount to send for this test
     const transferAmount = transferAmountCallback(BigInt(await schnoodle.balanceOf(sender)));
@@ -94,8 +96,17 @@ describe('Transfer', () => {
     for (const account of accounts) {
       const oldAmount = amounts[account];
 
-      // The old amount is adjusted by the transfer amount for only the sender (down) and recipient (up), less the fee for the latter
-      const baseBalance = oldAmount + transferAmount * BigInt(account == sender ? -100 : (account == recipient ? 100 - initialization.feePercent : 0)) / BigInt(100);
+      // Determine the percent change from the old amount depending on whether the account is the sender (down), recipient (up), eleemosynary (up) or other (zero)
+      const deltaPercent = account == sender
+        ? -100
+        : (account == recipient
+          ? 100 - initialization.feePercent - initialization.eleemosynaryPercent
+          : (account == eleemosynary
+            ? initialization.eleemosynaryPercent
+            : 0));
+
+      // The old amount is adjusted by a percentage of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)
+      const baseBalance = oldAmount + transferAmount * BigInt(deltaPercent) / BigInt(100);
 
       // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
       const newBalance = BigInt(await schnoodle.balanceOf(account));
@@ -103,7 +114,8 @@ describe('Transfer', () => {
       totalBalance += newBalance;
 
       // Chai doesn't fully suppport BigInt yet, so perform and approximate assertion this way
-      assert.isTrue(newBalance >= baseBalance, `Account ${account}${account == sender ? ' (sender)' : (account == recipient ? ' (recipient)' : '')} incorrect after transfer`);
+      const accountRole = account == sender ? 'sender' : (account == recipient ? 'recipient' : (account == eleemosynary ? 'eleemosynary' : ''));
+      assert.isTrue(newBalance >= baseBalance, `Account ${account}${accountRole == '' ? '' : (' (' + accountRole + ')')} incorrect after transfer`);
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');

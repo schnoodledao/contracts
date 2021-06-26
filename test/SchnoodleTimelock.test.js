@@ -1,7 +1,7 @@
 // test/SchnoodleTimelock.test.js
 
 const { accounts, contract } = require('@openzeppelin/test-environment');
-const [ owner ] = accounts;
+const [ owner, eleemosynary ] = accounts;
 const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
@@ -22,7 +22,7 @@ let schnoodleTimelock;
 
 beforeEach(async function () {
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent);
+  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent, initialization.eleemosynaryPercent, eleemosynary);
   schnoodleTimelock = await SchnoodleTimelock.new();
   await schnoodleTimelock.initialize(schnoodle.address, chance.pickone(accounts), moment().add(timelockSeconds, 'seconds').unix());
 });
