@@ -16,7 +16,7 @@ _**And who's your principal developer?**_
 
 His name is Jason – he has a glittering track record as a senior dev for many large British, American and Swiss banks while based in the financial centre of London, and is currently leading two IT divisions for the largest educational provider in the Netherlands.
 
-But his online name is [Neo](https://twitter.com/XtreemX), and this is where it gets interesting...
+But his online name is [Neo](https://twitter.com/Neo42), and this is where it gets interesting...
 
 _**Tell me more...**_
 
