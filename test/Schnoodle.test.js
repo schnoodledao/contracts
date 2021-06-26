@@ -11,7 +11,6 @@ const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');
 const bigInt = require('big-integer')
-const truffleAssert = require('truffle-assertions');
 
 const chance = new Chance();
 let schnoodle;
@@ -44,10 +43,6 @@ describe('Transfer', () => {
     await _testTransfer(amount => amount);
   });
 
-  it('should revert on attempt to transfer without enough balance', async() => {
-    await truffleAssert.reverts(_testTransfer(amount => amount * BigInt(2)), 'Schnoodle: transfer amount exceeds balance')
-  });
-
   async function _testTransfer(transferAmountCallback) {
     // Populate all accounts with some tokens from the owner account
     for (const account of accounts) {
@@ -56,38 +51,35 @@ describe('Transfer', () => {
 
     let amounts = {};
     for (const account of accounts) {
-      amounts[account] = BigInt(await schnoodle.balanceOfBurnable(account));
+      amounts[account] = BigInt(await schnoodle.balanceOf(account));
     }
 
     sender = chance.pickone(accounts);
     recipient = chance.pickone(accounts);
 
-    const senderBalance = BigInt(await schnoodle.balanceOf(sender));
-
     // Invoke the callback function to get the desired transfer amount to send for this test
-    const transferAmount = transferAmountCallback(senderBalance);
-
-    // Capture the fee part of the sender's balance before transfer as this is used up first in the transfer, and must be factored into the assert algorithm later
-    const balanceFee = senderBalance - BigInt(await schnoodle.balanceOfBurnable(sender));
+    const transferAmount = transferAmountCallback(BigInt(await schnoodle.balanceOf(sender)));
 
     await schnoodle.transfer(recipient, transferAmount, {from: sender});
 
-    const totalFees = BigInt(await schnoodle.totalFees());
-    const totalSupply = BigInt(await schnoodle.totalSupply());
+    let totalBalance = BigInt(0);
 
     // Check the balances of all accounts to ensure they match the expected algorithm
     for (const account of accounts) {
       const oldAmount = amounts[account];
 
-      // Sender's old amount is reduced by the transfer amount less the fee part of the account's balance; recipient's is increased by the transfer amount
-      const newAmount = oldAmount + transferAmount * BigInt(account == sender ? -100 : (account == recipient ? 100 - initialization.feePercent : 0)) / BigInt(100) + (account == sender ? balanceFee : BigInt(0));
+      // The old amount is adjusted by the transfer amount for only the sender (down) and recipient (up), less the fee for the latter
+      const baseBalance = oldAmount + transferAmount * BigInt(account == sender ? -100 : (account == recipient ? 100 - initialization.feePercent : 0)) / BigInt(100);
 
-      // The expected balance should also include a distribution of the total fees in proportion to the total supply
-      const expectedBalance = newAmount + newAmount * totalFees / (totalSupply - totalFees);
+      // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
       const newBalance = BigInt(await schnoodle.balanceOf(account));
 
+      totalBalance += newBalance;
+
       // Chai doesn't fully suppport BigInt yet, so perform and approximate assertion this way
-      assert.isTrue(newBalance - expectedBalance <= 1, `Account ${account}${account == sender ? ' (sender)' : (account == recipient ? ' (recipient)' : '')} incorrect after transfer`);
+      assert.isTrue(newBalance >= baseBalance, `Account ${account}${account == sender ? ' (sender)' : (account == recipient ? ' (recipient)' : '')} incorrect after transfer`);
     }
+
+    assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
   }
 });

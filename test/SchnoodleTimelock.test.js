@@ -5,7 +5,7 @@ const [ owner ] = accounts;
 const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
-const SchnoodleTimelock = contract.fromArtifact('SchnoodleStakingTimelock'); // Can be any of the timelock contracts
+const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
 
 const { initialization } = require('../migrations-config.js');
 const { assert } = require('chai');
@@ -23,8 +23,8 @@ let schnoodleTimelock;
 beforeEach(async function () {
   schnoodle = await Schnoodle.new();
   await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent);
-  beneficiary = chance.pickone(accounts);
-  schnoodleTimelock = await SchnoodleTimelock.new(schnoodle.address, beneficiary, moment().add(timelockSeconds, 'seconds').unix());
+  schnoodleTimelock = await SchnoodleTimelock.new();
+  await schnoodleTimelock.initialize(schnoodle.address, chance.pickone(accounts), moment().add(timelockSeconds, 'seconds').unix());
 });
 
 it('should release tokens to the beneficiary after the timelock period', async () => {
@@ -34,14 +34,14 @@ it('should release tokens to the beneficiary after the timelock period', async (
 
   // Attempt to release tokens before the timelock period
   await truffleAssert.reverts(schnoodleTimelock.release(), 'TokenTimelock: current time is before release time');
-  (await schnoodle.balanceOfBurnable(await schnoodleTimelock.beneficiary())).should.be.bignumber.equal(new BN(0), 'Beneficiary balance is not zero before timelock release');
+  (await schnoodle.balanceOf(await schnoodleTimelock.beneficiary())).should.be.bignumber.equal(new BN(0), 'Beneficiary balance is not zero before timelock release');
 
   await sleep(timelockSeconds * 1000);
 
   // Attempt to release tokens after the timelock period
   await schnoodleTimelock.release();
 
-  currentBalance = BigInt(await schnoodle.balanceOfBurnable(await schnoodleTimelock.beneficiary()));
+  currentBalance = BigInt(await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()));
   assert.isTrue(currentBalance - lockAmount < lockAmount * BigInt(10) / BigInt(100), 'Locked amount wasn\'t released by the timelock');
 
   function sleep(ms) {

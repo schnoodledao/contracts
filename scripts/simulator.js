@@ -8,7 +8,7 @@ module.exports = async function main(callback) {
         const owner = accounts[0];
         const Schnoodle = artifacts.require('SchnoodleV1');
         const schnoodle = await Schnoodle.new();
-        await schnoodle.initialize(10000, owner, initialization.feePercent);
+        await schnoodle.initialize(100000, owner, initialization.feePercent);
 
         const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
         const delimiter = ' | ';
@@ -20,14 +20,14 @@ module.exports = async function main(callback) {
         console.log(headers);
 
         let trades = [
-            { account: accounts[1], amount: 909 },
-            { account: accounts[2], amount: 395 },
-            { account: accounts[3], amount: 362 },
-            { account: accounts[4], amount: 333 },
-            { account: accounts[4], amount: -307 },
-            { account: accounts[5], amount: 173 },
-            { account: accounts[6], amount: 56 },
-            { account: accounts[7], amount: 216 }
+            { account: accounts[1], amount: 9090 },
+            { account: accounts[2], amount: 3950 },
+            { account: accounts[3], amount: 3620 },
+            { account: accounts[4], amount: 3330 },
+            { account: accounts[4], amount: -3070 },
+            { account: accounts[5], amount: 1730 },
+            { account: accounts[6], amount: 560 },
+            { account: accounts[7], amount: 2160 }
         ];
 
         for (const trade of trades) {

@@ -3,62 +3,63 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable {
+    uint256 private constant MAX = ~uint256(0);
+    uint256 private _totalSupply;
     uint256 private _feePercent;
-    address private _rewardsWallet;
-    mapping (address => uint256) private _rewardsSpent;
 
     function initialize(uint256 initialTokens, address owner, uint256 feePercent) public initializer {
-        super.initialize("Schnoodle", "SNOOD", initialTokens * 10 ** decimals(), owner);
-        _rewardsWallet = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
+        _totalSupply = initialTokens * 10 ** decimals();
+        super.initialize("Schnoodle", "SNOOD", MAX - (MAX % totalSupply()), owner);
         _feePercent = feePercent;
     }
 
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
+    }
+
     function balanceOf(address account) public view override returns (uint256) {
-        uint256 balance = super.balanceOf(account);
-        uint256 fees = super.balanceOf(_rewardsWallet);
-        uint256 totalSupply = totalSupply();
-
-        // Calculate the rewards as a proportionate amount of all fees in the rewards wallet
-        uint256 rewards = fees * balance / (totalSupply - fees);
-        uint256 rewardsSpent = _rewardsSpent[account];
-
-        // Reflect the balance as a sum of the underlying balance and rewards less the rewards spent already
-        return balance + (rewards > rewardsSpent ? rewards - rewardsSpent : 0);
-    }
-
-    function balanceOfBurnable(address account) public view returns (uint256) {
-        return super.balanceOf(account);
-    }
-
-    function totalFees() public view returns (uint256) {
-        return super.balanceOf(_rewardsWallet);
+        uint256 amount = super.balanceOf(account);
+        require(amount <= super.totalSupply(), "Schnoodle: Amount must be less than total reflections");
+        return amount / _getRate();
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
-        uint256 balance = balanceOf(sender);
-        require(balance >= amount, "Schnoodle: transfer amount exceeds balance");
+        uint256 rate =  _getRate();
+        super._transfer(sender, recipient, amount * rate);
+        _burn(recipient, amount * _feePercent / 100 * rate);
+    }
 
-        // Calculate the fee and net amount
-        uint256 fee = amount * _feePercent / 100;
-        uint256 netAmount = amount - fee;
+    function _getRate() private view returns(uint256) {
+        return super.totalSupply() / totalSupply();
+    }
 
-        // The amount to transfer from the rewards part of the balance is as much of the net amount as possible
-        uint256 maxRewardsPart = MathUpgradeable.min(balance - balanceOfBurnable(sender), netAmount);
+    function burn(uint256 amount) public virtual override {
+        super.burn(amount * _getRate());
+    }
 
-        // Track the overall amount of rewards spent by the sender so they're deducted when calculating the rewards that make up part of their total balance
-        _rewardsSpent[sender] += maxRewardsPart;
+    function burnFrom(address account, uint256 amount) public virtual override {
+        super.burnFrom(account, amount * _getRate());
+    }
 
-        // Perform the appropriate transfers depending on the amount available in the rewards part of the balance
-        if (maxRewardsPart > fee) {
-            maxRewardsPart -= fee;
-            super._transfer(sender, recipient, netAmount - maxRewardsPart);
-            super._transfer(_rewardsWallet, recipient, maxRewardsPart);
-        } else {
-            super._transfer(sender, recipient, netAmount - maxRewardsPart + fee);
-            if (fee > maxRewardsPart) super._transfer(recipient, _rewardsWallet, fee - maxRewardsPart);
-        }
+    function allowance(address owner, address spender) public view virtual override returns (uint256) {
+        return super.allowance(owner, spender) / _getRate();
+    }
+
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        return super.approve(spender, amount * _getRate());
+    }
+
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        return super.transferFrom(sender, recipient, amount * _getRate());
+    }
+
+    function increaseAllowance(address spender, uint256 addedValue) public virtual override returns (bool) {
+        return super.increaseAllowance(spender, addedValue * _getRate());
+    }
+
+    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual override returns (bool) {
+        return super.decreaseAllowance(spender, subtractedValue * _getRate());
     }
 }
