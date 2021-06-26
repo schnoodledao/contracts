@@ -42,7 +42,7 @@ Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to revise
 
 ## Schnoodle Creation
 
-### The Smart Contracts
+### Smart Contracts
 
 As already mentioned, existing RFI-based tokens and dog meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
 
@@ -68,7 +68,7 @@ Same outcome, way simpler, far less gas. And quite simply, beautiful, lean and c
 
 _**That sounds much better for hodlers. What about the algorithm itself?**_
 
-### The BARK Algorithm
+### BARK Algorithm
 
 The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for hodlers: their true balance \(`_tOwned`\), and their reflected balance \(`_rOwned`\). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC20Upgradeable` contract, to store all reflected balances.
 
