@@ -38,33 +38,9 @@ HOKK was released more than a month later and made no such improvements. Just a 
 
 _**OK, sounds like a gravy chain, but dogs love gravy on their food, right?**_
 
-Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to rewrite Morpheus' reflective algorithm from the ground up \(not using a single line of code from the RFI contract or any other dog meme coin\), and to ensure that he would use the best techniques, practices and leading-edge technologies the blockchain space has to offer. And so, Schnoodle was born, like a cute little puppy ready to change the world.
+Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to revise Morpheus' reflective algorithm stripping out any superfluous code, and ensuring that he would use the best techniques, practices and leading-edge technologies the blockchain space has to offer. And so, Schnoodle was born, like a cute little puppy ready to take on the world.
 
 ## Schnoodle Creation
-
-### The BARK Algorithm
-
-Neo's algorithm does away with the complexities of the RFI algorithm which stores two sets of balances for hodlers, in `_rOwned` and `_tOwned`. Instead, it uses a simple global rewards wallet created during contract deployment with a random address whose private key can never be known \(and therefore inaccessible to anyone or anything but the contract\), and then simply adds a proportion of this wallet to the hodler's balance in an overridden implementation of the `balanceOf` function. The algorithm is simple but smart:
-
-$$
-balance + fees × balance ÷ (totalSupply - fees) - rewardsSpent
-$$
-
-`balance` is your burnable balance \(can be retrieved with the `balanceOfBurnable` function\). `fees` is the value of the global rewards wallet. `rewardsSpent` are of course the rewards you've already spent \(you can't benefit from them twice, you greedy dog 😉\). The formula basically ensures that you are dynamically allocated a portion of the rewards wallet proportionate to your burnable balance relative to the total supply less fees. And the rewards wallet of course accumulates tokens on each transfer where a fee percentage is charged.
-
-_**Simple but effective. But how do we spend our fee rewards instead of our burnable balance?**_
-
-Good point! We handle this for you automatically. The `_transfer` function is smart in that it ensures the hodler's fee rewards are used **first** in any transfer. This has the effect of preventing all hodlers' fee rewards theoretically diminishing to zero before they are ever sold.
-
-As the distribution of **rewards** to hodlers is completely **automated** within the smart contract on the **blockchain**, we call this the BARK algorithm. Blockchain Automated Reward Kickbacks. **Kickbacks** because it's the only word we could think of to make it into a dog-related acronym.
-
-_**OK, it's neat, but it's not exactly the same as the RFI algorithm, right?**_
-
-Correct. The effect is different to the RFI code insofar as new hodlers immediately get a proportion of the rewards, but the normal liquidity pool algorithms will ensure that the benefit of rewards and the positive price impact to existing hodlers outweigh any reduction in their reward tokens. And a hodler selling their tokens will of course deplete the rewards wallet, but they are incentivised to not do so because 1\) they pay a fee, and 2\) more importantly, their stash will grow organically when other hodlers sell _their_ tokens. And so long as the number of hodlers continues to grow, the continuous redistribution of fees to hodlers combined with the increasing token value will of course benefit hodlers more generously the longer they have held. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
-
-The above effectively results in a completely fair cat-and-mouse game, game theory built into the tokenomics of the contract if you will, where ultimately and ironically the dog wins. And that means anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern \(more on that later as we talk about it becoming a true DAO in its future roadmap\).
-
-_**That sounds totally fair to hodlers. What about the contracts?**_
 
 ### The Smart Contracts
 
@@ -89,6 +65,50 @@ x -= y
 ```
 
 Same outcome, way simpler, far less gas. And quite simply, beautiful, lean and clean.
+
+_**That sounds much better for hodlers. What about the algorithm itself?**_
+
+### The BARK Algorithm
+
+The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for hodlers: their true balance \(`_tOwned`\), and their reflected balance \(`_rOwned`\). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC20Upgradeable` contract, to store all reflected balances.
+
+So, where the original RFI algorithm performed an effective burn on the total reflected supply by doing a subtraction in the code, Neo's code performs a true burn using the OpenZeppelin code directly on the recipient's reflected balance. The BARK algorithm therefore becomes simple but smart, and operates in both the `transfer` and `balanceOf` functions, as thus:
+
+#### `transfer`
+
+First, a transfer from the sender to the recipient is done:
+
+$$
+amount × reflectedTotalSupply ÷ totalSupply
+$$
+
+Then, a burn on the recipient's reflected balance is done:
+
+$$
+amount × feeRate × reflectedTotalSupply ÷ totalSupply
+$$
+
+#### `balanceOf`
+
+$$
+reflectedBalance ÷ reflectedTotalSupply ÷ totalSupply
+$$
+
+* `amount` is of course the amount of tokens requested to transfer.
+* `reflectedTotalSupply` is exactly that, but is effectively reduced on every transfer due to the burn.
+* `totalSupply` remains constant as this represents the total SNOOD supply and is never reduced by the algorithm.
+* `feeRate` represents the fee charged for every transfer.
+* `reflectedBalance` is the reflected balance of the address requested, as stored in the OpenZeppelin `_balances` mapping state.
+
+The BARK algorithm basically ensures that transfer fees are dynamically distributed to hodlers proportionate to their respective balances relative to the total supply. The algorithm rewards loyalty, so new hodlers will only benefit from transfer fees _after_ they become a hodler.
+
+As the distribution of **rewards** to hodlers is completely **automated** within the smart contract on the **blockchain**, we call this the BARK algorithm. Blockchain Automated Reward Kickbacks. **Kickbacks** because it's the only word we could think of to make it into a dog-related acronym.
+
+_**Very neat indeed, but does that mean liquidity providers are also subject to the same rules?**_
+
+Yes, spot on. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
+
+This effectively results in a completely fair ecosystem where anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail later as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
 
 _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won't be rugged?**_
 
