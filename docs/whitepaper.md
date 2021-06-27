@@ -52,7 +52,7 @@ So, Schnoodle includes an eleemosynary fund as part of its encoding. This can be
 
 _**What if I don't feel charitable, or don't agree with the beneficiary?**_
 
-Well, charity is certainly a deep topic awash with philosophies and political nuances, and not everyone wants to give up any part of their wealth for benevolent causes, or may even wish to choose who they give to.
+Well, charity is certainly a deep topic awash with philosophical and political nuances, and not everyone wants to give up a small part of their wealth for benevolent causes; and some may even wish to choose who they donate to.
 
 Part of the ideology behind contributing to a benevolent cause is that people will like it. This will in principle have the effect of promulgating the benefactor \(in this case, Schnoodle\) further, thereby attracting more hodlers and driving the price up further. This benefits both the eleemosynary fund and hodlers alike which is of course a win-win situation for everybody! In fact, our marketing campaigns will be largely based around this, and will include promoters that are motivated by such altruistic innovations.
 
