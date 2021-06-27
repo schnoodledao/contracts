@@ -126,7 +126,7 @@ _**Very neat indeed, but does that mean liquidity providers are also subject to 
 
 Yes, spot on. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
 
-This effectively results in a completely fair ecosystem where anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail later as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
+This effectively results in a completely fair ecosystem where anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail [later](whitepaper.md#schnoodle-dao) as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
 
 _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won't be rugged?**_
 
