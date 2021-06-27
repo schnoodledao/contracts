@@ -20,7 +20,7 @@ beforeEach(async function () {
   schnoodle = await Schnoodle.new();
   await schnoodle.initialize(initialization.initialTokens, owner);
   schnoodle.changeFeePercent(initialization.feePercent);
-  schnoodle.changeEleemosynary(eleemosynary, initialization.eleemosynaryPercent);
+  schnoodle.changeEleemosynary(eleemosynary, initialization.donationPercent);
 });
 
 describe('Balance', () => {
@@ -102,9 +102,9 @@ describe('Transfer', () => {
       const deltaPercent = account == sender
         ? -100
         : (account == recipient
-          ? 100 - initialization.feePercent - initialization.eleemosynaryPercent
+          ? 100 - initialization.feePercent - initialization.donationPercent
           : (account == eleemosynary
-            ? initialization.eleemosynaryPercent
+            ? initialization.donationPercent
             : 0));
 
       // The old amount is adjusted by a percentage of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)

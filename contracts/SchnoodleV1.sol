@@ -10,7 +10,7 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private _totalSupply;
     uint256 private _feePercent;
     address private _eleemosynary;
-    uint256 private _eleemosynaryPercent;
+    uint256 private _donationPercent;
 
     function initialize(uint256 initialTokens, address owner) public initializer {
         __Ownable_init();
@@ -29,19 +29,19 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
-        uint256 rate = _getRate();
         uint256 eleemosynaryAmount;
 
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
-            eleemosynaryAmount = _eleemosynaryPercent * amount / 100;
-            _transfer(sender, _eleemosynary, eleemosynaryAmount, _eleemosynaryPercent, rate);
+            eleemosynaryAmount = _donationPercent * amount / 100;
+            _transfer(sender, _eleemosynary, eleemosynaryAmount, _donationPercent);
         }
 
-        _transfer(sender, recipient, amount - eleemosynaryAmount, _feePercent, rate);
+        _transfer(sender, recipient, amount - eleemosynaryAmount, _feePercent);
     }
 
-    function _transfer(address sender, address recipient, uint256 amount, uint256 percent, uint256 rate) private {
+    function _transfer(address sender, address recipient, uint256 amount, uint256 percent) private {
+        uint256 rate = _getRate();
         super._transfer(sender, recipient, amount * rate);
         _burn(recipient, amount * percent / 100 * rate);
     }
@@ -57,7 +57,7 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
 
     function changeEleemosynary(address account, uint256 percent) public onlyOwner {
         _eleemosynary = account;
-        _eleemosynaryPercent = percent;
+        _donationPercent = percent;
         emit EleemosynaryChanged(account, percent);
     }
 

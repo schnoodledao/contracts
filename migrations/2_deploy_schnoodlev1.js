@@ -9,8 +9,8 @@ const Schnoodle = artifacts.require(contractName);
 
 module.exports = async function (deployer) {
   const proxy = await deployProxy(Schnoodle, [initialization.initialTokens, initialization.owner], { deployer });
-  proxy.setFeePercent(initialization.feePercent);
-  proxy.setEleemosynary(initialization.eleemosynary, initialization.eleemosynaryPercent);
+  proxy.changeFeePercent(initialization.feePercent);
+  proxy.changeEleemosynary(initialization.eleemosynary, initialization.donationPercent);
   
   contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
 };

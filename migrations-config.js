@@ -3,7 +3,7 @@ module.exports = {
     owner: '0x78FC40ca8A23cf02654d4A5638Ba4d71BAcaa965',
     initialTokens: 1000000000000,
     feePercent: 4,
-    eleemosynaryPercent: 1,
+    donationPercent: 1,
     eleemosynary: '0xd85839797df0f1d9ecd65ac82ccc0214f2437ecf'
   },
   governance: {
