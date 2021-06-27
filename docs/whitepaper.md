@@ -103,7 +103,7 @@ $$
  Each of those transfers is followed by a burn on the receiver's reflected balance:
 
 $$
-amount × feeRate × reflectedTotalSupply ÷ totalSupply
+amount × chargeRate × reflectedTotalSupply ÷ totalSupply
 $$
 
 #### `balanceOf`
@@ -115,10 +115,10 @@ $$
 * `amount` is the amount of tokens being transferred whether the main or eleemosynary amount.
 * `reflectedTotalSupply` is exactly that, but is effectively reduced on every transfer due to the burn.
 * `totalSupply` remains constant as this represents the total SNOOD supply and is never reduced by the algorithm.
-* `feeRate` represents the main or eleemosynary fee charged for every transfer.
+* `chargeRate` represents the fee or donation charged for every transfer.
 * `reflectedBalance` is the reflected balance of the address requested, as stored in the OpenZeppelin `_balances` mapping state.
 
-The BARK algorithm basically ensures that transfer fees are dynamically distributed to hodlers proportionate to their respective balances relative to the total supply. The algorithm rewards loyalty, so new hodlers will only benefit from transfer fees _after_ they become a hodler.
+The BARK algorithm basically ensures that transfer fees are dynamically redistributed to hodlers proportionate to their respective balances relative to the total supply. The algorithm rewards loyalty, so new hodlers will only benefit from the redistribution of transfer fees _after_ they become a hodler.
 
 As the distribution of **rewards** to hodlers is completely **automated** within the smart contract on the **blockchain**, we call this the BARK algorithm. Blockchain Automated Reward Kickbacks. **Kickbacks** because it's the only word we could think of to make it into a dog-related acronym.
 
