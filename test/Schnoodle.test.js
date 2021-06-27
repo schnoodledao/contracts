@@ -18,7 +18,9 @@ let schnoodle;
 
 beforeEach(async function () {
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialization.initialTokens, owner, initialization.feePercent, initialization.eleemosynaryPercent, eleemosynary);
+  await schnoodle.initialize(initialization.initialTokens, owner);
+  schnoodle.changeFeePercent(initialization.feePercent);
+  schnoodle.changeEleemosynary(eleemosynary, initialization.eleemosynaryPercent);
 });
 
 describe('Balance', () => {

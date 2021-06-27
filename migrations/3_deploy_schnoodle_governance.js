@@ -6,9 +6,13 @@ const contractsFile = require('../scripts/contracts-file.js');
 
 const contractName = 'SchnoodleGovernance';
 const SchnoodleGovernance = artifacts.require(contractName);
+const Schnoodle = artifacts.require("SchnoodleV1");
 
 module.exports = async function (deployer) {
   await deployer.deploy(SchnoodleGovernance, governance.minDelay, governance.proposers, governance.executors);
-  await admin.transferProxyAdminOwnership((await SchnoodleGovernance.deployed()).address);
+  const schnoodleGovernanceAddress = (await SchnoodleGovernance.deployed()).address;
+  await admin.transferProxyAdminOwnership(schnoodleGovernanceAddress);
+  (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);
+
   contractsFile.append(contractName);
 };

@@ -35,27 +35,33 @@ Execute the following PowerShell script to migrate contracts:
 1. Go to the address of the token to be locked, and transfer the desired amount to the `SchnoodleTimelock` clone address.
 1. After timelock elapsed, go to `SchnoodleTimelock` clone address, and call `release`.
 
-## Upgrade Steps (Multisig)
-The following steps assume that `SchnoodleGovernance` is the owner of `ProxyAdmin`.
-1. Migrate `SchnoodleV2` (`prepareUpgrade`).
-1. Go to `ProxyAdmin` contract address and call `upgrade` using parameters outputted in step 1 (do not confirm).
+## Config Procedure
+1. Perform a [contract interaction](#contract-interaction) with `TransparentUpgradeableProxy` to call `changeFeePercent` or `changeEleemosynary`.
+
+## Upgrade Procedure
+1. Migrate `SchnoodleV2` (`prepareUpgrade`)
+1. Perform a [contract interaction](#contract-interaction) with `ProxyAdmin` to call `upgrade` using `proxy` and `implementation` parameters outputted in step 1.
+
+## Contract Interaction
+Contract interaction is via either 1) multisig using `SchnoodleGovernance`, or 2) DAO using SafeSnap, depending on the owner of the contract. This may be set during deployment or by calling `transferOwnership` on the contract. A multisig contract can be made into a DAO contract by following the [multisig](#multisig) process using the `transferOwnership` function.
+
+### Multisig
+The following steps assume that `SchnoodleGovernance` is the owner of the contract address to be interacted with.
+1. Go to the contract address to be interacted with and call the desired function.
 1. Copy the HEX DATA from MetaMask and reject the transaction.
 1. Follow steps 27 and 28 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
 1. After timelock elapsed, follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
 
-## Upgrade Steps (DAO)
-The following steps assume that the Gnosis Safe address is the owner of `ProxyAdmin`.
-1. Migrate `SchnoodleV2` (`prepareUpgrade`).
-1. Go to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) and update `address` in strategy with proxy address (outputted in step 1).
+### DAO
+The following steps assume that the Gnosis Safe address is the owner of the contract address to be interacted with.
+1. Go to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) and ensure `address` in strategy is the `TransparentUpgradeableProxy` contract address.
 1. Go to [Snapshot space new proposal](https://snapshot.org/#/schnoodle.eth/create) and add a 'Contract Interaction' transaction:
-    * `to` is the `ProxyAdmin` contract address.
-    * `function` is `upgrade()`.
-    * `proxy` and `implementation` are the parameters outputted in step 1.
+    * `to` is the contract address to be interacted with.
+    * `function` is the function to be called.
+    * Set the parameters as required.
 1. After voting is closed, anyone may trigger the following actions on the plugin:
     * Request execution to put the question on [reality.eth](https://reality.eth.link/app/) for 24 hours.
     * Set the outcome with a bond (in ETH). The outcome should resolve in accordance with the vote in (game) theory.
     * After the question outcome is finalised and it is in favour, the upgrade transaction may be triggered by anyone to be executed on `ProxyAdmin`.
 1. If the proposal is malicious, it may be vetoed during the 24-hour cooldown period via Gnosis Safe by calling `markProposalInvalid` on the DAO module contract address.
     * The `proposalId` and `txHashes` values may be found from the `Input Data` of the relevant `Add Proposal` transaction on the DAO module contract.
-
-**TODO: Should ownership of ProxyAdmin be transferred from SchnoodleGovernance to the Gnosis Safe address?**
