@@ -170,11 +170,25 @@ _**Awesome. How TF does that work?**_
 
 This is basically a smart contract that derives from the OpenZeppelin `TimelockController` base contract. During deployment of `SchnoodleGovernance`, ownership of both the `Schnoodle` contract and the aforementioned `ProxyAdmin` contract is transferred to it so that any changes or upgrades to the `Schnoodle` contract are delayed by a minimum time period so that hodlers can view the change/upgrade on the blockchain before it becomes effective. If hodlers don't like it or find a problem with it, they can take action straight away, or we can cancel the change/upgrade.
 
-_**Cool. But you can still ignore us, right?**_
+_**I just buy dog tokens, dude; where do I even go to check pending upgrades?**_
+
+Granted, it's not a simple out-of-the-box method, but once you know how, it's pretty simple, and you get to learn a little about browsing the blockchain on Etherscan. Just follow these steps:
+
+1. Go the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599).
+2. Select a recent transaction with method `Exec Transaction` and view its logs. If the logs include an event called `CallScheduled`, then this is a scheduled contract interaction. The next steps outline how to decode this log.
+3. You will see in the `target` field an address. This is the contract being interacted with, and will resolve to the `ProxyAdmin` contract for upgrades.
+4. For upgrades, you will see in the `data` field three values separated by `000000000000000000000000` \(24 zeros\), as thus:
+   1. The first value is the `upgrade` function being called and will show as `99A88EC4`.
+   2. The second value is the address of the `TransparentUpgradeableProxy` contract being upgraded.
+   3. The third value is the address of the new implementation contract \(e.g., `SchnoodleV2`\).
+
+Armed with the above, you can now view any pending upgrade before it is executed and becomes live. Once an upgrade is executed, this will appear as a `CallExecuted` event in the Gnosis Safe address logs.
+
+_**Cool. But you can still ignore us if we don't agree with an upgrade, right?**_
 
 ### Multisig
 
-We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our Gnosis Safe address where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP_E).
+We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP_E).
 
 _**This all sounds really complicated. Explain again, like I'm a 2-year-old dog.**_
 
@@ -187,9 +201,9 @@ Right. So, the `Schnoodle` smart contract is deployed to the Ethereum blockchain
 In the event of an upgrade, the following steps take place:
 
 1. The new `Schnoodle` contract version \(say, `SchnoodleV2`\) is prepared with the proxy \(this means it's not yet active, but _ready_ to activate\).
-2. Then, the scheduled upgrade is signed off by the multi-signatory wallets at the Gnosis Safe address and broadcast to the blockchain.
-3. After the minimum required timelock has elapsed as per `SchnoodleGovernance`, the upgrade is executed at the Gnosis Safe address, again requiring sign-off by the multi-signatory wallets, and broadcast to the blockchain.
-4. Any scheduled or executed upgrades can be seen in the event log of the proxy contract.
+2. Then, the scheduled upgrade is signed off by the multi-signatory wallets at the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) and broadcast to the blockchain.
+3. After the minimum required timelock has elapsed as per `SchnoodleGovernance`, the upgrade is executed at the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599), again requiring sign-off by the multi-signatory wallets, and broadcast to the blockchain.
+4. Any scheduled or executed upgrades can be seen in the transactions of the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599). The event log of the `SchnoodleGovernance` contract address is also a way to see these events.
 
 With this comprehensive and highly sophisticated process, it now means we have two solid layers of protection for our hodlers: upgrade timelock protection and multisig.
 
@@ -207,7 +221,7 @@ This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https:/
 
 _**Wow! Three more blockchain platforms in the mix. Schnoodle really is the dog's bollocks, right?**_
 
-Right. But they all serve an important purpose. Our Snapshot space is where proposals are listed and can be voted on by hodlers. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
+Right. But they all serve an important purpose. Our [Snapshot space](https://snapshot.org/#/schnoodle.eth) is where proposals are listed and can be voted on by hodlers. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
 
 _**Free as in beer? But doesn't that come at the expense of a measure of decentralization?**_
 
