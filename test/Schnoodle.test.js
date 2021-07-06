@@ -6,7 +6,7 @@ const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
 
-const { initialization } = require('../migrations-config.js');
+const { initialization } = require('../migrations-config.rinkeby.js');
 const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');

@@ -1,6 +1,6 @@
 // scripts/simulator.js
 
-const { initialization } = require('../migrations-config.js');
+const { initialization } = require('../migrations-config.rinkeby.js');
 
 module.exports = async function main(callback) {
     try {
