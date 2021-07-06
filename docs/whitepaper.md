@@ -172,7 +172,7 @@ This is basically a smart contract that derives from the OpenZeppelin `TimelockC
 
 _**I just buy dog tokens, dude; where do I even go to check pending upgrades?**_
 
-Granted, it's not a simple out-of-the-box method, but once you know how, it's pretty simple, and you get to learn a little about browsing the blockchain on Etherscan. Just follow these steps:
+Granted, it's not a simple out-of-the-box method, but once you know how, it's pretty easy, and you get to learn a little about browsing the blockchain on Etherscan. Just follow these steps:
 
 1. Go the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599).
 2. Select a recent transaction with method `Exec Transaction` and view its logs. If the logs include an event called `CallScheduled`, then this is a scheduled contract interaction. The next steps outline how to decode this log.
@@ -182,7 +182,7 @@ Granted, it's not a simple out-of-the-box method, but once you know how, it's pr
    2. The second value is the address of the `TransparentUpgradeableProxy` contract being upgraded.
    3. The third value is the address of the new implementation contract \(e.g., `SchnoodleV2`\).
 
-Armed with the above, you can now view any pending upgrade before it is executed and becomes live. Once an upgrade is executed, this will appear as a `CallExecuted` event in the Gnosis Safe address logs.
+Armed with the above, you can now view any pending upgrade before it is executed and becomes live. Once an upgrade is executed, this will appear as a `CallExecuted` event in the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) logs.
 
 _**Cool. But you can still ignore us if we don't agree with an upgrade, right?**_
 
