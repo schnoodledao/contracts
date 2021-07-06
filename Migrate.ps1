@@ -17,6 +17,7 @@ If ($Reset) {
 If ($Rebuild) {
     $Filter = ($Network -eq "development") ? "unknown-*.json" : "$Network.json"
     Remove-Item .openzeppelin\$Filter -ErrorAction Ignore
+    Remove-Item build\contracts\*.json
 }
 
 $LogsPath = "logs"
@@ -27,8 +28,8 @@ If (!(Test-Path $LogsPath)) {
 $process = Start-Process npx -ArgumentList $NpxArgs -RedirectStandardOutput $LogsPath\migrate-$Network-$(Get-Date -Format FileDateTimeUniversal).log -PassThru -Wait -WindowStyle Hidden
 
 If (($process.ExitCode -eq 0) -and ($Network -ne "development")) {
-    "Waiting till $((Get-Date).AddMinutes(5)) to verify contracts."
-    Start-Sleep -s 300
+    "Waiting till $((Get-Date).AddMinutes(2)) to verify contracts."
+    Start-Sleep -s 120
     
     ForEach ($Contract in Get-Content $ContractsFile) {
         npx truffle run verify $Contract --network $Network

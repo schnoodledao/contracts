@@ -31,6 +31,12 @@ module.exports = {
       network_id: 5,
       gasPrice: 10e9,
       skipDryRun: true
+    },
+    mainnet: {
+      provider: () => new HDWalletProvider(mnemonic, `https://mainnet.infura.io/v3/${infuraProjectId}`),
+      network_id: 1,
+      gasPrice: 32e9,
+      skipDryRun: true
     }
   },
 

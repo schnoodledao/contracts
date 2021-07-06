@@ -7,7 +7,7 @@ module.exports = {
     eleemosynary: '0xd85839797df0f1d9ecd65ac82ccc0214f2437ecf'
   },
   governance: {
-    minDelay: 86400, // Minimum delay timer in seconds
+    minDelay: 120, // Minimum delay timer in seconds
     proposers: ['0xF4157e28eF1d741F3B3f4050E2273cb206Cafc3B'],
     executors: ['0xF4157e28eF1d741F3B3f4050E2273cb206Cafc3B']
   }

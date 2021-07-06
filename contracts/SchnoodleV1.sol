@@ -29,21 +29,18 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
-        uint256 eleemosynaryAmount;
+        _transferReflected(sender, recipient, amount);
 
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
-            eleemosynaryAmount = _donationPercent * amount / 100;
-            _transfer(sender, _eleemosynary, eleemosynaryAmount, _donationPercent);
+            _transferReflected(recipient, _eleemosynary, _donationPercent * amount / 100);
         }
-
-        _transfer(sender, recipient, amount - eleemosynaryAmount, _feePercent);
     }
 
-    function _transfer(address sender, address recipient, uint256 amount, uint256 percent) private {
+    function _transferReflected(address sender, address recipient, uint256 amount) private {
         uint256 rate = _getRate();
         super._transfer(sender, recipient, amount * rate);
-        _burn(recipient, amount * percent / 100 * rate);
+        super._burn(recipient, amount * _feePercent / 100 * rate);
     }
 
     function _getRate() private view returns(uint256) {
@@ -61,34 +58,9 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         emit EleemosynaryChanged(account, percent);
     }
 
-    function burn(uint256 amount) public virtual override {
-        super.burn(amount * _getRate());
+    function _burn(address account, uint256 amount) internal virtual override {
+        super._burn(account, amount * _getRate());
         _totalSupply -= amount;
-    }
-
-    function burnFrom(address account, uint256 amount) public virtual override {
-        super.burnFrom(account, amount * _getRate());
-        _totalSupply -= amount;
-    }
-
-    function allowance(address owner, address spender) public view virtual override returns (uint256) {
-        return super.allowance(owner, spender) / _getRate();
-    }
-
-    function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        return super.approve(spender, amount * _getRate());
-    }
-
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        return super.transferFrom(sender, recipient, amount * _getRate());
-    }
-
-    function increaseAllowance(address spender, uint256 addedValue) public virtual override returns (bool) {
-        return super.increaseAllowance(spender, addedValue * _getRate());
-    }
-
-    function decreaseAllowance(address spender, uint256 subtractedValue) public virtual override returns (bool) {
-        return super.decreaseAllowance(spender, subtractedValue * _getRate());
     }
 
     event FeePercentChanged(uint256 percent);
