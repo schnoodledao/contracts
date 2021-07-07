@@ -12,10 +12,10 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     address private _eleemosynary;
     uint256 private _donationPercent;
 
-    function initialize(uint256 initialTokens, address owner) public initializer {
+    function initialize(uint256 initialTokens, address serviceAccount) public initializer {
         __Ownable_init();
         _totalSupply = initialTokens * 10 ** decimals();
-        super.initialize("Schnoodle", "SNOOD", MAX - (MAX % totalSupply()), owner);
+        super.initialize("Schnoodle", "SNOOD", MAX - (MAX % totalSupply()), serviceAccount);
     }
 
     function totalSupply() public view virtual override returns (uint256) {

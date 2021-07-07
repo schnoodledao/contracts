@@ -1,13 +1,12 @@
 // test/SchnoodleTimelock.test.js
 
 const { accounts, contract } = require('@openzeppelin/test-environment');
-const [ owner ] = accounts;
+const [ serviceAccount ] = accounts;
 const { BN } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
 const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
 
-const { initialization } = require('../migrations-config.rinkeby.js');
 const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');
@@ -19,18 +18,21 @@ const chance = new Chance();
 const timelockSeconds = 2;
 let schnoodle;
 let schnoodleTimelock;
+let initialTokens;
 
 beforeEach(async function () {
+  initialTokens = chance.integer({ min: 1000 });
+
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialization.initialTokens, owner);
+  await schnoodle.initialize(initialTokens, serviceAccount);
   schnoodleTimelock = await SchnoodleTimelock.new();
   await schnoodleTimelock.initialize(schnoodle.address, chance.pickone(accounts), moment().add(timelockSeconds, 'seconds').unix());
 });
 
 it('should release tokens to the beneficiary after the timelock period', async () => {
-  const lockAmount = BigInt(bigInt.randBetween(1, initialization.initialTokens * 10 ** await schnoodle.decimals()));
+  const lockAmount = BigInt(bigInt.randBetween(1, initialTokens * 10 ** await schnoodle.decimals()));
 
-  await schnoodle.transfer(schnoodleTimelock.address, lockAmount, { from: owner });
+  await schnoodle.transfer(schnoodleTimelock.address, lockAmount, { from: serviceAccount });
 
   // Attempt to release tokens before the timelock period
   await truffleAssert.reverts(schnoodleTimelock.release(), 'TokenTimelock: current time is before release time');

@@ -1,6 +1,6 @@
 module.exports = {
   initialization: {
-    owner: '0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB',
+    serviceAccount: '0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB',
     initialTokens: 1000000000000,
     feePercent: 4,
     donationPercent: 1,
