@@ -154,7 +154,7 @@ We have made it upgradeable.
 
 _**But the blockchain is immutable. Upgrading a smart contract means all hodlers must undergo a token swap, right?**_
 
-Not quite. Using the OpenZeppelin Contracts, we utilise a concept known as a proxy contract known as `TransparentUpgradeableProxy`. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will even notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract \(`Schnoodle`\) to which there is a link on the respective 'proxy' pages.
+Not quite. Using the OpenZeppelin [`TransparentUpgradeableProxy`](https://docs.openzeppelin.com/contracts/4.x/api/proxy#TransparentUpgradeableProxy) contract, Schnoodle leverages the [EIP-1967 Transparent Proxy](https://eips.ethereum.org/EIPS/eip-1967) pattern whereby a proxy contract is deployed. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract \(`Schnoodle`\) to which there is a link on the respective 'proxy' pages.
 
 The beauty of this is that the `Schnoodle` smart contract can be upgraded in the future without changing the contract address because the proxy contract never changes. And due to the immutability of blockchain, the existing state can never be changed. We can only add new state.
 
