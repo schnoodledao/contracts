@@ -9,31 +9,36 @@ module.exports = {
       network_id: "*",
     },
     ropsten: {
-      provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://ropsten.infura.io/ws/v3/${infuraProjectId}`),
+      websockets: true,
       network_id: 3,
       gasPrice: 10e9,
       skipDryRun: true
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://rinkeby.infura.io/ws/v3/${infuraProjectId}`),
+      websockets: true,
       network_id: 4,
       gasPrice: 10e9,
       skipDryRun: true
     },
     kovan: {
-      provider: () => new HDWalletProvider(mnemonic, `https://kovan.infura.io/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://kovan.infura.io/ws/v3/${infuraProjectId}`),
+      websockets: true,
       network_id: 42,
       gasPrice: 10e9,
       skipDryRun: true
     },
     goerli: {
-      provider: () => new HDWalletProvider(mnemonic, `https://goerli.infura.io/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://goerli.infura.io/ws/v3/${infuraProjectId}`),
+      websockets: true,
       network_id: 5,
       gasPrice: 10e9,
       skipDryRun: true
     },
     mainnet: {
-      provider: () => new HDWalletProvider(mnemonic, `https://mainnet.infura.io/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
+      websockets: true,
       network_id: 1,
       gasPrice: 32e9,
       skipDryRun: true
