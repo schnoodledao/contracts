@@ -24,10 +24,19 @@ Execute the following PowerShell script to migrate contracts:
 - `reset`: Run all migrations from the beginning (default is `$false`).
 - `rebuild`: Delete all compiled contracts and the network manifest (default is `$false`).
 
+Run the following command to verify contracts:
+```
+npx truffle run verify <contractName>[@<address>] [--network <network>]
+```
+- `contractName`: The name of the contract to verify.
+- `address`: The address of the contract (required for proxy implementation contracts).
+- `network`: The network to verify the contract on (default is `development`).
+
 ## Launch Steps
-1. Migrate `Schnoodle`, `SchnoodleGovernance`, `SchnoodleTimelock` and `SchnoodleTimelockFactory`.
-1. Add liquidity to Uniswap.
-1. [Create a timelock contract](#create-timelock-contract) using the liquidity token address from transaction in wallet used for liquidity.
+1. Migrate `Schnoodle`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
+1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
+1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.
+1. [Create a timelock contract](#create-timelock-contract) to lock the full amount of the liquidity token held by the beneficiary wallet.
 
 ## Create Timelock Contract
 1. Go to `SchnoodleTimelockFactory` contract address and call `create` specifying the address of the token to be locked, the beneficiary, and the release time as a [Unix timestamp](https://www.unixtimestamp.com).
