@@ -1,4 +1,4 @@
-// migrations/5_deploy_schnoodle_timelock_factory.js
+// migrations/4_deploy_schnoodle_timelock_factory.js
 
 const contractsFile = require('../scripts/contracts-file.js');
 
