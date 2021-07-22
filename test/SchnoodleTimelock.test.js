@@ -2,7 +2,7 @@
 
 const { accounts, contract } = require('@openzeppelin/test-environment');
 const [ serviceAccount ] = accounts;
-const { BN } = require('@openzeppelin/test-helpers');
+const { BN, singletons } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
 const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
@@ -22,6 +22,8 @@ let initialTokens;
 
 beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
+
+  await singletons.ERC1820Registry(serviceAccount);
 
   schnoodle = await Schnoodle.new();
   await schnoodle.initialize(initialTokens, serviceAccount);

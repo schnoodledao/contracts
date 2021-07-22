@@ -48,14 +48,14 @@ contract SchnoodleV1 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
-            uint256 donationAmount = _donationPercent * amount / 100 * _getRate();
+            uint256 donationAmount = amount * _getRate() / 100 * _donationPercent;
             _send(recipient, _eleemosynary, donationAmount, "", "", true);
-            _payFee(recipient, donationAmount);
+            _payFee(_eleemosynary, donationAmount);
         }
     }
 
-    function _payFee(address recipient, uint256 amount) private {
-        super._burn(recipient, amount * _feePercent / 100, "", "");
+    function _payFee(address recipient, uint256 reflectedAmount) private {
+        super._burn(recipient, reflectedAmount / 100 * _feePercent, "", "");
     }
 
     function _getRate() private view returns(uint256) {

@@ -1,8 +1,8 @@
 // test/Schnoodle.test.js
 
-const { accounts, contract } = require('@openzeppelin/test-environment');
+const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const [ serviceAccount, eleemosynary ] = accounts;
-const { BN } = require('@openzeppelin/test-helpers');
+const { BN, singletons } = require('@openzeppelin/test-helpers');
 
 const Schnoodle = contract.fromArtifact('SchnoodleV1');
 
@@ -18,10 +18,14 @@ let initialTokens;
 let feePercent;
 let donationPercent;
 
+const data = web3.utils.sha3(chance.string());
+
 beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
   feePercent = chance.integer({ min: 1, max: 20 });
   donationPercent = chance.integer({ min: 1, max: 20 });
+
+  await singletons.ERC1820Registry(serviceAccount);
 
   schnoodle = await Schnoodle.new();
   await schnoodle.initialize(initialTokens, serviceAccount);
@@ -50,15 +54,15 @@ describe("Burning", () => {
 
   it("should revert on attempt to burn more tokens than are available", async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
-    await schnoodle.burn(1, { from: serviceAccount })
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + BigInt(1)), "ERC20: burn amount exceeds balance")
+    await schnoodle.burn(1, data, { from: serviceAccount })
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + BigInt(1)), "ERC777: burn amount exceeds balance")
   });
 
   async function _testBurning(amount) {
     const totalSupply = BigInt(await schnoodle.totalSupply());
     const balance = BigInt(await schnoodle.balanceOf(serviceAccount));
     
-    await schnoodle.burn(amount, { from: serviceAccount });
+    await schnoodle.burn(amount, data, { from: serviceAccount });
 
     const newTotalSupply = BigInt(await schnoodle.totalSupply());
     assert.equal(newTotalSupply, totalSupply - amount, "Total supply wasn't affected correctly by burning");

@@ -3,10 +3,16 @@
 const Chance = require('chance');
 
 module.exports = async function main(callback) {
+    require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
+    const { singletons } = require('@openzeppelin/test-helpers');
+
     try {
         const accounts = await web3.eth.getAccounts();
         const serviceAccount = accounts[0];
         const eleemosynary = accounts[1];
+
+        await singletons.ERC1820Registry(serviceAccount);
+
         const Schnoodle = artifacts.require('SchnoodleV1');
         const schnoodle = await Schnoodle.new();
         await schnoodle.initialize(100000, serviceAccount);
