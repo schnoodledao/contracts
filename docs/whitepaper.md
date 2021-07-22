@@ -64,7 +64,11 @@ _**Philanthropy and becoming rich at the same time. Awesome. Now show me the con
 
 As already mentioned, existing RFI-based tokens and dog meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
 
-This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC20PresetFixedSupplyUpgradeable` which provides OOTB standardised ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract \(more on that [later](whitepaper.md#upgradeability)\). This means that hodlers can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
+This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC777PresetFixedSupplyUpgradeable` which provides OOTB standard [ERC-777](https://eips.ethereum.org/EIPS/eip-777) functionality, namely _operators_ to send tokens on behalf of another address—contract or regular account—and send/receive _hooks_ to offer hodlers more control over their tokens.
+
+_**Hold on! Does this make Schnoodle the only ERC-777 dog meme coin in existence?**_
+
+As far as we know, yes. And ERC-777 is fully backward-compatible with the [ERC-20 token standard](https://eips.ethereum.org/EIPS/eip-20), and therefore includes, by way of the OpenZeppelin base contracts, standard ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract \(more on that [later](whitepaper.md#upgradeability)\). This means that hodlers can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
 
 And the way the contracts are deployed is as separate files under the same contract \(not flattened\), which makes it easier for you \(if you want to\) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
 
@@ -88,7 +92,7 @@ _**That sounds much better for hodlers. What about the algorithm itself?**_
 
 ### BARK Algorithm
 
-The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for hodlers: their true balance \(`_tOwned`\), and their reflected balance \(`_rOwned`\). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC20Upgradeable` contract, to store all reflected balances.
+The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for hodlers: their true balance \(`_tOwned`\), and their reflected balance \(`_rOwned`\). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC777Upgradeable` contract, to store all reflected balances.
 
 So, where the original RFI algorithm performed an effective burn on the total reflected supply by doing a subtraction in the code, Neo's code performs a true burn using the OpenZeppelin code directly on the recipient's reflected balance. The BARK algorithm therefore becomes simple but smart, and operates in both the `transfer` and `balanceOf` functions, as thus:
 
