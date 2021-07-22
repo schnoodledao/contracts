@@ -9,7 +9,7 @@ const Schnoodle = artifacts.require(contractName);
 module.exports = async function (deployer, network) {
   const { initialization } = require(`../migrations-config.${network}.js`);
 
-  const proxy = await deployProxy(Schnoodle, [initialization.initialTokens, initialization.owner], { deployer });
+  const proxy = await deployProxy(Schnoodle, [initialization.initialTokens, initialization.serviceAccount], { deployer });
   proxy.changeFeePercent(initialization.feePercent);
   proxy.changeEleemosynary(initialization.eleemosynary, initialization.donationPercent);
   

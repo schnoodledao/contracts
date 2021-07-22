@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/presets/ERC20PresetFixedSupplyUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
+contract SchnoodleV1 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _totalSupply;
     uint256 private _feePercent;
@@ -16,7 +16,7 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     function initialize(uint256 initialTokens, address serviceAccount) public initializer {
         __Ownable_init();
         _totalSupply = initialTokens * 10 ** decimals();
-        super.initialize("Schnoodle", "SNOOD", MAX - (MAX % totalSupply()), serviceAccount);
+        super.initialize("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
     }
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -29,19 +29,33 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         return reflectedBalance / _getRate();
     }
 
-    function _transfer(address sender, address recipient, uint256 amount) internal virtual override {
-        _transferReflected(sender, recipient, amount);
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        uint256 reflectedAmount = amount * _getRate();
+        bool result = super.transfer(recipient, reflectedAmount);
+        _payFeeAndDonate(recipient, reflectedAmount, amount);
+        return result;
+    }
 
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        uint256 reflectedAmount = amount * _getRate();
+        bool result = super.transferFrom(sender, recipient, reflectedAmount);
+        _payFeeAndDonate(recipient, reflectedAmount, amount);
+        return result;
+    }
+
+    function _payFeeAndDonate(address recipient, uint256 reflectedAmount, uint256 amount) private {
+        _payFee(recipient, reflectedAmount);
+        
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
-            _transferReflected(recipient, _eleemosynary, _donationPercent * amount / 100);
+            uint256 donationAmount = _donationPercent * amount / 100 * _getRate();
+            _send(recipient, _eleemosynary, donationAmount, "", "", true);
+            _payFee(recipient, donationAmount);
         }
     }
 
-    function _transferReflected(address sender, address recipient, uint256 amount) private {
-        uint256 rate = _getRate();
-        super._transfer(sender, recipient, amount * rate);
-        super._burn(recipient, amount * _feePercent / 100 * rate);
+    function _payFee(address recipient, uint256 amount) private {
+        super._burn(recipient, amount * _feePercent / 100, "", "");
     }
 
     function _getRate() private view returns(uint256) {
@@ -59,8 +73,8 @@ contract SchnoodleV1 is ERC20PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         emit EleemosynaryChanged(account, percent);
     }
 
-    function _burn(address account, uint256 amount) internal virtual override {
-        super._burn(account, amount * _getRate());
+    function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
+        super._burn(account, amount * _getRate(), data, operatorData);
         _totalSupply -= amount;
     }
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./SchnoodleTimelock.sol";
+import "./imports/SchnoodleTimelock.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract SchnoodleTimelockFactory {
