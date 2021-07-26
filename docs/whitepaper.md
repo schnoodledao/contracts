@@ -104,7 +104,7 @@ $$
 amount × reflectedTotalSupply ÷ totalSupply
 $$
 
- Each of those transfers is followed by a burn on the receiver's reflected balance:
+Each of those transfers is followed by a burn on the receiver's reflected balance:
 
 $$
 amount × chargeRate × reflectedTotalSupply ÷ totalSupply
@@ -138,7 +138,7 @@ _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won'
 
 Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustless. This means that there is no requirement for you to trust that the team will do what it promises, as we ensure that everything is in the code. This ensures that you have the confidence to use Schnoodle without being concerned about promises not being fulfilled.
 
-This is why we lock the initial liquidity for a minimum of 6 months in our `SchnoodleTimelock` contract which is based on the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleFinance).
+This is why we lock the initial liquidity for a minimum of 6 months in our `SchnoodleTimelock` contract which is based on the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleDeFi).
 
 Locked liquidity for 6 months gives peace of mind for hodlers, and eliminates ruggability even further.
 
