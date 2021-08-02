@@ -52,17 +52,17 @@ npx truffle run verify <contractName>[@<address>] [--network <network>]
 1. Perform a [contract interaction](#contract-interaction) with `ProxyAdmin` to call `upgrade` using `proxy` and `implementation` parameters outputted in step 1.
 
 ## Contract Interaction
-Contract interaction is via either 1) multisig using `SchnoodleGovernance`, or 2) DAO using SafeSnap, depending on the owner of the contract. This may be set during deployment or by calling `transferOwnership` on the contract. A multisig contract can be made into a DAO contract by following the [multisig](#multisig) process using the `transferOwnership` function.
+Contract interaction is via either 1) multisig (SafeSnap optional) if `SchnoodleGovernance` is the contract owner, or 2) SafeSnap (DAO) directly if the Gnosis Safe address is the contract owner. The contract owner may be set during deployment or by calling `transferOwnership` on the contract. A multisig contract can be made into a DAO contract by following the [multisig](#multisig) process using the `transferOwnership` function.
 
 ### Multisig
-The following steps assume that `SchnoodleGovernance` is the owner of the contract address to be interacted with.
 1. Go to the contract address to be interacted with and call the desired function.
 1. Copy the HEX DATA from MetaMask and reject the transaction.
 1. Follow steps 27 and 28 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
-1. After timelock elapsed, follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
+1. After timelock elapsed, follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) per either of the following scenarios:
+    * **Multisig only:** After timelock elapsed.
+    * **DAO:** Interact with `SchnoodleGovernance` via the [SafeSnap](#safesnap) process instead of directly.
 
-### DAO
-The following steps assume that the Gnosis Safe address is the owner of the contract address to be interacted with.
+### SafeSnap
 1. Go to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) and ensure `address` in strategy is the `TransparentUpgradeableProxy` contract address.
 1. Go to [Snapshot space new proposal](https://snapshot.org/#/schnoodle.eth/create) and add a 'Contract Interaction' transaction:
     * `to` is the contract address to be interacted with.
@@ -71,6 +71,6 @@ The following steps assume that the Gnosis Safe address is the owner of the cont
 1. After voting is closed, anyone may trigger the following actions on the plugin:
     * Request execution to put the question on [reality.eth](https://reality.eth.link/app/) for 24 hours.
     * Set the outcome with a bond (in ETH). The outcome should resolve in accordance with the vote in (game) theory.
-    * After the question outcome is finalised and it is in favour, the upgrade transaction may be triggered by anyone to be executed on `ProxyAdmin`.
+    * After the question outcome is finalised and it is in favour, the upgrade transaction may be triggered by anyone to be executed on the interaction contract.
 1. If the proposal is malicious, it may be vetoed during the 24-hour cooldown period via Gnosis Safe by calling `markProposalInvalid` on the DAO module contract address.
     * The `proposalId` and `txHashes` values may be found from the `Input Data` of the relevant `Add Proposal` transaction on the DAO module contract.
