@@ -219,13 +219,13 @@ Well, in reality, this would only happen if we were savagely attacked by flesh-e
 
 ### Schnoodle DAO
 
-This is where we will be turning our attention to the long-term roadmap of Schnoodle and making it into the first true DAO of the blockchain where upgrades will only be permitted if the hodlers vote in favour of them. And this will be a fully automated process to really put the 'A' in DAO.
+Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only be permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
 This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
 
 _**Wow! Three more blockchain platforms in the mix. Schnoodle really is the dog's bollocks, right?**_
 
-Right. But they all serve an important purpose. Our [Snapshot space](https://snapshot.org/#/schnoodle.eth) is where proposals are listed and can be voted on by hodlers. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
+Right. But they all serve an important purpose. Our [Snapshot space](https://snapshot.org/#/schnoodle.eth) is where any hodler over a defined threshold can make a proposal for anything \(not just upgrades\), and then the proposal can be voted on by hodlers. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
 
 _**Free as in beer? But doesn't that come at the expense of a measure of decentralization?**_
 
@@ -243,11 +243,11 @@ If the vote is in favour and the reality.eth question confirms this, reality.eth
 
 _**This sounds brilliant! But aren't you worried about hodlers making a dog's dinner of everything?**_
 
-Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen \(an upgrade with a serious flaw that no one noticed, or some sort of hodler 51% attack\), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade.
+Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen \(an upgrade with a serious flaw that no one noticed, or some sort of hodler 51% attack\), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade. The admins of the Snapshot space may also delete proposals at any time.
 
 _**Phew! OK, but then it's still not really fully decentralised then, is it?**_
 
-Not fully, but once the team are confident that the hodlers are responsible, and there are enough of them to prevent malicious attacks, then the team will remove themselves as multisig owners from the Gnosis Safe. At this point, Schnoodle becomes the world's first truly progressive DeFi DAO, and we really put the 'D' in DAO.
+Not fully, but once the team are confident that the hodlers are responsible, and there are enough of them to prevent malicious attacks, then the team will remove themselves as multisig owners from the Gnosis Safe and as admins from the Snapshot space. At this point, Schnoodle becomes the world's first truly progressive DeFi DAO, and we really put the 'D' in DAO.
 
 _**Oh, wow. I'm so excited, my tail is wagging like a metronome!**_
 
