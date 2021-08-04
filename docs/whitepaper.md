@@ -219,7 +219,7 @@ Well, in reality, this would only happen if we were savagely attacked by flesh-e
 
 ### Schnoodle DAO
 
-Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only be permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
+Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
 This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
 
