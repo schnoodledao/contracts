@@ -4,7 +4,8 @@ const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const [ serviceAccount, eleemosynary ] = accounts;
 const { BN, singletons } = require('@openzeppelin/test-helpers');
 
-const Schnoodle = contract.fromArtifact('SchnoodleV1');
+const { testContract } = require(`../migrations-config.development.js`);
+const Schnoodle = contract.fromArtifact(testContract);
 
 const { assert } = require('chai');
 require('chai').should();
@@ -72,16 +73,52 @@ describe("Burning", () => {
   }
 });
 
+describe('Maintenance', () => {
+  it.skip('should transfer tokens from a specific sender to a specific recipient', async() => {
+    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
+  });
+});
+
 describe('Transfer', () => {
-  it('should transfer from the sender to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)));
+  it('should transfer some ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _transfer(schnoodle, sender, recipient, amount));
   });
 
-  it('should transfer all from the sender to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => amount);
+  it('should transfer all ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _transfer(schnoodle, sender, recipient, amount));
   });
 
-  async function _testTransfer(transferAmountCallback) {
+  it('should transfer some ERC-20 tokens from the sender to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _transferFrom(schnoodle, sender, recipient, amount));
+  });
+
+  it('should transfer all ERC-20 tokens from the sender to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _transferFrom(schnoodle, sender, recipient, amount));
+  });
+
+  it('should transfer some ERC-777 tokens to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
+  });
+
+  it('should transfer all ERC-777 tokens to the recipient and distribute a fee to all accounts', async() => {
+    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
+  });
+
+  async function _transfer(schnoodle, sender, recipient, amount) {
+    await schnoodle.transfer(recipient, amount, {from: sender});
+  }
+
+  async function _transferFrom(schnoodle, sender, recipient, amount) {
+    await schnoodle.approve(sender, amount, {from: sender});
+    assert.equal(amount, BigInt(await schnoodle.allowance(sender, sender)));
+    await schnoodle.transferFrom(sender, recipient, amount, {from: sender});
+  }
+
+  async function _send(schnoodle, sender, recipient, amount) {
+    await schnoodle.send(recipient, amount, 0, {from: sender});
+  }
+
+  async function _testTransfer(amountCallback, transferCallback) {
     // Populate all accounts with some tokens from the service account
     for (const account of accounts) {
       await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)) / BigInt(accounts.length))), { from: serviceAccount });
@@ -97,10 +134,10 @@ describe('Transfer', () => {
     sender = chance.pickone(senderCandidates);
     recipient = chance.pickone(senderCandidates.filter(a => a != sender));
 
-    // Invoke the callback function to get the desired transfer amount to send for this test
-    const transferAmount = transferAmountCallback(BigInt(await schnoodle.balanceOf(sender)));
+    // Invoke the callback function to get the desired amount to transfer for this test
+    const transferAmount = amountCallback(BigInt(await schnoodle.balanceOf(sender)));
 
-    await schnoodle.transfer(recipient, transferAmount, {from: sender});
+    await transferCallback(schnoodle, sender, recipient, transferAmount);
 
     let totalBalance = BigInt(0);
 

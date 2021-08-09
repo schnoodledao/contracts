@@ -4,7 +4,8 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 const [ serviceAccount ] = accounts;
 const { BN, singletons } = require('@openzeppelin/test-helpers');
 
-const Schnoodle = contract.fromArtifact('SchnoodleV1');
+const { testContract } = require(`../migrations-config.development.js`);
+const Schnoodle = contract.fromArtifact(testContract);
 const SchnoodleTimelock = contract.fromArtifact('SchnoodleTimelock');
 
 const { assert } = require('chai');

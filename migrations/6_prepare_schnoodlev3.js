@@ -1,9 +1,9 @@
-// migrations/5_prepare_schnoodlev2.js
+// migrations/6_prepare_schnoodlev3.js
 
 const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
 const contractsFile = require('../scripts/contracts-file.js');
 
-const contractName = 'SchnoodleV2';
+const contractName = 'SchnoodleV3';
 const SchnoodleNew = artifacts.require(contractName);
 const SchnoodleOld = artifacts.require('SchnoodleV1');
 

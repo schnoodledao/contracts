@@ -13,7 +13,8 @@ module.exports = async function main(callback) {
 
         await singletons.ERC1820Registry(serviceAccount);
 
-        const Schnoodle = artifacts.require('SchnoodleV1');
+        const { testContract } = require(`../migrations-config.development.js`);
+        const Schnoodle = artifacts.require(testContract);
         const schnoodle = await Schnoodle.new();
         await schnoodle.initialize(100000, serviceAccount);
 
