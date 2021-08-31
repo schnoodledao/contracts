@@ -16,7 +16,7 @@ No. Our principal developer investigated what was really going on, and how he co
 
 _**And who's your principal developer?**_
 
-His name is Jason – he has a glittering track record as a senior dev for many large British, American and Swiss banks while based in the financial centre of London, and is currently leading two IT divisions for the largest educational provider in the Netherlands.
+His name is Jason Payne – he has a glittering track record as a senior dev for many large British, American and Swiss banks while based in the financial centre of London, and is currently leading two IT divisions for the largest educational provider in the Netherlands.
 
 But his online name is [Neo](https://twitter.com/Neo42), and this is where it gets interesting...
 
@@ -64,6 +64,8 @@ _**Philanthropy and becoming rich at the same time. Awesome. Now show me the con
 
 As already mentioned, existing RFI-based tokens and dog meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
 
+### ERC-777 Standard
+
 This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC777PresetFixedSupplyUpgradeable` which provides OOTB standard [ERC-777](https://eips.ethereum.org/EIPS/eip-777) functionality, namely _operators_ to send tokens on behalf of another address—contract or regular account—and send/receive _hooks_ to offer hodlers more control over their tokens.
 
 _**Hold on! Does this make Schnoodle the only ERC-777 dog meme coin in existence?**_
@@ -74,7 +76,9 @@ And the way the contracts are deployed is as separate files under the same contr
 
 _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
-Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity \(0.8.6 at the time of writing\) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit \(unlikely, but the safety of hodlers' funds is Schnoodle's absolute priority, no matter how remote any given risk is\). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
+### Latest Solidity
+
+Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity \(0.8.7 at the time of writing\) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit \(unlikely, but the safety of hodlers' funds is Schnoodle's absolute priority, no matter how remote any given risk is\). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
 
 ```text
 x = x.sub(y)
@@ -190,7 +194,7 @@ Armed with the above, you can now view any pending upgrade before it is executed
 
 _**Cool. But you can still ignore us if we don't agree with an upgrade, right?**_
 
-### Multisig
+### Multisig Protection
 
 We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP_E).
 
@@ -217,7 +221,7 @@ _**I love it. But I still have a niggle. What if the whole team mutinies or goes
 
 Well, in reality, this would only happen if we were savagely attacked by flesh-eating dog zombies, and we turned into said dog zombies ourselves bent on destroying all humans. But we hear you. Enter, Schnoodle DAO...
 
-### Schnoodle DAO
+### Trustless DAO
 
 Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
@@ -253,7 +257,7 @@ _**Oh, wow. I'm so excited, my tail is wagging like a metronome!**_
 
 For comparison, there are several well-known projects such as Yearn, Sushi, Balancer, Aave, DIA and Synthetix that use Gnosis Safe and Snapshot to gather off-chain votes, with a team "promise" that they will execute proposals voted for.
 
-By using SafeSnap on top of this, Schnoodle becomes completely autonomous once a proposal goes in. This puts Schnoodle technologically way ahead of all the aforementioned projects, not to mention other meme coins. And once our multisig ownership is removed completely, then it becomes truly 100% a DAO.
+By using SafeSnap on top of this, Schnoodle becomes completely autonomous once a proposal goes in. This puts Schnoodle technologically way ahead of all the aforementioned projects, not to mention other meme coins. And once our multisig ownership is removed completely, then it becomes a truly 100% trustless DAO.
 
 And we are already developing this part of the project on the Ethereum testnet known as Rinkeby. This is because SafeSnap is also only available on Rinkeby at present because it really is truly bleeding-edge technology. However, once it's in mainnet, the outlook is that we'll be ready to ship it straight away and be the first progressive DeFi DAO on the blockchain! 🚀
 
@@ -263,6 +267,6 @@ _**WOOF!!**_
 
 As if all that isn't enough, we also have other plans for Schnoodle, but the details of this are still being fleshed out and will be in a subsequent version of the whitepaper. But in short, these are the two main milestones you can look forward to in 2021:
 
-1. Staking – stake your SNOOD tokens for additional rewards.
+1. Neoteric Staking – sophisticated system to stake your tokens for additional rewards.
 2. NFT rewards – receive Schnoodle NFTs just for staking your SNOOD tokens.
 
