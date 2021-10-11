@@ -3,6 +3,7 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 
 # Prerequisites
 - [Node.js](https://nodejs.org/)
+- [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
 - Local blockchain (use [`truffle develop`](https://www.trufflesuite.com/docs/truffle/reference/truffle-commands#develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
 # Setup
@@ -58,7 +59,7 @@ Contract interaction is via either 1) multisig (SafeSnap optional) if `Schnoodle
 1. Go to the contract address to be interacted with and call the desired function.
 1. Copy the HEX DATA from MetaMask and reject the transaction.
 1. Follow steps 27 and 28 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
-1. After timelock elapsed, follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) per either of the following scenarios:
+1. Follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) per either of the following scenarios:
     * **Multisig only:** After timelock elapsed.
     * **DAO:** Interact with `SchnoodleGovernance` via the [SafeSnap](#safesnap) process instead of directly.
 

@@ -1,2 +1,4 @@
-module.exports = require("./migrations-config.testnet.js");
-module.exports = { testContract: 'SchnoodleV3' };
+module.exports = {
+    ...require("./migrations-config.testnet.js"),
+    testContract: 'SchnoodleV5'
+};

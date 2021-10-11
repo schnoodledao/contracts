@@ -1,7 +1,7 @@
 // test/Schnoodle.test.js
 
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
-const [ serviceAccount, eleemosynary ] = accounts;
+const [ serviceAccount, stakingPool, eleemosynary ] = accounts;
 const { BN, singletons } = require('@openzeppelin/test-helpers');
 
 const { testContract } = require(`../migrations-config.development.js`);
@@ -29,9 +29,10 @@ beforeEach(async function () {
   await singletons.ERC1820Registry(serviceAccount);
 
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialTokens, serviceAccount);
-  schnoodle.changeFeePercent(feePercent);
-  schnoodle.changeEleemosynary(eleemosynary, donationPercent);
+  await schnoodle.initialize(initialTokens, serviceAccount, stakingPool);
+  await schnoodle.changeFeePercent(feePercent);
+  await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
+  await schnoodle.changeStakingPercent(feePercent);
 });
 
 describe('Balance', () => {
@@ -55,8 +56,8 @@ describe("Burning", () => {
 
   it("should revert on attempt to burn more tokens than are available", async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
-    await schnoodle.burn(1, data, { from: serviceAccount })
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + BigInt(1)), "ERC777: burn amount exceeds balance")
+    await schnoodle.burn(1, data, { from: serviceAccount });
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + BigInt(1)), "ERC777: burn amount exceeds balance");
   });
 
   async function _testBurning(amount) {
@@ -71,12 +72,6 @@ describe("Burning", () => {
     const newBalance = BigInt(await schnoodle.balanceOf(serviceAccount));
     assert.equal(newBalance, balance - amount, "Service account wasn't affected correctly by burning");
   }
-});
-
-describe('Maintenance', () => {
-  it.skip('should transfer tokens from a specific sender to a specific recipient', async() => {
-    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
-  });
 });
 
 describe('Transfer', () => {
@@ -119,10 +114,7 @@ describe('Transfer', () => {
   }
 
   async function _testTransfer(amountCallback, transferCallback) {
-    // Populate all accounts with some tokens from the service account
-    for (const account of accounts) {
-      await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)) / BigInt(accounts.length))), { from: serviceAccount });
-    };
+    await _populateAccounts();
 
     let amounts = {};
     for (const account of accounts) {
@@ -162,11 +154,54 @@ describe('Transfer', () => {
 
       totalBalance += newBalance;
 
-      // Chai doesn't fully suppport BigInt yet, so perform an approximate assertion this way
       const accountRole = account == sender ? 'sender' : (account == recipient ? 'recipient' : (account == eleemosynary ? 'eleemosynary' : ''));
-      assert.isTrue(newBalance >= baseBalance, `Account ${account}${accountRole == '' ? '' : (' (' + accountRole + ')')} incorrect after transfer`);
+      assert.isTrue(newBalance >= baseBalance, `Account ${account}${accountRole == '' ? '' : (` (${accountRole})`)} incorrect after transfer`);
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
   }
 });
+
+describe('Staking', () => {
+  let stakeholder;
+  let stakeAmount;
+  let startBalance;
+
+  beforeEach(async function () {
+    await _populateAccounts();
+    stakeholderCandidates = accounts.filter(a => a != stakingPool);
+    stakeholder = chance.pickone(stakeholderCandidates);
+    stakeAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeholder))));
+    startBalance = BigInt(await schnoodle.balanceOf(stakeholder));
+    await schnoodle.addStake(stakeAmount, { from: stakeholder });
+    const stakingSummary = await schnoodle.stakingSummary({ from: stakeholder });
+    console.log(stakingSummary);
+  });
+
+  it('should stake tokens increasing the stakeholder\'s balance by the reward', async() => {
+    const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
+    const reward = BigInt(receipt.logs.find(l => l.event == 'Withdrawn').args.reward);
+    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance wasn\'t increased by the reward amount');
+  });
+
+  it('should revert on attempt to stake more tokens than are unstaked', async() => {
+    const additionalStake = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
+    await truffleAssert.reverts(schnoodle.addStake(additionalStake, { from: stakeholder }), "Stakeable: stake amount exceeds unstaked balance");
+  });
+
+  it('should revert on attempt to transfer more tokens than are unstaked', async() => {
+    const transferAmount = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Stakeable: transfer exceeds unstaked balance");
+  });
+
+  it('should revert on attempt to transfer more tokens than are available including staked', async() => {
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(startBalance + BigInt(1)), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
+  });
+});
+
+async function _populateAccounts() {
+  // Populate all accounts with some tokens from the service account
+  for (const account of accounts) {
+    await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)) / BigInt(accounts.length))), { from: serviceAccount });
+  };
+}
