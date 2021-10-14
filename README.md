@@ -17,21 +17,13 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 - Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
 
 # Migrate
-Execute the following PowerShell script to migrate contracts:
+Execute the following PowerShell script to migrate (and verify) contracts:
 ```
 .\Migrate.ps1 [<network>] [<reset>] [<rebuild>]
 ```
-- `network`: The network to run the migration on (default is `development`).
+- `network`: The network to run the migration on (default is `develop`).
 - `reset`: Run all migrations from the beginning (default is `$false`).
 - `rebuild`: Delete all compiled contracts and the network manifest (default is `$false`).
-
-Run the following command to verify contracts:
-```
-npx truffle run verify <contractName>[@<address>] [--network <network>]
-```
-- `contractName`: The name of the contract to verify.
-- `address`: The address of the contract (required for proxy implementation contracts).
-- `network`: The network to verify the contract on (default is `development`).
 
 ## Launch Steps
 1. Migrate `Schnoodle`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.

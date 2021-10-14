@@ -4,7 +4,7 @@ const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const [ serviceAccount, stakingPool, eleemosynary ] = accounts;
 const { BN, singletons } = require('@openzeppelin/test-helpers');
 
-const { testContract } = require(`../migrations-config.development.js`);
+const { testContract } = require(`../migrations-config.develop.js`);
 const Schnoodle = contract.fromArtifact(testContract);
 
 const { assert } = require('chai');
@@ -25,14 +25,15 @@ beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
   feePercent = chance.integer({ min: 1, max: 20 });
   donationPercent = chance.integer({ min: 1, max: 20 });
+  stakingPercent = chance.integer({ min: 1, max: 20 });
 
   await singletons.ERC1820Registry(serviceAccount);
 
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialTokens, serviceAccount, stakingPool);
+  await schnoodle.initialize(initialTokens, serviceAccount);
   await schnoodle.changeFeePercent(feePercent);
   await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
-  await schnoodle.changeStakingPercent(feePercent);
+  await schnoodle.changeStaking(stakingPool, stakingPercent);
 });
 
 describe('Balance', () => {

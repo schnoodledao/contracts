@@ -15,10 +15,10 @@ module.exports = async function main(callback) {
 
         await singletons.ERC1820Registry(serviceAccount);
 
-        const { testContract } = require(`../migrations-config.development.js`);
+        const { testContract } = require(`../migrations-config.develop.js`);
         const Schnoodle = artifacts.require(testContract);
         const schnoodle = await Schnoodle.new();
-        await schnoodle.initialize(100000, serviceAccount, stakingPool);
+        await schnoodle.initialize(100000, serviceAccount);
         const stakingFund = await schnoodle.stakingFund();
 
         const chance = new Chance();
@@ -27,7 +27,7 @@ module.exports = async function main(callback) {
         const stakingPercent = chance.integer({ min: 1, max: 5 });
         await schnoodle.changeFeePercent(feePercent);
         await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
-        await schnoodle.changeStakingPercent(stakingPercent);
+        await schnoodle.changeStaking(stakingPool, stakingPercent);
 
         console.log(`Service Account: ${serviceAccount}`);
         console.log(`Eleemosynary:    ${eleemosynary}`);
