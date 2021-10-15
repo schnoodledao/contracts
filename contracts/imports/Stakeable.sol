@@ -19,7 +19,6 @@ contract Stakeable is Initializable {
     uint256 private _stakingSupply;
     uint256 private _rewardPool;
 
-    /// A stake struct is used to represent the way we store stakes. A Stake will contain the user's address, the amount staked and a timestamp representing the time of the stake
     struct Stake {
         uint256 amount;
         uint256 blockNumber;
@@ -31,10 +30,10 @@ contract Stakeable is Initializable {
         _stakingFund = stakingFund;
     }
 
-    /// Used to make a stake for an sender. It will remove the amount staked from the staker's account and place those tokens inside a stake container StakeID 
+    /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
     function addStake(uint256 amount) public {
         require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stakeable: stake amount exceeds unstaked balance");
-        require(amount > 0, "Stakeable: Cannot stake nothing");
+        require(amount > 0, "Stakeable: stake amount must be nonzero");
 
         uint256 blockNumber = block.number;
         _stakes[msg.sender].push(Stake(amount, blockNumber, 0));
@@ -46,16 +45,20 @@ contract Stakeable is Initializable {
         emit Staked(msg.sender, amount, blockNumber);
     }
 
-    /// Takes in an amount and a index of the stake and will remove tokens from that stake. index is the user's stake counter, starting at 0 for the first stake
+    /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
     function withdrawStake(uint256 index, uint256 amount) public virtual returns(uint256) {
-        Stake memory stake = _stakes[msg.sender][index];
-        require(stake.amount >= amount, "Stakeable: Cannot withdraw more than you have staked");
+        Stake[] memory stakes = _stakes[msg.sender];
+        Stake memory stake = stakes[index];
+        require(stake.amount >= amount, "Stakeable: cannot withdraw more than you have staked");
 
         uint256 blockNumber = block.number;
+
+        // Calculate the stake amount multiplied across the number of block since the start of the stake
         uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
 
         _updateCumulativeTotal(blockNumber);
 
+        // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes
         uint256 reward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / _cumulativeTotal;
 
         _cumulativeTotal -= cumulativeAmount;
@@ -65,7 +68,8 @@ contract Stakeable is Initializable {
         _totals[msg.sender] -= amount;
 
         if (_stakes[msg.sender][index].amount == 0) {
-            delete _stakes[msg.sender][index];
+            _stakes[msg.sender][index] = stakes[stakes.length - 1];
+            _stakes[msg.sender].pop();
         }
 
         return reward;

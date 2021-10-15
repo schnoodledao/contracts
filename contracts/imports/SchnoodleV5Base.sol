@@ -74,7 +74,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         _transferTax(recipient, _eleemosynary, amount, _donationPercent, transferCallback);
     }
 
-    function _transferTax(address from, address to, uint256 amount, uint256 percent, function(address, address, uint256) internal transferCallback) private {
+    function _transferTax(address from, address to, uint256 amount, uint256 percent, function(address, address, uint256) internal transferCallback) internal {
         // Ignore tax if not enabled
         if (to != address(0)) {
             uint256 taxAmount = amount * percent / 100;

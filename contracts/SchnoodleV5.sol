@@ -19,6 +19,11 @@ contract SchnoodleV5 is SchnoodleV5Base, Stakeable {
         __Stakeable_init(address(this), _stakingFund);
     }
 
+    function payFeeAndDonate(address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
+        super.payFeeAndDonate(recipient, amount, reflectedAmount, transferCallback);
+        _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
+    }
+
     function stakingFund() public view returns (address) {
         return _stakingFund;
     }
