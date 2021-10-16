@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Schnoodle from "../../../../contracts/SchnoodleV5.json";
+import Schnoodle from "../contracts/SchnoodleV5.json";
 import getWeb3 from "../getWeb3";
 const bigInt = require("big-integer");
 
@@ -92,6 +92,7 @@ export class Staking extends Component {
           <tr>
             <th>Block Number</th>
             <th>Amount</th>
+            <th>Claimable</th>
           </tr>
         </thead>
         <tbody>
@@ -99,6 +100,7 @@ export class Staking extends Component {
             <tr key={stake.blockNumber}>
               <td>{stake.blockNumber}</td>
               <td>{this.scaleDownUnits(stake.amount)}</td>
+              <td>{this.scaleDownUnits(stake.claimable)}</td>
               <td><button className='btn btn-primary' onClick={() => this.withdrawStake(index, stake.amount)}>{withdraw}</button></td>
             </tr>
           )}

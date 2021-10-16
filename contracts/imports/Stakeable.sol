@@ -77,7 +77,7 @@ contract Stakeable is Initializable {
         uint256 newCumulativeTotal = _newCumulativeTotal(blockNumber);
 
         // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes
-        uint256 reward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
+        uint256 reward = cumulativeAmount == 0 ? 0 : _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
 
         // The returned new cumulative total should not include the amount being withdrawn
         newCumulativeTotal -= cumulativeAmount;
@@ -105,7 +105,14 @@ contract Stakeable is Initializable {
     }
 
     function stakingSummary() public view returns(Stake[] memory) {
-        return _stakes[msg.sender];
+        Stake[] memory stakes = _stakes[msg.sender];
+        uint256 blockNumber = block.number;
+
+        for (uint256 i = 0; i < stakes.length; i++) {
+            stakes[i].claimable = _reward(stakes[i], blockNumber);
+        }
+
+        return stakes;
     }
 
     event Staked(address indexed user, uint256 amount, uint256 blockNumber);
