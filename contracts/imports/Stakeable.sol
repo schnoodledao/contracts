@@ -39,7 +39,7 @@ contract Stakeable is Initializable {
         _stakes[msg.sender].push(Stake(amount, blockNumber, 0));
         _totals[msg.sender] += amount;
 
-        _updateCumulativeTotal(blockNumber);
+        _updateCumulativeTotal(_newCumulativeTotal(blockNumber), blockNumber);
         _total += amount;
 
         emit Staked(msg.sender, amount, blockNumber);
@@ -53,15 +53,9 @@ contract Stakeable is Initializable {
 
         uint256 blockNumber = block.number;
 
-        // Calculate the stake amount multiplied across the number of block since the start of the stake
-        uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
+        (uint256 reward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
-        _updateCumulativeTotal(blockNumber);
-
-        // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes
-        uint256 reward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / _cumulativeTotal;
-
-        _cumulativeTotal -= cumulativeAmount;
+        _updateCumulativeTotal(newCumulativeTotal, blockNumber);
         _total -= amount;
 
         _stakes[msg.sender][index].amount -= amount;
@@ -75,9 +69,34 @@ contract Stakeable is Initializable {
         return reward;
     }
 
-    function _updateCumulativeTotal(uint256 blockNumber) private {
-        // Update the cumulative total of all blocks since the previous such calculation
-        _cumulativeTotal += _total * (blockNumber - _lastBlockNumber);
+    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private view returns(uint256, uint256) {
+        // Calculate the stake amount multiplied across the number of blocks since the start of the stake
+        uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
+
+        // Get the new cumulative total of all stakes as the current stored value is from the previous staking activity
+        uint256 newCumulativeTotal = _newCumulativeTotal(blockNumber);
+
+        // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes
+        uint256 reward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
+
+        // The returned new cumulative total should not include the amount being withdrawn
+        newCumulativeTotal -= cumulativeAmount;
+
+        return (reward, newCumulativeTotal);
+    }
+
+    function _reward(Stake memory stake, uint256 blockNumber) private view returns(uint256) {
+        (uint256 reward,) = _rewardInfo(stake, stake.amount, blockNumber);
+        return reward;
+    }
+
+    function _newCumulativeTotal(uint256 blockNumber) private view returns(uint256) {
+        // Add the total of all stakes multiplied across all blocks since the previous calculation to the cumulative total
+        return _cumulativeTotal + _total * (blockNumber - _lastBlockNumber);
+    }
+
+    function _updateCumulativeTotal(uint256 cumulativeTotal, uint256 blockNumber) private {
+        _cumulativeTotal = cumulativeTotal;
         _lastBlockNumber = blockNumber;
     }
 

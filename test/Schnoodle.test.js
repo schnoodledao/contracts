@@ -18,6 +18,7 @@ let schnoodle;
 let initialTokens;
 let feePercent;
 let donationPercent;
+let stakingPercent;
 
 const data = web3.utils.sha3(chance.string());
 
@@ -142,7 +143,7 @@ describe('Transfer', () => {
       const deltaPercent = account == sender
         ? -100
         : (account == recipient
-          ? 100 - feePercent - donationPercent
+          ? 100 - feePercent - donationPercent - stakingPercent
           : (account == eleemosynary
             ? donationPercent - feePercent / 10 // A fee is also paid on the donation itself
             : 0));
@@ -192,7 +193,7 @@ describe('Staking', () => {
 
   it('should revert on attempt to transfer more tokens than are unstaked', async() => {
     const transferAmount = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Stakeable: transfer exceeds unstaked balance");
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are available including staked', async() => {

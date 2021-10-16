@@ -47,7 +47,7 @@ contract SchnoodleV5 is SchnoodleV5Base, Stakeable {
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
-            require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer exceeds unstaked balance");
+            require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);

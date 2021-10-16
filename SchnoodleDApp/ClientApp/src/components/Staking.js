@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Schnoodle from "../contracts/SchnoodleV5.json";
+import Schnoodle from "../../../../contracts/SchnoodleV5.json";
 import getWeb3 from "../getWeb3";
 const bigInt = require("big-integer");
 
