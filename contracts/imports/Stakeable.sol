@@ -104,7 +104,7 @@ contract Stakeable is Initializable {
         return _totals[account];
     }
 
-    function stakingSummary() public view returns(Stake[] memory) {
+    function stakingSummary() public view virtual returns(Stake[] memory) {
         Stake[] memory stakes = _stakes[msg.sender];
         uint256 blockNumber = block.number;
 

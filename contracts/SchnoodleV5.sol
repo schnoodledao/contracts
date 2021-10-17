@@ -54,19 +54,32 @@ contract SchnoodleV5 is SchnoodleV5Base, Stakeable {
     }
 
     function withdrawStake(uint256 index, uint256 amount) public virtual override returns(uint256) {
-        uint256 rewardFund = super.withdrawStake(index, amount);
-        _transferFromReflected(_stakingFund, _msgSender(), _getReflectedAmount(rewardFund));
+        uint256 rewardFromFund = super.withdrawStake(index, amount);
+        _transferFromReflected(_stakingFund, _msgSender(), _getReflectedAmount(rewardFromFund));
 
-        uint256 rewardPool;
-        if (_stakingPool != address(0)) {
-            rewardPool = balanceOf(_stakingPool) * rewardFund / totalSupply();
-            _transferFromReflected(_stakingPool, _msgSender(), _getReflectedAmount(rewardPool));
+        uint256 rewardFromPool = _rewardFromPool(rewardFromFund);
+        if (rewardFromPool > 0) {
+            _transferFromReflected(_stakingPool, _msgSender(), _getReflectedAmount(rewardFromPool));
         }
 
-        uint256 rewardTotal = rewardFund + rewardPool;
+        uint256 rewardTotal = rewardFromFund + rewardFromPool;
         emit Withdrawn(_msgSender(), index, amount, rewardTotal);
         
         return rewardTotal;
+    }
+
+    function stakingSummary() public view virtual override returns(Stake[] memory) {
+        Stake[] memory stakes = super.stakingSummary();
+
+        for (uint256 i = 0; i < stakes.length; i++) {
+            stakes[i].claimable += _rewardFromPool(stakes[i].claimable);
+        }
+
+        return stakes;
+    }
+
+    function _rewardFromPool(uint256 rewardFromFund) private view returns(uint256) {
+        return _stakingPool == address(0) ? 0 : balanceOf(_stakingPool) * rewardFromFund / totalSupply();
     }
 
     event StakingChanged(address stakingPool, uint256 percent);
