@@ -8,7 +8,10 @@ export class Staking extends Component {
 
   constructor(props) {
     super(props);
+
     this.state = {
+      success: false,
+      message: null,
       web3: null,
       accounts: null,
       schnoodle: null,
@@ -17,9 +20,10 @@ export class Staking extends Component {
       stakingFundBalance: 0,
       stakingPoolBalance: 0,
       balance: 0,
+      amountToStake: 1,
       stakedBalance: 0,
       stakingSummary: [],
-      amountToStake: 0
+      withdrawItems: []
     };
 
     this.addStake = this.addStake.bind(this);
@@ -38,16 +42,17 @@ export class Staking extends Component {
 
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
-    } catch (error) {
+    } catch (err) {
       alert(`Failed to load web3, accounts, or contract. Check console for details.`);
-      console.error(error);
+      console.error(err);
     }
   }
 
   async getInfo() {
-    const { web3, schnoodle, selectedAddress } = this.state;
+    const { schnoodle, selectedAddress } = this.state;
 
     const decimals = await schnoodle.methods.decimals().call();
+    this.setState({ decimals: decimals });
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
     const stakingPoolBalance = await schnoodle.methods.balanceOf((await schnoodle.methods.staking().call())[0]).call();
 
@@ -55,7 +60,12 @@ export class Staking extends Component {
     const stakedBalance = await schnoodle.methods.stakedBalanceOf(selectedAddress).call();
     const stakingSummary = await schnoodle.methods.stakingSummary().call();
 
-    this.setState({ decimals: decimals, stakingFundBalance: stakingFundBalance, stakingPoolBalance: stakingPoolBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary });
+    let withdrawItems = [];
+    for (let i = 0; i < stakingSummary.length; i++) {
+      withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
+    }
+
+    this.setState({ stakingFundBalance: stakingFundBalance, stakingPoolBalance: stakingPoolBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -66,20 +76,54 @@ export class Staking extends Component {
     return bigInt(amount).multiply(10 ** this.state.decimals);
   }
 
+  async handleResponse(response) {
+    if (response.status) {
+      this.setState({ success: true, message: response.transactionHash });
+    }
+
+    await this.getInfo();
+  }
+
+  handleError(err) {
+    console.error(err);
+    let message = err.message;
+
+    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
+      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
+    }
+
+    this.setState({ success: false, message: message });
+    alert(message);
+  }
+
   async addStake() {
-    const { web3, accounts, schnoodle, selectedAddress, amountToStake } = this.state;
-
-    await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString()).send({ from: selectedAddress });
+    try {
+      const { schnoodle, selectedAddress, amountToStake } = this.state;
+      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString()).send({ from: selectedAddress });
+      this.handleResponse(response);
+    } catch (err) {
+      await this.handleError(err);
+    }
   }
 
-  async withdrawStake(index, amount) {
-    const { web3, accounts, schnoodle, selectedAddress, amountToStake } = this.state;
-
-    await schnoodle.methods.withdrawStake(index, amount).send({ from: selectedAddress });
+  async withdrawStake(i) {
+    try {
+      const { schnoodle, selectedAddress, withdrawItems } = this.state;
+      const response = await schnoodle.methods.withdrawStake(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      this.handleResponse(response);
+    } catch (err) {
+      await this.handleError(err);
+    }
   }
 
-  async updateAmountToStake(e) {
-    const amountToStake = parseInt(e.target.value);
+  updateWithdrawItem(i, e) {
+    let withdrawItems = this.state.withdrawItems;
+    withdrawItems[i] = e.target.value;
+    this.setState({ withdrawItems: withdrawItems });
+  }
+
+  updateAmountToStake(e) {
+    const amountToStake = e.target.value;
     this.setState({ amountToStake: amountToStake ? amountToStake : 0 });
   }
 
@@ -92,18 +136,25 @@ export class Staking extends Component {
           <tr>
             <th>Block Number</th>
             <th>Amount</th>
-            <th>Claimable</th>
+            <th>Withdraw</th>
+            <th>Claimable Reward</th>
           </tr>
         </thead>
         <tbody>
-          {stakingSummary.map((stake, index) =>
-            <tr key={stake.blockNumber}>
-              <td>{stake.blockNumber}</td>
-              <td>{this.scaleDownUnits(stake.amount)}</td>
-              <td>{this.scaleDownUnits(stake.claimable)}</td>
-              <td><button className='btn btn-primary' onClick={() => this.withdrawStake(index, stake.amount)}>{withdraw}</button></td>
-            </tr>
-          )}
+          {stakingSummary.map((stake, i) => {
+            const amount = this.scaleDownUnits(stake.amount);
+            return (
+              <tr key={stake.blockNumber}>
+                <td>{stake.blockNumber}</td>
+                <td>{amount}</td>
+                <td>
+                  <button className='btn btn-primary' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
+                  <span style={{ paddingLeft: 10 }}><input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} /></span>
+                </td>
+                <td>{this.scaleDownUnits(stake.claimable)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );
@@ -111,6 +162,9 @@ export class Staking extends Component {
 
   render() {
     const stake = 'Stake';
+    const balance = this.scaleDownUnits(this.state.balance);
+    const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
+    const stakeableAmount = balance - stakedBalance;
 
     if (!this.state.web3) {
       return <div>Loading...</div>;
@@ -121,14 +175,24 @@ export class Staking extends Component {
 
         <div>Staking fund balance: {this.scaleDownUnits(this.state.stakingFundBalance)}</div>
         <div>Staking pool balance: {this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
-
-        <div>Your balance: {this.scaleDownUnits(this.state.balance)}</div>
-        <div>Staked balance: {this.scaleDownUnits(this.state.stakedBalance)}</div>
-        <div>Staking summary: {this.renderStakingSummaryTable(this.state.stakingSummary)}</div>
-
-        <strong>Amount to Stake:</strong>
-        <p><input type='text' placeholder='1000' value={this.state.amountToStake} onChange={this.updateAmountToStake} /></p>
-        <button className='btn btn-primary' onClick={this.addStake}>{stake}</button>
+        <p />
+        <strong>Your Tokens</strong>
+        <div>Total balance: {balance}</div>
+        <div>Staked balance: {stakedBalance}</div>
+        <div>Stakeable amount: {stakeableAmount}</div>
+        <p />
+        <strong>Add Stake</strong>
+        <form>
+          <fieldset disabled={stakeableAmount == 0}>
+            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} />
+            <span style={{ paddingLeft: 10 }}><button className='btn btn-primary' disabled={this.state.amountToStake < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button></span>
+          </fieldset>
+        </form>
+        <p />
+        <strong>Your Stakes</strong>
+        <div>{this.renderStakingSummaryTable(this.state.stakingSummary)}</div>
+        <p />
+        <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
       </div>
     );
   }
