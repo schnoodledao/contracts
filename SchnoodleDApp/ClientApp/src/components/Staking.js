@@ -21,13 +21,16 @@ export class Staking extends Component {
       stakingPoolBalance: 0,
       balance: 0,
       amountToStake: 1,
+      lockBlocks: 1,
       stakedBalance: 0,
       stakingSummary: [],
+      blockNumber: 0,
       withdrawItems: []
     };
 
     this.addStake = this.addStake.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
+    this.updateLockBlocks = this.updateLockBlocks.bind(this);
   }
 
   async componentDidMount() {
@@ -49,7 +52,7 @@ export class Staking extends Component {
   }
 
   async getInfo() {
-    const { schnoodle, selectedAddress } = this.state;
+    const { web3, schnoodle, selectedAddress } = this.state;
 
     const decimals = await schnoodle.methods.decimals().call();
     this.setState({ decimals: decimals });
@@ -58,14 +61,15 @@ export class Staking extends Component {
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
     const stakedBalance = await schnoodle.methods.stakedBalanceOf(selectedAddress).call();
-    const stakingSummary = await schnoodle.methods.stakingSummary().call();
+    const stakingSummary = [].concat(await schnoodle.methods.stakingSummary().call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
+    const blockNumber = await web3.eth.getBlockNumber();
 
     let withdrawItems = [];
     for (let i = 0; i < stakingSummary.length; i++) {
       withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, stakingPoolBalance: stakingPoolBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, stakingPoolBalance: stakingPoolBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -98,8 +102,8 @@ export class Staking extends Component {
 
   async addStake() {
     try {
-      const { schnoodle, selectedAddress, amountToStake } = this.state;
-      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString()).send({ from: selectedAddress });
+      const { schnoodle, selectedAddress, amountToStake, lockBlocks } = this.state;
+      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString(), lockBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -124,7 +128,12 @@ export class Staking extends Component {
 
   updateAmountToStake(e) {
     const amountToStake = e.target.value;
-    this.setState({ amountToStake: amountToStake ? amountToStake : 0 });
+    this.setState({ amountToStake: amountToStake });
+  }
+
+  updateLockBlocks(e) {
+    const lockBlocks = e.target.value;
+    this.setState({ lockBlocks: lockBlocks });
   }
 
   renderStakingSummaryTable(stakingSummary) {
@@ -136,6 +145,7 @@ export class Staking extends Component {
           <tr>
             <th>Block Number</th>
             <th>Amount</th>
+            <th>Remaining Lock Blocks</th>
             <th>Withdraw</th>
             <th>Claimable Reward</th>
           </tr>
@@ -147,6 +157,7 @@ export class Staking extends Component {
               <tr key={stake.blockNumber}>
                 <td>{stake.blockNumber}</td>
                 <td>{amount}</td>
+                <td>{Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber)}</td>
                 <td>
                   <button className='btn btn-primary' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
                   <span style={{ paddingLeft: 10 }}><input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} /></span>
@@ -183,9 +194,10 @@ export class Staking extends Component {
         <p />
         <strong>Add Stake</strong>
         <form>
-          <fieldset disabled={stakeableAmount == 0}>
-            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} />
-            <span style={{ paddingLeft: 10 }}><button className='btn btn-primary' disabled={this.state.amountToStake < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button></span>
+          <fieldset disabled={stakeableAmount === 0}>
+            <div>Amount: <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} /></div>
+            <div>Lock blocks: <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} /></div>
+            <button type="button" className='btn btn-primary' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
           </fieldset>
         </form>
         <p />
