@@ -18,23 +18,7 @@ code {
   border-color: #1861ac; */
 }
 
-.bottomstats:before {
-content: "";
-position: absolute;
-z-index: 0;
-inset: 0px;
-padding: 3.5px;
-border-radius: 1rem;
-background: rgba(0, 0, 0, 0) linear-gradient(90deg, rgb(76, 29, 149) -6.85%, rgba(139, 92, 246) 109.03%) repeat scroll 0% 0%;
-mask-mode: match-source, match-source;
-mask-repeat: repeat, repeat;
-mask-clip: content-box, border-box;
-mask-origin: content-box, border-box;
-mask-position: 0% 0%, 0% 0%;
-mask-size: auto, auto;
-mask-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px), linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px);
-mask-composite: exclude;
-}
+
 
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
@@ -48,7 +32,76 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+.tabledata {
+  @apply text-sm md:text-2xl text-left px-1 py-4 md:px-8;
+}
+.hidemd {
+  @apply inline-block md:hidden;
+}
+.hidesm {
+  @apply hidden md:inline-block;
+}
+.textfade {
+  @apply bg-clip-text text-transparent bg-gradient-to-r;
+}
+.purplefade {
+  @apply textfade from-purple-800 to-purple-500;
+}
 
+.greenfade {
+  @apply textfade from-green-600 to-green-400;
+}
+
+.stats {
+  @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-10;
+}
+.stat {
+  @apply place-items-center place-content-center;
+}
+
+.stat-value {
+  @apply text-2xl md:text-5xl;
+}
+.stat-title, .card-title, .staketitle {
+  @apply uppercase;
+}
+.topstats .stat-title {
+  @apply text-secondary font-bold;
+}
+.bottomstats .stat-title {
+  @apply font-bold;
+}
+.topstats .stat {
+  @apply bg-base-100;
+}
+.bottomstats .stat {
+  @apply bg-base-200;
+}
+.titlefont {
+  @apply font-bold mb-6 md:mb-10;
+}
+
+.fullhalfwidth {
+  @apply w-full md:w-1/2;
+}
+
+.bottomstats:before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0px;
+  padding: 3.5px;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0) linear-gradient(90deg, rgb(76, 29, 149) -6.85%, rgba(139, 92, 246) 109.03%) repeat scroll 0% 0%;
+  mask-mode: match-source, match-source;
+  mask-repeat: repeat, repeat;
+  mask-clip: content-box, border-box;
+  mask-origin: content-box, border-box;
+  mask-position: 0% 0%, 0% 0%;
+  mask-size: auto, auto;
+  mask-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px), linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px);
+  mask-composite: exclude;
+  }
 
 @keyframes blink {
   /**

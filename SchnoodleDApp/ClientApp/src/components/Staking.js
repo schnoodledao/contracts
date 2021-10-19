@@ -134,10 +134,10 @@ export class Staking extends Component {
       <table className='table table-striped w-full text-2xl mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
         <thead >
           <tr >
-            <th class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'><span class="inline-block md:hidden">B/N</span><span class="hidden md:inline-block">Block Number</span></th>
-            <th class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>Amount</th>
-            <th class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>Withdraw</th>
-            <th class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'><span class="inline-block md:hidden">Claimable</span><span class="hidden md:inline-block">Claimable Reward</span></th>
+            <th><span class="hidemd">B/N</span><span class="hidesm">Block Number</span></th>
+            <th>Amount</th>
+            <th>Withdraw</th>
+            <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
         <tbody class='text-2xl'>
@@ -145,13 +145,13 @@ export class Staking extends Component {
             const amount = this.scaleDownUnits(stake.amount);
             return (
               <tr key={stake.blockNumber}>
-                <td  class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>{stake.blockNumber}</td>
-                <td  class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>{amount}</td>
-                <td  class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>
+                <td >{stake.blockNumber}</td>
+                <td >{amount}</td>
+                <td >
                   <button className='md:btn md:btn-secondary btn-sm pl-0 md:pl-3 mt-2 md:mt-0' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
                   <span style={{ paddingLeft: 10 }}><input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} /></span>
                 </td>
-                <td class='text-sm md:text-2xl text-left px-1 py-4 md:px-8'>{this.scaleDownUnits(stake.claimable)}</td>
+                <td>{this.scaleDownUnits(stake.claimable)}</td>
               </tr>
             );
           })}
@@ -169,10 +169,10 @@ export class Staking extends Component {
     if (!this.state.web3) {
       return <div class="overflow-hidden antialiased font-roboto">
       <div class="min-h-screen md:flex">
-          <div class="flex items-center justify-center w-full md:w-1/2">
+          <div class="flex items-center justify-center fullhalfwidth">
               <div class="max-w-lg">
               <img class="object-cover w-full my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                  <div class="text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500 md:text-8xl">STAKING</div>
+                  <div class="text-6xl font-black purplefade md:text-8xl">STAKING</div>
                   <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                   <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
              </div>
@@ -185,42 +185,42 @@ export class Staking extends Component {
       <div class="min-h-screen bg-neutral-focus mx-2 md:m-auto font-roboto">
     <div class="text-center container">
         <div class="text-base-200 w-full">
-            <h1 class="mt-10 mb-2 text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500 md:text-8xl leading-tight text-center md:text-left uppercase">
+            <h1 class="mt-10 mb-2 text-6xl font-black purplefade md:text-8xl leading-tight text-center md:text-left uppercase">
                 Staking</h1>
-            <p class="my-2 text-2xl md:text-3xl leading-tight font-bold mb-6 md:mb-10 w-2/3 md:w-full m-auto md:mx-0 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-purple-500">
+            <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
                 <span class="block md:hidden text-center">Stake SNOOD tokens,<br/>get SNOOD tokens</span>
                 <span class="hidden md:block text-left">Stake SNOOD tokens, get SNOOD tokens</span>
             </p>
-            <div class="w-full stats topstats grid-flow-row lg:grid-flow-col my-6 md:my-10 ">
-                <div class="stat place-items-center place-content-center bg-base-100">
-                    <div class="stat-title uppercase text-secondary text-bold">Staking fund balance</div>
-                    <div class="text-2xl md:text-5xl stat-value bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
+            <div class="stats topstats">
+                <div class="stat">
+                    <div class="stat-title">Staking fund balance</div>
+                    <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
                     <div class="stat-desc text-secondary">SNOOD</div>
                 </div>
-                <div class="stat place-items-center place-content-center bg-base-100">
-                <div class="stat-title uppercase text-secondary text-bold">Staking pool balance</div>
-                    <div class="text-2xl md:text-5xl stat-value bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400">{this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
+                <div class="stat">
+                <div class="stat-title">Staking pool balance</div>
+                    <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
                     <div class="stat-desc text-secondary">SNOOD</div>
                 </div>
             </div>
             <div class="card shadow-sm text-accent-content mt-5 container-lg">
 
                 <div class="card-body my-6 md:my-10 rounded-4xl">
-                    <h2 class="card-title text-3xl md:text-5xl text-purple-500 uppercase font-bold mb-6 md:mb-10"><span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500">Your SNOOD Tokens</span></h2>
-                    <div class="w-full shadow bottomstats stats grid-flow-row lg:grid-flow-col my-6 md:my-10">
-                        <div class="stat place-items-center place-content-center bg-base-200">
-                            <div class="stat-title uppercase">Total balance</div>
-                            <div class="text-2xl md:text-5xl stat-value bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500">{balance}</div>
+                    <h2 class="card-title text-3xl md:text-5xl text-purple-500 titlefont"><span class="purplefade">Your SNOOD Tokens</span></h2>
+                    <div class="shadow bottomstats stats ">
+                        <div class="stat">
+                            <div class="stat-title">Total balance</div>
+                            <div class="stat-value purplefade">{balance}</div>
                             <div class="stat-desc">SNOOD</div>
                         </div>
-                        <div class="stat place-items-center place-content-center bg-base-200">
-                            <div class="stat-title uppercase">Staked balance</div>
-                            <div class="text-2xl md:text-5xl stat-value bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500">{stakedBalance}</div>
-                            <div class="stat-desc ">SNOOD</div>
+                        <div class="stat">
+                            <div class="stat-title">Staked balance</div>
+                            <div class="stat-value purplefade">{stakedBalance}</div>
+                            <div class="stat-desc">SNOOD</div>
                         </div>
-                        <div class="stat place-items-center place-content-center bg-base-200">
-                            <div class="stat-title uppercase">Stakeable amount</div>
-                            <div class="text-2xl md:text-5xl stat-value bg-clip-text text-transparent bg-gradient-to-r from-purple-800 to-purple-500">{stakeableAmount}</div>
+                        <div class="stat ">
+                            <div class="stat-title">Stakeable amount</div>
+                            <div class="stat-value purplefade">{stakeableAmount}</div>
                             <div class="stat-desc">SNOOD</div>
                         </div>
                     </div>
@@ -228,12 +228,12 @@ export class Staking extends Component {
 
 
                     <div class="divider text-white mt-10">
-                        <h3 class="text-xl md:text-2xl text-white leading-tight font-bold uppercase">Add Stake</h3>
+                        <h3 class="staketitle text-xl md:text-2xl text-white leading-tight font-bold ">Add Stake</h3>
                     </div>
 
                     <div class="card-actions text-center mx-auto w-full">
 
-                        <form class="form-control justify-center w-full md:w-1/2 mx-auto mt-10">
+                        <form class="form-control justify-center fullhalfwidth mx-auto mt-10">
                             <fieldset disabled={stakeableAmount===0 }>
                                 <div class="flex space-x-2">
                                     <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="w-full input input-accent input-bordered" /> 
