@@ -250,9 +250,9 @@ export class Staking extends Component {
             </div>
 
             <h3 class="mb-5 text-3xl staketitle mt-10">Your Stakes</h3>
-            <div class="overflow-x-auto text-secondary mb-5 mt-5 ">
+            <div class="overflow-x-auto text-secondary my-5 ">
                 {this.renderStakingSummaryTable(this.state.stakingSummary)}</div>
-            <div class="mb-5 mt-5">
+            <div class="my-5">
                 <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
             </div>
         </div>
