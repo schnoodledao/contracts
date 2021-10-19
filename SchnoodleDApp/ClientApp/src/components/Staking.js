@@ -172,7 +172,7 @@ export class Staking extends Component {
           <div class="flex items-center justify-center fullhalfwidth">
               <div class="max-w-lg">
               <img class="object-cover w-full my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                  <div class="text-6xl font-black purplefade md:text-8xl">STAKING</div>
+                  <div class="maintitles">STAKING</div>
                   <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                   <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
              </div>
@@ -185,7 +185,7 @@ export class Staking extends Component {
       <div class="min-h-screen bg-neutral-focus mx-2 md:m-auto font-roboto">
     <div class="text-center container">
         <div class="text-base-200 w-full">
-            <h1 class="mt-10 mb-2 text-6xl font-black purplefade md:text-8xl leading-tight text-center md:text-left uppercase">
+            <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">
                 Staking</h1>
             <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
                 <span class="block md:hidden text-center">Stake SNOOD tokens,<br/>get SNOOD tokens</span>
@@ -236,7 +236,7 @@ export class Staking extends Component {
                         <form class="form-control justify-center fullhalfwidth mx-auto mt-10">
                             <fieldset disabled={stakeableAmount===0 }>
                                 <div class="flex space-x-2">
-                                    <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="w-full input input-accent input-bordered" /> 
+                                    <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" /> 
                                     {
                                     /* <span style={{ paddingLeft: 10 }}>*/
                                     <button className='btn btn-accent' disabled={this.state.amountToStake < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
@@ -249,7 +249,7 @@ export class Staking extends Component {
                 </div>
             </div>
 
-            <h3 class="mb-5 text-3xl font-bold text-secondary mt-10">Your Stakes</h3>
+            <h3 class="mb-5 text-3xl staketitle mt-10">Your Stakes</h3>
             <div class="overflow-x-auto text-secondary mb-5 mt-5 ">
                 {this.renderStakingSummaryTable(this.state.stakingSummary)}</div>
             <div class="mb-5 mt-5">
