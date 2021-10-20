@@ -67,6 +67,9 @@ input[type=number] {
 .stat-title, .card-title {
   @apply uppercase;
 }
+.staketitle {
+  @apply uppercase;
+}
 .topstats .stat-title, .staketitle {
   @apply text-secondary font-bold;
 }
@@ -79,8 +82,9 @@ input[type=number] {
 .bottomstats .stat {
   @apply bg-base-200;
 }
-.titlefont {
-  @apply font-bold mb-6 md:mb-10;
+
+.headingfont {
+  @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
 .stakeinput {
   @apply w-full input-accent input-bordered input text-white;

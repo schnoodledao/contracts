@@ -216,9 +216,9 @@ export class Staking extends Component {
               </div>
             </div>
 
-            <div class="card shadow-sm text-accent-content mt-5 container-lg">
+            <div class="card shadow-sm text-accent-content mt-5 mb-5 container-lg">
               <div class="card-body my-6 md:my-10 rounded-4xl">
-                <h2 class="card-title text-3xl md:text-5xl text-purple-500 titlefont"><span class="purplefade">Your SNOOD Tokens</span></h2>
+                <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your SNOOD Tokens</span></h2>
                 <div class="shadow bottomstats stats ">
                   <div class="stat">
                     <div class="stat-title">Total balance</div>
@@ -267,7 +267,7 @@ export class Staking extends Component {
               </div>
             </div>
 
-            <h3 class="mb-5 text-3xl staketitle mt-10">Your Stakes</h3>
+            <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
             <div class="overflow-x-auto text-secondary my-5 ">
               {this.renderStakingSummaryTable(this.state.stakingSummary)}
             </div>
