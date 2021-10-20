@@ -150,7 +150,7 @@ export class Staking extends Component {
           <tr>
             <th><span class="hidemd">B/N</span><span class="hidesm">Block Number</span></th>
             <th>Amount</th>
-            <th>Remaining Lock Blocks</th>
+            <th><span class="hidemd">Blocks Left</span><span class="hidesm">Remaining Lock Blocks</span></th>
             <th>Withdraw</th>
             <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
@@ -164,8 +164,10 @@ export class Staking extends Component {
                 <td>{amount}</td>
                 <td>{Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber)}</td>
                 <td>
-                  <button className='md:btn md:btn-secondary btn-sm pl-0 md:pl-3 mt-2 md:mt-0' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
-                  <span style={{ paddingLeft: 10 }}><input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} /></span>
+                <div class="relative">
+                  <input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
+                  <button class="text-xs md:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary opacity-80 bordered border-secondary text-base-300 px-1 md:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
+                  </div>
                 </td>
                 <td>{this.scaleDownUnits(stake.claimable)}</td>
               </tr>
@@ -224,7 +226,7 @@ export class Staking extends Component {
               </div>
             </div>
 
-            <div class="card shadow-sm text-accent-content mt-5 mb-5 container-lg">
+            <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
               <div class="card-body my-6 md:my-10 rounded-4xl">
                 <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
                 <div class="shadow bottomstats stats ">
@@ -257,18 +259,18 @@ export class Staking extends Component {
                             <span class="label-text">Amount</span>
                           </label> 
                           <div class="relative">
-                            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput pr-16" />
-                            <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg" onClick={this.stakeAll}>ALL</button>
+                            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
+                            <button class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg">ALL</button>
                           </div>
                         </div>
-                        <div class="mb-3">
-                          <label class="label">
-                            <span class="label-text">Lock blocks</span>
-                          </label> 
-                          <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
-                        </div>
-                        <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                       </div>
+                      <div class="mb-3">
+                        <label class="label">
+                          <span class="label-text">Lock blocks</span>
+                        </label> 
+                        <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
+                      </div>
+                      <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                     </fieldset>
                   </form>
                 </div>

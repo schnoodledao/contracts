@@ -5,10 +5,24 @@ export class Home extends Component {
 
   render () {
     return (
-      <div>
-        <h1>Schnoodle X</h1>
-        <p>Welcome to Schnoodle X</p>
+      <div class="overflow-hidden antialiased font-roboto">
+            
+      <div class="min-h-screen md:flex">
+        <div class="flex items-center justify-center w-full">
+          <div class="container">
+          <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+            <div class="maintitles">SCHNOODLE X</div>
+            <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
+            <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">STAKING</p>
+            <a href="/staking">
+            <button class="px-4 py-2 mt-4 text-lg text-accent border-accent duration-200 transform border rounded-lg hover:bg-purple-100 focus:outline-none">
+                            Start Staking
+                        </button>
+                        </a>
+          </div>
+        </div>
       </div>
+    </div>
     );
   }
 }

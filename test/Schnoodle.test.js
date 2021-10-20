@@ -2,7 +2,7 @@
 
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
 const [ serviceAccount, stakingPool, eleemosynary ] = accounts;
-const { BN, singletons, time } = require('@openzeppelin/test-helpers');
+const { BN, singletons } = require('@openzeppelin/test-helpers');
 
 const { testContract } = require(`../migrations-config.develop.js`);
 const Schnoodle = contract.fromArtifact(testContract);
@@ -175,45 +175,28 @@ describe('Staking', () => {
     stakeholder = chance.pickone(stakeholderCandidates);
     stakeAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeholder))));
     startBalance = BigInt(await schnoodle.balanceOf(stakeholder));
+    await schnoodle.addStake(stakeAmount, { from: stakeholder });
+    const stakingSummary = await schnoodle.stakingSummary({ from: stakeholder });
+    console.log(stakingSummary);
   });
 
-  it('should increase the stakeholder\'s balance by a nonzero reward when a stake with 1 lock block is withdrawn', async() => {
-    await schnoodle.addStake(stakeAmount, 1, { from: stakeholder });
-    await time.advanceBlock();
+  it('should stake tokens increasing the stakeholder\'s balance by the reward', async() => {
     const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
     const reward = BigInt(receipt.logs.find(l => l.event == 'Withdrawn').args.reward);
-    assert.isTrue(reward > 0n, 'Staking reward is not positive');
     assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance wasn\'t increased by the reward amount');
   });
 
-  it('should not increase the stakeholder\'s balance when a stake with no lock blocks is withdrawn', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
-    await time.advanceBlock();
-    const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
-    const reward = BigInt(receipt.logs.find(l => l.event == 'Withdrawn').args.reward);
-    assert.isTrue(reward == 0n, 'Staking reward is not zero');
-    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance was wrongly increased');
-  });
-
-  it('should revert on attempt to withdraw during lock blocks', async() => {
-    await schnoodle.addStake(stakeAmount, chance.integer({ min: 1 }), { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "Stakeable: cannot withdraw during lock blocks");
-  });
-
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     const additionalStake = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
-    await truffleAssert.reverts(schnoodle.addStake(additionalStake, 0, { from: stakeholder }), "Stakeable: stake amount exceeds unstaked balance");
+    await truffleAssert.reverts(schnoodle.addStake(additionalStake, { from: stakeholder }), "Stakeable: stake amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are unstaked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     const transferAmount = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
     await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are available including staked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(startBalance + BigInt(1)), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
   });
 });

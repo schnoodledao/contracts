@@ -4,7 +4,7 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 # Prerequisites
 - [Node.js](https://nodejs.org/)
 - [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
-- Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
+- Local blockchain (use [`truffle develop`](https://www.trufflesuite.com/docs/truffle/reference/truffle-commands#develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
 # Setup
 ## Gnosis Safe

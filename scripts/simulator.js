@@ -79,8 +79,8 @@ module.exports = async function main(callback) {
       { account: accounts[5], add: true },
       { account: accounts[6], add: true },
       { account: accounts[7], add: true },
-      { account: accounts[8], add: true },
       { account: accounts[7], add: false },
+      { account: accounts[8], add: true },
       { account: accounts[9], add: true }
     ];
 
@@ -90,7 +90,7 @@ module.exports = async function main(callback) {
       // Add or withdraw stake depending on the add stake action being true or false
       if (stake.add) {
         amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stake.account))));
-        await schnoodle.addStake(amount, 1, { from: stake.account });
+        await schnoodle.addStake(amount, { from: stake.account });
       } else {
         amount = -BigInt(await schnoodle.stakedBalanceOf(stake.account));
         await schnoodle.withdrawStake(0, -amount, { from: stake.account });
@@ -128,6 +128,7 @@ module.exports = async function main(callback) {
       row += (total / decimalsFactor + BigInt(total % decimalsFactor == 0n ? 0 : 1)).toString().padStart(11) + delimiter;
 
       console.log(row);
+      callback(0);
     }
     } catch (error) {
       console.error(error);

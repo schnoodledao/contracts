@@ -23,7 +23,6 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
-  @apply text-xl;
 }
 .maintitles {
   @apply text-6xl font-black purplefade md:text-8xl;
@@ -31,11 +30,17 @@ input[type=number] {
 .tabledata {
   @apply text-sm md:text-2xl text-left px-1 py-4 md:px-8;
 }
+.table td {
+  @apply text-sm md:text-2xl px-1 md:px-4;
+}
+.table th {
+  @apply ml-0 text-xs md:text-xl px-1 md:px-4;
+}
 .hidemd {
-  @apply inline-block md:hidden;
+  @apply block md:hidden;
 }
 .hidesm {
-  @apply hidden md:inline-block;
+  @apply hidden md:block;
 }
 .textfade {
   @apply bg-clip-text text-transparent bg-gradient-to-r;
@@ -79,8 +84,14 @@ input[type=number] {
 .headingfont {
   @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
+.withdrawstake{
+  @apply input pr-16 w-full input-bordered text-white;
+}
+.withdrawinput{
+  @apply input-secondary withdrawstake text-sm md:text-2xl text-left;
+}
 .stakeinput {
-  @apply w-full input-accent input-bordered input text-white;
+  @apply input-accent withdrawstake text-xl;
 }
 .fullhalfwidth {
   @apply w-full md:w-1/2;
@@ -89,23 +100,6 @@ input[type=number] {
   @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
 }
 
-.bottomstats:before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0px;
-  padding: 3.5px;
-  border-radius: 1rem;
-  background: rgba(0, 0, 0, 0) linear-gradient(90deg, rgb(76, 29, 149) -6.85%, rgba(139, 92, 246) 109.03%) repeat scroll 0% 0%;
-  mask-mode: match-source, match-source;
-  mask-repeat: repeat, repeat;
-  mask-clip: content-box, border-box;
-  mask-origin: content-box, border-box;
-  mask-position: 0% 0%, 0% 0%;
-  mask-size: auto, auto;
-  mask-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px), linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px);
-  mask-composite: exclude;
-  }
 
 @keyframes blink {
   /**
