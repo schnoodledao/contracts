@@ -179,10 +179,13 @@ export class Staking extends Component {
   }
 
   render() {
-    const stake = 'Stake';
     const balance = this.scaleDownUnits(this.state.balance);
     const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
     const stakeableAmount = balance - stakedBalance;
+
+    const token = 'SNOOD';
+    const stakeTokens = `Stake ${token} tokens.`;
+    const earnTokens = `Earn ${token} tokens.`;
 
     if (!this.state.web3) {
       return (
@@ -191,7 +194,7 @@ export class Staking extends Component {
             <div class="flex items-center justify-center fullhalfwidth">
               <div class="max-w-lg">
                 <img class="object-cover w-full my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                <div class="maintitles">STAKING</div>
+                <div class="maintitles uppercase">Staking</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                 <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
               </div>
@@ -206,41 +209,41 @@ export class Staking extends Component {
           <div class="text-base-200 w-full">
             <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
             <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
-              <span class="block md:hidden text-center">Stake SNOOD tokens,<br/>get SNOOD tokens</span>
-              <span class="hidden md:block text-left">Stake SNOOD tokens, get SNOOD tokens</span>
+              <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
+              <span class="hidden md:block text-left">{stakeTokens} {earnTokens}</span>
             </p>
       
             <div class="stats topstats">
               <div class="stat">
                 <div class="stat-title">Staking fund balance</div>
                 <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
-                <div class="stat-desc text-secondary">SNOOD</div>
+                <div class="stat-desc text-secondary">{token}</div>
               </div>
               <div class="stat">
               <div class="stat-title">Staking pool balance</div>
                 <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
-                <div class="stat-desc text-secondary">SNOOD</div>
+                <div class="stat-desc text-secondary">{token}</div>
               </div>
             </div>
 
             <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
               <div class="card-body my-6 md:my-10 rounded-4xl">
-                <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your SNOOD Tokens</span></h2>
+                <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
                 <div class="shadow bottomstats stats ">
                   <div class="stat">
                     <div class="stat-title">Total balance</div>
                     <div class="stat-value purplefade">{balance}</div>
-                    <div class="stat-desc">SNOOD</div>
+                    <div class="stat-desc">{token}</div>
                   </div>
                   <div class="stat">
                     <div class="stat-title">Staked balance</div>
                     <div class="stat-value purplefade">{stakedBalance}</div>
-                    <div class="stat-desc">SNOOD</div>
+                    <div class="stat-desc">{token}</div>
                   </div>
                     <div class="stat ">
                     <div class="stat-title">Stakeable amount</div>
                     <div class="stat-value purplefade">{stakeableAmount}</div>
-                    <div class="stat-desc">SNOOD</div>
+                    <div class="stat-desc">{token}</div>
                   </div>
                 </div>
                 <div class="divider mt-10">
@@ -249,25 +252,25 @@ export class Staking extends Component {
 
                 <div class="card-actions text-center mx-auto w-full">
                   <form class="form-control justify-center fullhalfwidth mx-auto mt-5">
-                    <fieldset disabled={stakeableAmount === 0 }>
+                    <fieldset disabled={stakeableAmount === 0}>
                       <div class="flex flex-col">
                         <div>
-                            <label class="label">
-                              <span class="label-text">Amount</span>
-                            </label> 
-                            <div class="relative">
-                              <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
-                              <button class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg">ALL</button>
-                            </div>
+                          <label class="label">
+                            <span class="label-text">Amount</span>
+                          </label> 
+                          <div class="relative">
+                            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
+                            <button class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg">ALL</button>
                           </div>
                         </div>
-                        <div class="mb-3">
-                          <label class="label">
-                            <span class="label-text">Lock blocks</span>
-                          </label> 
-                          <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
-                        </div>
-                        <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
+                      </div>
+                      <div class="mb-3">
+                        <label class="label">
+                          <span class="label-text">Lock blocks</span>
+                        </label> 
+                        <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
+                      </div>
+                      <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                     </fieldset>
                   </form>
                 </div>
