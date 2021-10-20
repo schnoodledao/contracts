@@ -68,8 +68,8 @@ contract SchnoodleV5 is SchnoodleV5Base, Stakeable {
         return rewardTotal;
     }
 
-    function stakingSummary() public view virtual override returns(Stake[] memory) {
-        Stake[] memory stakes = super.stakingSummary();
+    function stakingSummary(address account) public view virtual override returns(Stake[] memory) {
+        Stake[] memory stakes = super.stakingSummary(account);
 
         for (uint256 i = 0; i < stakes.length; i++) {
             stakes[i].claimable += _rewardFromPool(stakes[i].claimable);

@@ -84,23 +84,27 @@ contract Stakeable is Initializable {
         if (cumulativeAmount > 0) {
             // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
             uint256 averageLockWeight = _totalLockWeight / _numStakes;
-            bytes16 x = ABDKMathQuad.mul(
-                ABDKMathQuad.div(
-                    ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
-                    ABDKMathQuad.fromUInt(averageLockWeight)
-                ),
-                ABDKMathQuad.sub(
-                    ABDKMathQuad.mul(ABDKMathQuad.fromUInt(stake.amount), ABDKMathQuad.fromUInt(stake.lockBlocks)),
-                    ABDKMathQuad.fromUInt(averageLockWeight)
-                )
-            );
 
-            // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
-            uint256 accuracy = 1000;
-            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
+            if (averageLockWeight > 0) {
+                // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
+                bytes16 x = ABDKMathQuad.mul(
+                    ABDKMathQuad.div(
+                        ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
+                        ABDKMathQuad.fromUInt(averageLockWeight)
+                    ),
+                    ABDKMathQuad.sub(
+                        ABDKMathQuad.mul(ABDKMathQuad.fromUInt(stake.amount), ABDKMathQuad.fromUInt(stake.lockBlocks)),
+                        ABDKMathQuad.fromUInt(averageLockWeight)
+                    )
+                );
 
-            // The returned new cumulative total should not include the amount being withdrawn
-            newCumulativeTotal -= cumulativeAmount;
+                // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
+                uint256 accuracy = 1000;
+                reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
+
+                // The returned new cumulative total should not include the reward
+                newCumulativeTotal -= cumulativeAmount;
+            }
         }
 
         return (reward, newCumulativeTotal);
@@ -140,8 +144,8 @@ contract Stakeable is Initializable {
         return _totals[account];
     }
 
-    function stakingSummary() public view virtual returns(Stake[] memory) {
-        Stake[] memory stakes = _stakes[msg.sender];
+    function stakingSummary(address account) public view virtual returns(Stake[] memory) {
+        Stake[] memory stakes = _stakes[account];
         uint256 blockNumber = block.number;
 
         for (uint256 i = 0; i < stakes.length; i++) {
@@ -154,4 +158,27 @@ contract Stakeable is Initializable {
     event Staked(address indexed user, uint256 amount, uint256 blockNumber);
 
     event Withdrawn(address indexed user, uint256 index, uint256 amount, uint256 reward);
+
+
+    function uint2str(uint _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint j = _i;
+        uint len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
 }
