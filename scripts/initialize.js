@@ -8,8 +8,9 @@ module.exports = async function main(callback) {
     const Schnoodle = artifacts.require(testContract);
     const schnoodle = await Schnoodle.deployed();
     
-    const staking = await schnoodle.staking();
-    await schnoodle.transfer(staking[0], BigInt(400000000000) * BigInt(10 ** 18));
+    stakingPool = accounts[2];
+    await schnoodle.changeStaking(stakingPool, 1);
+    await schnoodle.transfer(stakingPool, BigInt(400000000000) * BigInt(10 ** 18));
 
     callback(0);
   } catch (error) {
