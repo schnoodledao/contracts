@@ -1,14 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Provide sufficient contrast against white background */
+
 a {
-  color: #0366d6;
+  /* color: #0366d6; */
 }
 
 code {
-  color: #E01A76;
+  /* color: #E01A76; */
 }
 
 .btn-primary {
-  color: #fff;
+  /* color: #fff;
   background-color: #1b6ec2;
-  border-color: #1861ac;
+  border-color: #1861ac; */
+}
+
+
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+.maintitles {
+  @apply text-6xl font-black purplefade md:text-8xl;
+}
+.tabledata {
+  @apply text-sm md:text-2xl text-left px-1 py-4 md:px-8;
+}
+.hidemd {
+  @apply inline-block md:hidden;
+}
+.hidesm {
+  @apply hidden md:inline-block;
+}
+.textfade {
+  @apply bg-clip-text text-transparent bg-gradient-to-r;
+}
+.purplefade {
+  @apply textfade from-purple-800 to-purple-500;
+}
+
+.greenfade {
+  @apply textfade from-green-600 to-green-400;
+}
+
+.stats {
+  @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-10;
+}
+.stat {
+  @apply place-items-center place-content-center;
+}
+.stat-value {
+  @apply text-2xl md:text-5xl;
+}
+.stat-title, .card-title {
+  @apply uppercase;
+}
+.topstats .stat-title, .staketitle {
+  @apply text-secondary font-bold;
+}
+.bottomstats .stat-title {
+  @apply font-bold;
+}
+.topstats .stat {
+  @apply bg-base-100;
+}
+.bottomstats .stat {
+  @apply bg-base-200;
+}
+.titlefont {
+  @apply font-bold mb-6 md:mb-10;
+}
+.stakeinput {
+  @apply w-full input-accent input-bordered input text-white;
+}
+.fullhalfwidth {
+  @apply w-full md:w-1/2;
+}
+
+.bottomstats:before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0px;
+  padding: 3.5px;
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0) linear-gradient(90deg, rgb(76, 29, 149) -6.85%, rgba(139, 92, 246) 109.03%) repeat scroll 0% 0%;
+  mask-mode: match-source, match-source;
+  mask-repeat: repeat, repeat;
+  mask-clip: content-box, border-box;
+  mask-origin: content-box, border-box;
+  mask-position: 0% 0%, 0% 0%;
+  mask-size: auto, auto;
+  mask-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px), linear-gradient(rgb(255, 255, 255) 0px, rgb(255, 255, 255) 0px);
+  mask-composite: exclude;
+  }
+
+@keyframes blink {
+  /**
+   * At the start of the animation the dot
+   * has an opacity of .2
+   */
+  0% {
+    opacity: .2;
+  }
+  /**
+   * At 20% the dot is fully visible and
+   * then fades out slowly
+   */
+  20% {
+    opacity: 1;
+  }
+  /**
+   * Until it reaches an opacity of .2 and
+   * the animation can start again
+   */
+  100% {
+    opacity: .2;
+  }
+}
+
+.loading span {
+  /**
+   * Use the blink animation, which is defined above
+   */
+  animation-name: blink;
+  /**
+   * The animation should take 1.4 seconds
+   */
+  animation-duration: 1.4s;
+  /**
+   * It will repeat itself forever
+   */
+  animation-iteration-count: infinite;
+  /**
+   * This makes sure that the starting style (opacity: .2)
+   * of the animation is applied before the animation starts.
+   * Otherwise we would see a short flash or would have
+   * to set the default styling of the dots to the same
+   * as the animation. Same applies for the ending styles.
+   */
+  animation-fill-mode: both;
+}
+
+.loading span:nth-child(2) {
+  /**
+   * Starts the animation of the third dot
+   * with a delay of .2s, otherwise all dots
+   * would animate at the same time
+   */
+  animation-delay: .2s;
+}
+
+.loading span:nth-child(3) {
+  /**
+   * Starts the animation of the third dot
+   * with a delay of .4s, otherwise all dots
+   * would animate at the same time
+   */
+  animation-delay: .4s;
 }

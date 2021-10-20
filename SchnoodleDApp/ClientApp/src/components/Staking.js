@@ -140,17 +140,17 @@ export class Staking extends Component {
     const withdraw = 'Withdraw';
 
     return (
-      <table className='table table-striped' aria-labelledby="tabelLabel">
+      <table className='table table-striped w-full text-2xl mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
         <thead>
           <tr>
-            <th>Block Number</th>
+            <th><span class="hidemd">B/N</span><span class="hidesm">Block Number</span></th>
             <th>Amount</th>
             <th>Remaining Lock Blocks</th>
             <th>Withdraw</th>
-            <th>Claimable Reward</th>
+            <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class='text-2xl'>
           {stakingSummary.map((stake, i) => {
             const amount = this.scaleDownUnits(stake.amount);
             return (
@@ -159,7 +159,7 @@ export class Staking extends Component {
                 <td>{amount}</td>
                 <td>{Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber)}</td>
                 <td>
-                  <button className='btn btn-primary' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
+                  <button className='md:btn md:btn-secondary btn-sm pl-0 md:pl-3 mt-2 md:mt-0' disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
                   <span style={{ paddingLeft: 10 }}><input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} /></span>
                 </td>
                 <td>{this.scaleDownUnits(stake.claimable)}</td>
@@ -178,33 +178,91 @@ export class Staking extends Component {
     const stakeableAmount = balance - stakedBalance;
 
     if (!this.state.web3) {
-      return <div>Loading...</div>;
+      return (
+        <div class="overflow-hidden antialiased font-roboto">
+          <div class="min-h-screen md:flex">
+            <div class="flex items-center justify-center fullhalfwidth">
+              <div class="max-w-lg">
+                <img class="object-cover w-full my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <div class="maintitles">STAKING</div>
+                <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
+                <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
     return (
-      <div>
-        <h1>Staking</h1>
+      <div class="min-h-screen bg-neutral-focus mx-2 md:m-auto font-roboto">
+        <div class="text-center container">
+          <div class="text-base-200 w-full">
+            <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
+            <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
+              <span class="block md:hidden text-center">Stake SNOOD tokens,<br/>get SNOOD tokens</span>
+              <span class="hidden md:block text-left">Stake SNOOD tokens, get SNOOD tokens</span>
+            </p>
+      
+            <div class="stats topstats">
+              <div class="stat">
+                <div class="stat-title">Staking fund balance</div>
+                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
+                <div class="stat-desc text-secondary">SNOOD</div>
+              </div>
+              <div class="stat">
+              <div class="stat-title">Staking pool balance</div>
+                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
+                <div class="stat-desc text-secondary">SNOOD</div>
+              </div>
+            </div>
 
-        <div>Staking fund balance: {this.scaleDownUnits(this.state.stakingFundBalance)}</div>
-        <div>Staking pool balance: {this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
-        <p />
-        <strong>Your Tokens</strong>
-        <div>Total balance: {balance}</div>
-        <div>Staked balance: {stakedBalance}</div>
-        <div>Stakeable amount: {stakeableAmount}</div>
-        <p />
-        <strong>Add Stake</strong>
-        <form>
-          <fieldset disabled={stakeableAmount === 0}>
-            <div>Amount: <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} /></div>
-            <div>Lock blocks: <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} /></div>
-            <button type="button" className='btn btn-primary' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
-          </fieldset>
-        </form>
-        <p />
-        <strong>Your Stakes</strong>
-        <div>{this.renderStakingSummaryTable(this.state.stakingSummary)}</div>
-        <p />
-        <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+            <div class="card shadow-sm text-accent-content mt-5 container-lg">
+              <div class="card-body my-6 md:my-10 rounded-4xl">
+                <h2 class="card-title text-3xl md:text-5xl text-purple-500 titlefont"><span class="purplefade">Your SNOOD Tokens</span></h2>
+                <div class="shadow bottomstats stats ">
+                  <div class="stat">
+                    <div class="stat-title">Total balance</div>
+                    <div class="stat-value purplefade">{balance}</div>
+                    <div class="stat-desc">SNOOD</div>
+                  </div>
+                  <div class="stat">
+                    <div class="stat-title">Staked balance</div>
+                    <div class="stat-value purplefade">{stakedBalance}</div>
+                    <div class="stat-desc">SNOOD</div>
+                  </div>
+                    <div class="stat ">
+                    <div class="stat-title">Stakeable amount</div>
+                    <div class="stat-value purplefade">{stakeableAmount}</div>
+                    <div class="stat-desc">SNOOD</div>
+                  </div>
+                </div>
+                <div class="divider text-white mt-10">
+                  <h3 class="staketitle text-xl md:text-2xl text-white leading-tight font-bold ">Add Stake</h3>
+                </div>
+
+                <div class="card-actions text-center mx-auto w-full">
+                  <form class="form-control justify-center fullhalfwidth mx-auto mt-10">
+                    <fieldset disabled={stakeableAmount === 0 }>
+                      <div class="flex space-x-2">
+                        <div>Amount: <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" /></div>
+                        <div>Lock blocks: <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} /></div>
+                        <button type="button" className='btn btn-accent' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
+                      </div>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="mb-5 text-3xl staketitle mt-10">Your Stakes</h3>
+            <div class="overflow-x-auto text-secondary my-5 ">
+              {this.renderStakingSummaryTable(this.state.stakingSummary)}
+            </div>
+            <div class="my-5">
+              <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
