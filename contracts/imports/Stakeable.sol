@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC777/ERC777Upgradeable.sol";
+import "abdk-libraries-solidity/ABDKMathQuad.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
 /// @title A token staking superclass
@@ -12,16 +13,16 @@ contract Stakeable is Initializable {
     address private _stakingFund;
     mapping(address => Stake[]) private _stakes;
     mapping(address => uint256) private _totals;
-    uint256 private _total;
+    uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
     uint256 private _lastBlockNumber;
-
-    uint256 private _stakingSupply;
-    uint256 private _rewardPool;
+    uint256 private _totalLockWeight;
+    uint256 private _numStakes;
 
     struct Stake {
         uint256 amount;
         uint256 blockNumber;
+        uint256 lockBlocks;
         uint256 claimable;
     }
 
@@ -31,16 +32,16 @@ contract Stakeable is Initializable {
     }
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
-    function addStake(uint256 amount) public {
+    function addStake(uint256 amount, uint256 lockBlocks) public {
         require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stakeable: stake amount exceeds unstaked balance");
         require(amount > 0, "Stakeable: stake amount must be nonzero");
 
         uint256 blockNumber = block.number;
-        _stakes[msg.sender].push(Stake(amount, blockNumber, 0));
+        _stakes[msg.sender].push(Stake(amount, blockNumber, lockBlocks, 0));
         _totals[msg.sender] += amount;
+        _numStakes++;
 
-        _updateCumulativeTotal(_newCumulativeTotal(blockNumber), blockNumber);
-        _total += amount;
+        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, lockBlocks);
 
         emit Staked(msg.sender, amount, blockNumber);
     }
@@ -52,18 +53,20 @@ contract Stakeable is Initializable {
         require(stake.amount >= amount, "Stakeable: cannot withdraw more than you have staked");
 
         uint256 blockNumber = block.number;
+        require(stake.blockNumber + stake.lockBlocks < blockNumber, "Stakeable: cannot withdraw during lock blocks");
 
         (uint256 reward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
-        _updateCumulativeTotal(newCumulativeTotal, blockNumber);
-        _total -= amount;
+        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.lockBlocks);
 
         _stakes[msg.sender][index].amount -= amount;
         _totals[msg.sender] -= amount;
 
+        // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
         if (_stakes[msg.sender][index].amount == 0) {
             _stakes[msg.sender][index] = stakes[stakes.length - 1];
             _stakes[msg.sender].pop();
+            _numStakes--;
         }
 
         return reward;
@@ -76,13 +79,42 @@ contract Stakeable is Initializable {
         // Get the new cumulative total of all stakes as the current stored value is from the previous staking activity
         uint256 newCumulativeTotal = _newCumulativeTotal(blockNumber);
 
-        // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes
-        uint256 reward = cumulativeAmount == 0 ? 0 : _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
+        uint256 reward;
 
-        // The returned new cumulative total should not include the amount being withdrawn
-        newCumulativeTotal -= cumulativeAmount;
+        if (cumulativeAmount > 0) {
+            // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
+            uint256 averageLockWeight = _totalLockWeight / _numStakes;
+            bytes16 x = ABDKMathQuad.mul(
+                ABDKMathQuad.div(
+                    ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
+                    ABDKMathQuad.fromUInt(averageLockWeight)
+                ),
+                ABDKMathQuad.sub(
+                    ABDKMathQuad.mul(ABDKMathQuad.fromUInt(stake.amount), ABDKMathQuad.fromUInt(stake.lockBlocks)),
+                    ABDKMathQuad.fromUInt(averageLockWeight)
+                )
+            );
+
+            // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
+            uint256 accuracy = 1000;
+            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / 1000;
+
+            // The returned new cumulative total should not include the amount being withdrawn
+            newCumulativeTotal -= cumulativeAmount;
+        }
 
         return (reward, newCumulativeTotal);
+    }
+
+    function _multitplier(uint256 accuracy, bytes16 x) private pure returns(uint256) {
+        bytes16 one = ABDKMathQuad.fromUInt(1);
+
+        return ABDKMathQuad.toUInt(
+            ABDKMathQuad.mul(
+                ABDKMathQuad.fromUInt(accuracy),
+                ABDKMathQuad.div(one, ABDKMathQuad.add(one, ABDKMathQuad.exp(x)))
+            )
+        );
     }
 
     function _reward(Stake memory stake, uint256 blockNumber) private view returns(uint256) {
@@ -92,12 +124,16 @@ contract Stakeable is Initializable {
 
     function _newCumulativeTotal(uint256 blockNumber) private view returns(uint256) {
         // Add the total of all stakes multiplied across all blocks since the previous calculation to the cumulative total
-        return _cumulativeTotal + _total * (blockNumber - _lastBlockNumber);
+        return _cumulativeTotal + _totalTokens * (blockNumber - _lastBlockNumber);
     }
 
-    function _updateCumulativeTotal(uint256 cumulativeTotal, uint256 blockNumber) private {
+    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 lockBlocks) private {
         _cumulativeTotal = cumulativeTotal;
         _lastBlockNumber = blockNumber;
+        _totalTokens = uint256(int256(_totalTokens) + amountDelta);
+
+        // Adjust the sum of products of staked tokens and lock blocks to get a total weight - this is used to calculate the weighted average later
+        _totalLockWeight = uint256(int256(_totalLockWeight) + amountDelta * int256(lockBlocks));
     }
 
     function stakedBalanceOf(address account) public view returns(uint256) {
