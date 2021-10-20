@@ -30,6 +30,7 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+  @apply text-xl;
 }
 .maintitles {
   @apply text-6xl font-black purplefade md:text-8xl;
@@ -86,6 +87,9 @@ input[type=number] {
 }
 .fullhalfwidth {
   @apply w-full md:w-1/2;
+}
+.label-text {
+  @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
 }
 
 .bottomstats:before {
