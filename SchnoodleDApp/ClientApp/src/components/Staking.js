@@ -28,6 +28,7 @@ export class Staking extends Component {
       withdrawItems: []
     };
 
+    this.stakeAll = this.stakeAll.bind(this);
     this.addStake = this.addStake.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateLockBlocks = this.updateLockBlocks.bind(this);
@@ -98,6 +99,10 @@ export class Staking extends Component {
 
     this.setState({ success: false, message: message });
     alert(message);
+  }
+
+  stakeAll() {
+    this.setState({ amountToStake: this.scaleDownUnits(this.state.balance - this.state.stakedBalance) });
   }
 
   async addStake() {
@@ -245,19 +250,19 @@ export class Staking extends Component {
                     <fieldset disabled={stakeableAmount === 0 }>
                       <div class="flex flex-col">
                         <div>
-                            <label class="label">
-                              <span class="label-text">Amount</span>
-                            </label> 
-                            <div class="relative">
-                              <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput pr-16" />
-                              <button class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg">ALL</button>
-                            </div>
+                          <label class="label">
+                            <span class="label-text">Amount</span>
+                          </label> 
+                          <div class="relative">
+                            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput pr-16" />
+                            <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg" onClick={this.stakeAll}>ALL</button>
                           </div>
-                          <div class="mb-3">
-                            <label class="label">
-                              <span class="label-text">Lock blocks</span>
-                            </label> 
-                            <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
+                        </div>
+                        <div class="mb-3">
+                          <label class="label">
+                            <span class="label-text">Lock blocks</span>
+                          </label> 
+                          <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
                         </div>
                         <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>{stake}</button>
                       </div>

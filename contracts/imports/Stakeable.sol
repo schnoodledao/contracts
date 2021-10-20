@@ -82,11 +82,13 @@ contract Stakeable is Initializable {
         uint256 reward;
 
         if (cumulativeAmount > 0) {
-            // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
             uint256 averageLockWeight = _totalLockWeight / _numStakes;
-            bytes16 x = ABDKMathQuad.mul(
-                ABDKMathQuad.div(
-                    ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
+
+            if (averageLockWeight > 0) {
+                // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
+                bytes16 x = ABDKMathQuad.mul(
+                    ABDKMathQuad.div(
+                        ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
                     ABDKMathQuad.fromUInt(averageLockWeight)
                 ),
                 ABDKMathQuad.sub(
@@ -99,8 +101,9 @@ contract Stakeable is Initializable {
             uint256 accuracy = 1000;
             reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
 
-            // The returned new cumulative total should not include the amount being withdrawn
-            newCumulativeTotal -= cumulativeAmount;
+                // The returned new cumulative total should not include the amount being withdrawn
+                newCumulativeTotal -= cumulativeAmount;
+            }
         }
 
         return (reward, newCumulativeTotal);
