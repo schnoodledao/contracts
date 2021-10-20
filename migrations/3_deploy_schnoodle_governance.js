@@ -8,6 +8,8 @@ const SchnoodleGovernance = artifacts.require(contractName);
 const Schnoodle = artifacts.require("SchnoodleV1");
 
 module.exports = async function (deployer, network) {
+  if (network === 'develop') return;
+
   const { governance } = require(`../migrations-config.${network}.js`);
 
   await deployer.deploy(SchnoodleGovernance, governance.minDelay, governance.proposers, governance.executors);

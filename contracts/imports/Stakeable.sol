@@ -97,7 +97,7 @@ contract Stakeable is Initializable {
 
             // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
             uint256 accuracy = 1000;
-            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / 1000;
+            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
 
             // The returned new cumulative total should not include the amount being withdrawn
             newCumulativeTotal -= cumulativeAmount;

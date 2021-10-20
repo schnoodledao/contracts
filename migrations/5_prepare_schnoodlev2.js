@@ -7,7 +7,9 @@ const contractName = 'SchnoodleV2';
 const SchnoodleNew = artifacts.require(contractName);
 const SchnoodleOld = artifacts.require('SchnoodleV1');
 
-module.exports = async function (_deployer) {
+module.exports = async function (_deployer, network) {
+  if (network === 'develop') return;
+
   const proxyAddress = (await SchnoodleOld.deployed()).address;
   const schnoodleNewAddress = await prepareUpgrade(proxyAddress, SchnoodleNew);
 
