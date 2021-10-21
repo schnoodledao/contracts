@@ -141,14 +141,14 @@ export class Staking extends Component {
 
   renderStakingSummaryTable(stakingSummary) {
     return (
-      <table className='table table-striped w-full text-2xl mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
+      <table className='table table-striped w-full mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
         <thead>
           <tr>
-            <th><span class="hidemd">Block<br/>No.</span><span class="hidesm">Block Number</span></th>
-            <th>Amount</th>
+            <th class="hidden md:table-cell">Block Number</th>
+            <th><span class="hidemd">Staked<br/>Amount</span><span class="hidesm">Staked Amount</span></th>
             <th><span class="hidemd">Blocks<br/>Left</span><span class="hidesm">Blocks Left</span></th>
             <th>Withdraw</th>
-            <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
+            <th><span class="hidemd">Rewards</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
         <tbody class=''>
@@ -157,7 +157,7 @@ export class Staking extends Component {
             const remainingLockBlocks = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber);
             return (
               <tr key={stake.blockNumber}>
-                <td>{stake.blockNumber}</td>
+                <td class="hidden md:table-cell">{stake.blockNumber}</td>
                 <td>{amount}</td>
                 <td>{remainingLockBlocks}</td>
                 <td>
@@ -166,7 +166,7 @@ export class Staking extends Component {
                       <fieldset disabled={remainingLockBlocks > 0}>
                       <div class="form-control">
                         <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                        <button type="button" class="text-xs lg:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>Withdraw</button>
+                        <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Take<br/>out</span><span class="hidesm">Withdraw</span></button>
                       </div>
                       </fieldset>
                     </form>
@@ -192,12 +192,12 @@ export class Staking extends Component {
 
     if (!this.state.web3) {
       return (
-        <div class="overflow-hidden antialiased font-roboto">
-          <div class="min-h-screen md:flex">
-            <div class="flex items-center justify-center fullhalfwidth">
-              <div class="max-w-lg">
-                <img class="object-cover w-full my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                <div class="maintitles uppercase">Staking</div>
+        <div class="overflow-hidden antialiased font-roboto mx-4">
+      <div class="h-noheader md:flex">
+        <div class="flex items-center justify-center w-full">
+          <div class="container">
+          <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+            <div class="maintitles pb-4">Staking</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                 <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
               </div>
@@ -207,7 +207,7 @@ export class Staking extends Component {
       );
     }
     return (
-      <div class="min-h-screen bg-neutral-focus mx-2 md:m-auto font-roboto">
+      <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
         <div class="text-center container">
           <div class="text-base-200 w-full">
             <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
