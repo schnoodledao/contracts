@@ -24,11 +24,11 @@ export class NavMenu extends Component {
   render () {
     return (
       <header>
-        <Navbar className="navbar mb-2 shadow-lg bg-neutral text-neutral-content" light>
+        <Navbar className="navbar mb-2 shadow-lg bg-neutral text-neutral-content font-roboto" light>
           <Container className="m-auto">
             <div class="flex-1 px-2 mx-2">
               <span class="text-lg font-bold">
-                <NavbarBrand tag={Link} to="/">Schnoodle X</NavbarBrand>
+                <NavbarBrand tag={Link} to="/" className="leading-tight uppercase">Schnoodle X</NavbarBrand>
               </span>
               </div>
               <div class="flex-none hidden px-2 mx-2 lg:flex">
@@ -44,7 +44,7 @@ export class NavMenu extends Component {
                     </ul>
                   </Collapse>
                 <div class="flex-none">
-                  <NavbarToggler onClick={this.toggleNavbar} className="btn btn-square btn-ghost" />
+                  <NavbarToggler onClick={this.toggleNavbar} />
                 </div>
               </div>
             </div>

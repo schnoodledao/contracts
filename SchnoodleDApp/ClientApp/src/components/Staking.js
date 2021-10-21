@@ -151,7 +151,7 @@ export class Staking extends Component {
             <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
-        <tbody class='text-2xl'>
+        <tbody class=''>
           {stakingSummary.map((stake, i) => {
             const amount = this.scaleDownUnits(stake.amount);
             const remainingLockBlocks = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber);
