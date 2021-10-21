@@ -16,8 +16,7 @@ contract Stakeable is Initializable {
     uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
     uint256 private _lastBlockNumber;
-    uint256 private _totalLockWeight;
-    uint256 private _numStakes;
+    uint256 private _totalStakeWeight;
 
     struct Stake {
         uint256 amount;
@@ -39,7 +38,6 @@ contract Stakeable is Initializable {
         uint256 blockNumber = block.number;
         _stakes[msg.sender].push(Stake(amount, blockNumber, lockBlocks, 0));
         _totals[msg.sender] += amount;
-        _numStakes++;
 
         _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, lockBlocks);
 
@@ -66,7 +64,6 @@ contract Stakeable is Initializable {
         if (_stakes[msg.sender][index].amount == 0) {
             _stakes[msg.sender][index] = stakes[stakes.length - 1];
             _stakes[msg.sender].pop();
-            _numStakes--;
         }
 
         return reward;
@@ -81,30 +78,27 @@ contract Stakeable is Initializable {
 
         uint256 reward;
 
-        if (cumulativeAmount > 0) {
+        if (cumulativeAmount > 0 && _totalStakeWeight > 0) {
+            uint256 lockBlocksWeightedAverage = _totalStakeWeight / _totalTokens;
+
             // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
-            uint256 averageLockWeight = _totalLockWeight / _numStakes;
+            bytes16 x = ABDKMathQuad.mul(
+                ABDKMathQuad.div(
+                    ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
+                    ABDKMathQuad.fromUInt(lockBlocksWeightedAverage)
+                ),
+                ABDKMathQuad.sub(
+                    ABDKMathQuad.fromUInt(stake.lockBlocks),
+                    ABDKMathQuad.fromUInt(lockBlocksWeightedAverage)
+                )
+            );
 
-            if (averageLockWeight > 0) {
-                // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
-                bytes16 x = ABDKMathQuad.mul(
-                    ABDKMathQuad.div(
-                        ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
-                        ABDKMathQuad.fromUInt(averageLockWeight)
-                    ),
-                    ABDKMathQuad.sub(
-                        ABDKMathQuad.mul(ABDKMathQuad.fromUInt(stake.amount), ABDKMathQuad.fromUInt(stake.lockBlocks)),
-                        ABDKMathQuad.fromUInt(averageLockWeight)
-                    )
-                );
+            // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
+            uint256 accuracy = 1000;
+            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
 
-                // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
-                uint256 accuracy = 1000;
-                reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
-
-                // The returned new cumulative total should not include the reward
-                newCumulativeTotal -= cumulativeAmount;
-            }
+            // The returned new cumulative total should not include the reward
+            newCumulativeTotal -= cumulativeAmount;
         }
 
         return (reward, newCumulativeTotal);
@@ -137,7 +131,7 @@ contract Stakeable is Initializable {
         _totalTokens = uint256(int256(_totalTokens) + amountDelta);
 
         // Adjust the sum of products of staked tokens and lock blocks to get a total weight - this is used to calculate the weighted average later
-        _totalLockWeight = uint256(int256(_totalLockWeight) + amountDelta * int256(lockBlocks));
+        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(lockBlocks));
     }
 
     function stakedBalanceOf(address account) public view returns(uint256) {
