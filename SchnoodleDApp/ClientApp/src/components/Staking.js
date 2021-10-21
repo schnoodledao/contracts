@@ -144,9 +144,9 @@ export class Staking extends Component {
       <table className='table table-striped w-full text-2xl mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
         <thead>
           <tr>
-            <th><span class="hidemd">B/N</span><span class="hidesm">Block Number</span></th>
+            <th><span class="hidemd">Block<br/>No.</span><span class="hidesm">Block Number</span></th>
             <th>Amount</th>
-            <th><span class="hidemd">Blocks Left</span><span class="hidesm">Remaining Lock Blocks</span></th>
+            <th><span class="hidemd">Blocks<br/>Left</span><span class="hidesm">Blocks Left</span></th>
             <th>Withdraw</th>
             <th><span class="hidemd">Claimable</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
@@ -162,10 +162,12 @@ export class Staking extends Component {
                 <td>{remainingLockBlocks}</td>
                 <td>
                   <div class="relative">
-                    <form class="form-control">
+                    <form>
                       <fieldset disabled={remainingLockBlocks > 0}>
+                      <div class="form-control">
                         <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                        <button type="button" class="text-xs md:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary opacity-80 bordered border-secondary text/-base-300 px-1 md:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>Withdraw</button>
+                        <button type="button" class="text-xs lg:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>Withdraw</button>
+                      </div>
                       </fieldset>
                     </form>
                   </div>
@@ -252,9 +254,9 @@ export class Staking extends Component {
                 </div>
 
                 <div class="card-actions text-center mx-auto w-full">
-                  <form class="form-control justify-center fullhalfwidth mx-auto mt-5">
+                  <form class=" justify-center fullhalfwidth mx-auto mt-5">
                     <fieldset disabled={stakeableAmount === 0}>
-                      <div class="flex flex-col">
+                      <div class="form-control">
                         <div>
                           <label class="label">
                             <span class="label-text">Amount</span>
@@ -265,7 +267,7 @@ export class Staking extends Component {
                           </div>
                         </div>
                       </div>
-                      <div class="mb-3">
+                      <div class="mb-3 form-control">
                         <label class="label">
                           <span class="label-text">Lock blocks</span>
                         </label>

@@ -10,17 +10,21 @@ module.exports = {
         extend: {},
     },
     variants: {
-        extend: {},
+      extend: {
+        opacity: ['disabled'],
+      }
     },
     plugins: [
         require('daisyui'),
     ],
     daisyui: {
+      themes: [
+        'synthwave'
+      ],
       styled: true,
-      themes: true,
       base: true,
-      utils: true,
-      logs: true,
+      utils: false,
+      logs: false,
       rtl: false,
     },
 }
