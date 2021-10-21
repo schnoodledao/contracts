@@ -13,7 +13,6 @@ export class Staking extends Component {
       success: false,
       message: null,
       web3: null,
-      accounts: null,
       schnoodle: null,
       selectedAddress: null,
       decimals: null,
@@ -37,12 +36,11 @@ export class Staking extends Component {
   async componentDidMount() {
     try {
       const web3 = await getWeb3();
-      const accounts = await web3.eth.getAccounts();
 
       const deployedNetwork = Schnoodle.networks[await web3.eth.net.getId()];
       const instance = new web3.eth.Contract(Schnoodle.abi, deployedNetwork && deployedNetwork.address);
 
-      this.setState({ web3, accounts, schnoodle: instance, selectedAddress: web3.currentProvider.selectedAddress }, this.getInfo);
+      this.setState({ web3, schnoodle: instance, selectedAddress: web3.currentProvider.selectedAddress }, this.getInfo);
 
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
@@ -62,7 +60,7 @@ export class Staking extends Component {
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
     const stakedBalance = await schnoodle.methods.stakedBalanceOf(selectedAddress).call();
-    const stakingSummary = [].concat(await schnoodle.methods.stakingSummary().call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
+    const stakingSummary = [].concat(await schnoodle.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
     let withdrawItems = [];
@@ -142,8 +140,6 @@ export class Staking extends Component {
   }
 
   renderStakingSummaryTable(stakingSummary) {
-    const withdraw = 'Withdraw';
-
     return (
       <table className='table table-striped w-full text-2xl mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
         <thead>
@@ -158,15 +154,20 @@ export class Staking extends Component {
         <tbody class='text-2xl'>
           {stakingSummary.map((stake, i) => {
             const amount = this.scaleDownUnits(stake.amount);
+            const remainingLockBlocks = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber);
             return (
               <tr key={stake.blockNumber}>
                 <td>{stake.blockNumber}</td>
                 <td>{amount}</td>
-                <td>{Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber)}</td>
+                <td>{remainingLockBlocks}</td>
                 <td>
-                <div class="relative">
-                  <input type='number' min='1' max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                  <button class="text-xs md:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary opacity-80 bordered border-secondary text-base-300 px-1 md:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>{withdraw}</button>
+                  <div class="relative">
+                    <form class="form-control">
+                      <fieldset disabled={remainingLockBlocks > 0}>
+                        <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
+                        <button type="button" class="text-xs md:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary opacity-80 bordered border-secondary text/-base-300 px-1 md:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}>Withdraw</button>
+                      </fieldset>
+                    </form>
                   </div>
                 </td>
                 <td>{this.scaleDownUnits(stake.claimable)}</td>
@@ -240,7 +241,7 @@ export class Staking extends Component {
                     <div class="stat-value purplefade">{stakedBalance}</div>
                     <div class="stat-desc">{token}</div>
                   </div>
-                    <div class="stat ">
+                  <div class="stat">
                     <div class="stat-title">Stakeable amount</div>
                     <div class="stat-value purplefade">{stakeableAmount}</div>
                     <div class="stat-desc">{token}</div>
@@ -267,8 +268,8 @@ export class Staking extends Component {
                       <div class="mb-3">
                         <label class="label">
                           <span class="label-text">Lock blocks</span>
-                        </label> 
-                        <input type='number' min='1' value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
+                        </label>
+                        <input type="number" min="1" value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
                       </div>
                       <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                     </fieldset>
@@ -277,10 +278,15 @@ export class Staking extends Component {
               </div>
             </div>
 
-            <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
-            <div class="overflow-x-auto text-secondary my-5 ">
-              {this.renderStakingSummaryTable(this.state.stakingSummary)}
-            </div>
+            {this.state.stakingSummary.length > 0 && (
+              <div>
+                <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
+                <div class="overflow-x-auto text-secondary my-5 ">
+                  {this.renderStakingSummaryTable(this.state.stakingSummary)}
+                </div>
+              </div>
+            )}
+
             <div class="my-5">
               <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
             </div>
