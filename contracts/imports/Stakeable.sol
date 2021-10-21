@@ -32,7 +32,7 @@ contract Stakeable is Initializable {
     }
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
-    function addStake(uint256 amount, uint256 lockBlocks) public {
+    function addStake(uint256 amount, uint256 lockBlocks) external {
         require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stakeable: stake amount exceeds unstaked balance");
         require(amount > 0, "Stakeable: stake amount must be nonzero");
 
