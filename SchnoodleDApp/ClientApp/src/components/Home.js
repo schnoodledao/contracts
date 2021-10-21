@@ -5,9 +5,9 @@ export class Home extends Component {
 
   render () {
     return (
-      <div class="overflow-hidden antialiased font-roboto">
+      <div class="overflow-hidden antialiased font-roboto mx-4">
             
-      <div class="min-h-screen md:flex">
+      <div class="h-noheader md:flex">
         <div class="flex items-center justify-center w-full">
           <div class="container">
           <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />

@@ -2,16 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Provide sufficient contrast against white background */
 
-a {
-}
-
-code {
-}
-
-.btn-primary {
-}
 
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
@@ -24,23 +15,35 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+.h-noheader {
+  min-height: calc( 100vh - 74px );
+}
+fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
+  @apply opacity-30 cursor-not-allowed;
+}
 .maintitles {
   @apply text-6xl font-black purplefade md:text-8xl;
 }
 .tabledata {
-  @apply text-sm md:text-2xl text-left px-1 py-4 md:px-8;
+  @apply text-sm lg:text-2xl text-left px-1 py-4 md:px-8;
 }
 .table td {
-  @apply text-sm md:text-2xl px-1 md:px-4;
+  @apply text-sm lg:text-2xl px-1 md:px-4;
 }
 .table th {
-  @apply ml-0 text-xs md:text-xl px-1 md:px-4;
+  @apply ml-0 text-xs lg:text-xl px-1 md:px-4;
 }
 .hidemd {
   @apply block md:hidden;
 }
+.showmd {
+  @apply hidden md:block lg:hidden;
+}
 .hidesm {
   @apply hidden md:block;
+}
+.hidesmmd {
+  @apply hidden lg:block;
 }
 .textfade {
   @apply bg-clip-text text-transparent bg-gradient-to-r;
@@ -60,7 +63,7 @@ input[type=number] {
   @apply place-items-center place-content-center;
 }
 .stat-value {
-  @apply text-2xl md:text-5xl;
+  @apply text-3xl xl:text-5xl;
 }
 .stat-title, .card-title {
   @apply uppercase;
@@ -85,10 +88,10 @@ input[type=number] {
   @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
 .withdrawstake{
-  @apply input pr-16 w-full input-bordered text-white;
+  @apply input pl-1 md:pl-4 pr-11 md:pr-32 lg:pr-40 xl:pr-64 w-full input-bordered text-white;
 }
 .withdrawinput{
-  @apply input-secondary withdrawstake text-sm md:text-2xl text-left;
+  @apply input-secondary withdrawstake text-sm lg:text-base xl:text-2xl text-left;
 }
 .stakeinput {
   @apply input-accent withdrawstake text-xl;
