@@ -161,16 +161,17 @@ export class Staking extends Component {
                 <td>{amount}</td>
                 <td>{blocksPending}</td>
                 <td>
-                  <div class="relative">
                     <form>
                       <fieldset disabled={blocksPending > 0}>
+                      <div class="relative">
                         <div class="form-control">
                           <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
                           <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
                         </div>
+                        </div>
                       </fieldset>
                     </form>
-                  </div>
+                  
                 </td>
                 <td>{this.scaleDownUnits(stake.claimable)}</td>
               </tr>
@@ -208,8 +209,8 @@ export class Staking extends Component {
     }
     return (
       <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
-        <div class="text-center container">
-          <div class="text-base-200 w-full">
+        <div class="text-center container px-1 md:px-5 ">
+          <div class="text-base-200 w-full ">
             <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
             <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
               <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
@@ -272,6 +273,8 @@ export class Staking extends Component {
                           <span class="label-text">Vesting blocks</span>
                         </label>
                         <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                        </div>
+                        <div class="mb-3 form-control">
                         <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                       </div>
                     </fieldset>
@@ -281,7 +284,7 @@ export class Staking extends Component {
             </div>
 
             {this.state.stakingSummary.length > 0 && (
-              <div>
+              <div class="staketable">
                 <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
                 <div class="overflow-x-auto text-secondary my-5 ">
                   {this.renderStakingSummaryTable(this.state.stakingSummary)}
