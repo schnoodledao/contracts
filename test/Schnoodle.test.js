@@ -177,7 +177,7 @@ describe('Staking', () => {
     startBalance = BigInt(await schnoodle.balanceOf(stakeholder));
   });
 
-  it('should increase the stakeholder\'s balance by a nonzero reward when a stake with 1 lock block is withdrawn', async() => {
+  it('should increase the stakeholder\'s balance by a nonzero reward when a stake with 1 vesting block is withdrawn', async() => {
     await schnoodle.addStake(stakeAmount, 1, { from: stakeholder });
     await time.advanceBlock();
     const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
@@ -186,7 +186,7 @@ describe('Staking', () => {
     assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance wasn\'t increased by the reward amount');
   });
 
-  it('should not increase the stakeholder\'s balance when a stake with no lock blocks is withdrawn', async() => {
+  it('should not increase the stakeholder\'s balance when a stake with no vesting blocks is withdrawn', async() => {
     await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     await time.advanceBlock();
     const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
@@ -195,9 +195,9 @@ describe('Staking', () => {
     assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance was wrongly increased');
   });
 
-  it('should revert on attempt to withdraw during lock blocks', async() => {
+  it('should revert on attempt to withdraw during vesting blocks', async() => {
     await schnoodle.addStake(stakeAmount, chance.integer({ min: 1 }), { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "Stakeable: cannot withdraw during lock blocks");
+    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "Stakeable: cannot withdraw during vesting blocks");
   });
 
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
