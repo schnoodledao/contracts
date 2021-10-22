@@ -166,7 +166,7 @@ export class Staking extends Component {
                       <div class="relative">
                         <div class="form-control">
                           <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                          <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
+                          <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Take<br/>out</span><span class="hidesm">Withdraw</span></button>
                         </div>
                         </div>
                       </fieldset>
