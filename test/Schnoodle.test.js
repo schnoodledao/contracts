@@ -197,19 +197,19 @@ describe('Staking', () => {
 
   it('should revert on attempt to withdraw during vesting blocks', async() => {
     await schnoodle.addStake(stakeAmount, chance.integer({ min: 1 }), { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "Stakeable: cannot withdraw during vesting blocks");
+    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "Cannot withdraw during vesting blocks");
   });
 
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
     await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     const additionalStake = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
-    await truffleAssert.reverts(schnoodle.addStake(additionalStake, 0, { from: stakeholder }), "Stakeable: stake amount exceeds unstaked balance");
+    await truffleAssert.reverts(schnoodle.addStake(additionalStake, 0, { from: stakeholder }), "Stake amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are unstaked', async() => {
     await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
     const transferAmount = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Transfer amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are available including staked', async() => {

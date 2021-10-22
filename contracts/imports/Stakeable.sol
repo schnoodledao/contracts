@@ -32,8 +32,8 @@ contract Stakeable is Initializable {
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
     function addStake(uint256 amount, uint256 vestingBlocks) external {
-        require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stakeable: stake amount exceeds unstaked balance");
-        require(amount > 0, "Stakeable: stake amount must be nonzero");
+        require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stake amount exceeds unstaked balance");
+        require(amount > 0, "Stake must be nonzero");
 
         uint256 blockNumber = block.number;
         _stakes[msg.sender].push(Stake(amount, blockNumber, vestingBlocks, 0));
@@ -48,10 +48,10 @@ contract Stakeable is Initializable {
     function withdraw(uint256 index, uint256 amount) internal returns(uint256, uint256) {
         Stake[] memory stakes = _stakes[msg.sender];
         Stake memory stake = stakes[index];
-        require(stake.amount >= amount, "Stakeable: cannot withdraw more than you have staked");
+        require(stake.amount >= amount, "Cannot withdraw more than staked");
 
         uint256 blockNumber = block.number;
-        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "Stakeable: cannot withdraw during vesting blocks");
+        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "Cannot withdraw during vesting blocks");
 
         (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
