@@ -21,7 +21,7 @@ contract Stakeable is Initializable {
     struct Stake {
         uint256 amount;
         uint256 blockNumber;
-        uint256 lockBlocks;
+        uint256 vestingBlocks;
         uint256 claimable;
     }
 
@@ -31,15 +31,15 @@ contract Stakeable is Initializable {
     }
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
-    function addStake(uint256 amount, uint256 lockBlocks) external {
+    function addStake(uint256 amount, uint256 vestingBlocks) external {
         require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stakeable: stake amount exceeds unstaked balance");
         require(amount > 0, "Stakeable: stake amount must be nonzero");
 
         uint256 blockNumber = block.number;
-        _stakes[msg.sender].push(Stake(amount, blockNumber, lockBlocks, 0));
+        _stakes[msg.sender].push(Stake(amount, blockNumber, vestingBlocks, 0));
         _totals[msg.sender] += amount;
 
-        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, lockBlocks);
+        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, vestingBlocks);
 
         emit Staked(msg.sender, amount, blockNumber);
     }
@@ -51,11 +51,11 @@ contract Stakeable is Initializable {
         require(stake.amount >= amount, "Stakeable: cannot withdraw more than you have staked");
 
         uint256 blockNumber = block.number;
-        require(stake.blockNumber + stake.lockBlocks < blockNumber, "Stakeable: cannot withdraw during lock blocks");
+        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "Stakeable: cannot withdraw during vesting blocks");
 
         (uint256 reward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
-        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.lockBlocks);
+        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks);
 
         _stakes[msg.sender][index].amount -= amount;
         _totals[msg.sender] -= amount;
@@ -79,17 +79,17 @@ contract Stakeable is Initializable {
         uint256 reward;
 
         if (cumulativeAmount > 0 && _totalStakeWeight > 0) {
-            uint256 lockBlocksWeightedAverage = _totalStakeWeight / _totalTokens;
+            uint256 vestingBlocksWeightedAverage = _totalStakeWeight / _totalTokens;
 
             // Calculate a reward multiplier based on a sigmoid curve defined by 1 ÷ (1 + e⁻ˣ) where x is the stake's lock weight delta from the average
             bytes16 x = ABDKMathQuad.mul(
                 ABDKMathQuad.div(
                     ABDKMathQuad.fromInt(-10), // Adjust to change the S-shape (higher value increases slope)
-                    ABDKMathQuad.fromUInt(lockBlocksWeightedAverage)
+                    ABDKMathQuad.fromUInt(vestingBlocksWeightedAverage)
                 ),
                 ABDKMathQuad.sub(
-                    ABDKMathQuad.fromUInt(stake.lockBlocks),
-                    ABDKMathQuad.fromUInt(lockBlocksWeightedAverage)
+                    ABDKMathQuad.fromUInt(stake.vestingBlocks),
+                    ABDKMathQuad.fromUInt(vestingBlocksWeightedAverage)
                 )
             );
 
@@ -125,13 +125,13 @@ contract Stakeable is Initializable {
         return _cumulativeTotal + _totalTokens * (blockNumber - _lastBlockNumber);
     }
 
-    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 lockBlocks) private {
+    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 vestingBlocks) private {
         _cumulativeTotal = cumulativeTotal;
         _lastBlockNumber = blockNumber;
         _totalTokens = uint256(int256(_totalTokens) + amountDelta);
 
-        // Adjust the sum of products of staked tokens and lock blocks to get a total weight - this is used to calculate the weighted average later
-        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(lockBlocks));
+        // Adjust the sum of products of staked tokens and vesting blocks to get a total weight - this is used to calculate the weighted average later
+        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks));
     }
 
     function stakedBalanceOf(address account) public view returns(uint256) {

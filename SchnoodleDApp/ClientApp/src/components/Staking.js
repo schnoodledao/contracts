@@ -20,7 +20,7 @@ export class Staking extends Component {
       stakingPoolBalance: 0,
       balance: 0,
       amountToStake: 1,
-      lockBlocks: 1,
+      vestingBlocks: 1,
       stakedBalance: 0,
       stakingSummary: [],
       blockNumber: 0,
@@ -30,7 +30,7 @@ export class Staking extends Component {
     this.stakeAll = this.stakeAll.bind(this);
     this.addStake = this.addStake.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
-    this.updateLockBlocks = this.updateLockBlocks.bind(this);
+    this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
   }
 
   async componentDidMount() {
@@ -105,8 +105,8 @@ export class Staking extends Component {
 
   async addStake() {
     try {
-      const { schnoodle, selectedAddress, amountToStake, lockBlocks } = this.state;
-      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString(), lockBlocks).send({ from: selectedAddress });
+      const { schnoodle, selectedAddress, amountToStake, vestingBlocks } = this.state;
+      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -134,9 +134,9 @@ export class Staking extends Component {
     this.setState({ amountToStake: amountToStake });
   }
 
-  updateLockBlocks(e) {
-    const lockBlocks = e.target.value;
-    this.setState({ lockBlocks: lockBlocks });
+  updateVestingBlocks(e) {
+    const vestingBlocks = e.target.value;
+    this.setState({ vestingBlocks: vestingBlocks });
   }
 
   renderStakingSummaryTable(stakingSummary) {
@@ -146,28 +146,28 @@ export class Staking extends Component {
           <tr>
             <th class="hidden md:table-cell">Block Number</th>
             <th><span class="hidemd">Staked<br/>Amount</span><span class="hidesm">Staked Amount</span></th>
-            <th><span class="hidemd">Blocks<br/>Left</span><span class="hidesm">Blocks Left</span></th>
+            <th><span class="hidemd">Blocks<br/>Pending</span><span class="hidesm">Blocks Pending</span></th>
             <th>Withdraw</th>
-            <th><span class="hidemd">Rewards</span><span class="hidesm">Claimable Reward</span></th>
+            <th><span class="hidemd">Claimable<br />Rewards</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
         <tbody class=''>
           {stakingSummary.map((stake, i) => {
             const amount = this.scaleDownUnits(stake.amount);
-            const remainingLockBlocks = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.lockBlocks) - this.state.blockNumber);
+            const blocksPending = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.vestingBlocks) - this.state.blockNumber);
             return (
               <tr key={stake.blockNumber}>
                 <td class="hidden md:table-cell">{stake.blockNumber}</td>
                 <td>{amount}</td>
-                <td>{remainingLockBlocks}</td>
+                <td>{blocksPending}</td>
                 <td>
                   <div class="relative">
                     <form>
-                      <fieldset disabled={remainingLockBlocks > 0}>
-                      <div class="form-control">
-                        <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                        <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Take<br/>out</span><span class="hidesm">Withdraw</span></button>
-                      </div>
+                      <fieldset disabled={blocksPending > 0}>
+                        <div class="form-control">
+                          <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
+                          <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
+                        </div>
                       </fieldset>
                     </form>
                   </div>
@@ -193,11 +193,11 @@ export class Staking extends Component {
     if (!this.state.web3) {
       return (
         <div class="overflow-hidden antialiased font-roboto mx-4">
-      <div class="h-noheader md:flex">
-        <div class="flex items-center justify-center w-full">
-          <div class="container">
-          <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-            <div class="maintitles pb-4">Staking</div>
+          <div class="h-noheader md:flex">
+            <div class="flex items-center justify-center w-full">
+              <div class="container">
+              <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <div class="maintitles pb-4">Staking</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                 <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
               </div>
@@ -263,17 +263,17 @@ export class Staking extends Component {
                           </label> 
                           <div class="relative">
                             <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
-                            <button class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg">ALL</button>
+                            <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
                           </div>
                         </div>
                       </div>
                       <div class="mb-3 form-control">
                         <label class="label">
-                          <span class="label-text">Lock blocks</span>
+                          <span class="label-text">Vesting blocks</span>
                         </label>
-                        <input type="number" min="1" value={this.state.lockBlocks} onChange={this.updateLockBlocks} class="stakeinput" />
+                        <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                        <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                       </div>
-                      <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.lockBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                     </fieldset>
                   </form>
                 </div>
