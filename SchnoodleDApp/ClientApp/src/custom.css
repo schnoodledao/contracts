@@ -19,7 +19,13 @@ input[type=number] {
   min-height: calc( 100vh - 74px );
 }
 fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
-  @apply opacity-30 cursor-not-allowed;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.35;
+  filter: alpha(opacity=35);
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  
 }
 .maintitles {
   @apply text-6xl font-black purplefade md:text-8xl;
@@ -58,6 +64,7 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
 
 .stats {
   @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-10;
+  /* @ apply w-full grid-flow-row my-6 md:my-10 grid grid-cols-1 grid-rows-4 lg:grid-cols-2 lg:grid-rows-2 gap-4; */
 }
 .stat {
   @apply place-items-center place-content-center;
