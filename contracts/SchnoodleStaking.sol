@@ -21,7 +21,7 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
         uint256 claimable;
     }
 
-    function initialize(address stakingToken) internal initializer {
+    function initialize(address stakingToken) public initializer {
         __Context_init();
         _stakingToken = stakingToken;
     }
@@ -30,7 +30,7 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
     function addStake(uint256 amount, uint256 vestingBlocks) external {
         address msgSender = _msgSender();
 
-        require(amount <= balanceOf(msgSender) - stakedBalanceOf(msgSender), "Stake amount exceeds unstaked balance");
+        require(amount <= balanceOf(msgSender) - stakedBalanceOf(msgSender), "SchnoodleStaking: stake amount exceeds unstaked balance");
         require(amount > 0, "Stake must be nonzero");
 
         uint256 blockNumber = block.number;
@@ -47,10 +47,10 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
         address msgSender = _msgSender();
         Stake[] memory stakes = _stakes[msgSender];
         Stake memory stake = stakes[index];
-        require(stake.amount >= amount, "Cannot withdraw more than staked");
+        require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
 
         uint256 blockNumber = block.number;
-        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "Cannot withdraw during vesting blocks");
+        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
 
         (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
@@ -137,7 +137,7 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
         _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks));
     }
 
-    function stakingSummary(address account) public virtual returns(Stake[] memory) {
+    function stakingSummary(address account) public returns(Stake[] memory) {
         Stake[] memory stakes = _stakes[account];
         uint256 blockNumber = block.number;
 
@@ -148,35 +148,39 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
         return stakes;
     }
 
-    // Delegate calls
+    // Calls to the Schnoodle proxy contract
 
     function stakingFund() private returns (address) {
-        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakingFund()"));
+        (bool success, bytes memory result) = _stakingToken.call(abi.encodeWithSignature("stakingFund()"));
         assert(success);
         return abi.decode(result, (address));
     }
 
     function balanceOf(address account) private returns(uint256) {
-        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("balanceOf(address)", account));
+        (bool success, bytes memory result) = _stakingToken.call(abi.encodeWithSignature("balanceOf(address)", account));
         assert(success);
         return abi.decode(result, (uint256));
     }
+
+    function stakedBalanceOf(address account) private returns(uint256) {
+        (bool success, bytes memory result) = _stakingToken.call(abi.encodeWithSignature("stakedBalanceOf(address)", account));
+        assert(success);
+        return abi.decode(result, (uint256));
+    }
+
+    // Delegate calls to the Schnoodle proxy contract
 
     function adjustStakedBalance(int256 amount) private {
         (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("adjustStakedBalance(int256)", int256(amount)));
         assert(success);
     }
 
-    function stakedBalanceOf(address account) private returns(uint256) {
-        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakedBalanceOf(address)", account));
-        assert(success);
-        return abi.decode(result, (uint256));
-    }
-
     function stakingReward(uint256 netReward, uint256 grossReward) private {
         (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakingReward(uint256,uint256)", netReward, grossReward));
         assert(success);
     }
+
+    // Events
 
     event Staked(address indexed account, uint256 amount, uint256 blockNumber);
 
