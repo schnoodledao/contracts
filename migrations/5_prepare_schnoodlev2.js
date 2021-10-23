@@ -1,22 +1,6 @@
 // migrations/5_prepare_schnoodlev2.js
 
-const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
-const contractsFile = require('../scripts/contracts-file.js');
-
-const contractName = 'SchnoodleV2';
-const SchnoodleNew = artifacts.require(contractName);
-const SchnoodleOld = artifacts.require('SchnoodleV1');
-
-module.exports = async function (_deployer, network) {
-  if (network === 'develop') return;
-
-  const proxyAddress = (await SchnoodleOld.deployed()).address;
-  const schnoodleNewAddress = await prepareUpgrade(proxyAddress, SchnoodleNew);
-
-  const proxyAdmin = await admin.getInstance();
-  console.log("Write 'upgrade' at ProxyAdmin address:", proxyAdmin.address);
-  console.log("Proxy address:", proxyAddress);
-  console.log("Implementation address:", schnoodleNewAddress);
-
-  contractsFile.append(`${contractName}@${schnoodleNewAddress}`);
+module.exports = async function (deployer, network) {
+  const contract = require('../scripts/contract.js');
+  contract.upgrade(deployer, network, 'SchnoodleV2');
 };

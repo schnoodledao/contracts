@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Schnoodle from "../contracts/SchnoodleV5.json";
+import SchnoodleStaking from "../contracts/SchnoodleStaking.json";
 import getWeb3 from "../getWeb3";
 const bigInt = require("big-integer");
 
@@ -14,10 +15,10 @@ export class Staking extends Component {
       message: null,
       web3: null,
       schnoodle: null,
+      schnoodleStaking: null,
       selectedAddress: null,
       decimals: null,
       stakingFundBalance: 0,
-      stakingPoolBalance: 0,
       balance: 0,
       amountToStake: 1,
       vestingBlocks: 1,
@@ -37,10 +38,12 @@ export class Staking extends Component {
     try {
       const web3 = await getWeb3();
 
-      const deployedNetwork = Schnoodle.networks[await web3.eth.net.getId()];
-      const instance = new web3.eth.Contract(Schnoodle.abi, deployedNetwork && deployedNetwork.address);
+      const schnoodleDeployedNetwork = Schnoodle.networks[await web3.eth.net.getId()];
+      const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
+      const schnoodleStaking = new web3.eth.Contract(SchnoodleStaking.abi, schnoodleStakingDeployedNetwork && schnoodleStakingDeployedNetwork.address);
 
-      this.setState({ web3, schnoodle: instance, selectedAddress: web3.currentProvider.selectedAddress }, this.getInfo);
+      this.setState({ web3, schnoodle: schnoodle, schnoodleStaking: schnoodleStaking, selectedAddress: web3.currentProvider.selectedAddress }, this.getInfo);
 
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
@@ -56,11 +59,10 @@ export class Staking extends Component {
     const decimals = await schnoodle.methods.decimals().call();
     this.setState({ decimals: decimals });
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
-    const stakingPoolBalance = await schnoodle.methods.balanceOf((await schnoodle.methods.staking().call())[0]).call();
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
     const stakedBalance = await schnoodle.methods.stakedBalanceOf(selectedAddress).call();
-    const stakingSummary = [].concat(await schnoodle.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
+    const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
     let withdrawItems = [];
@@ -68,7 +70,7 @@ export class Staking extends Component {
       withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, stakingPoolBalance: stakingPoolBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -105,8 +107,8 @@ export class Staking extends Component {
 
   async addStake() {
     try {
-      const { schnoodle, selectedAddress, amountToStake, vestingBlocks } = this.state;
-      const response = await schnoodle.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks).send({ from: selectedAddress });
+      const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks } = this.state;
+      const response = await schnoodleStaking.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -115,8 +117,8 @@ export class Staking extends Component {
 
   async withdrawStake(i) {
     try {
-      const { schnoodle, selectedAddress, withdrawItems } = this.state;
-      const response = await schnoodle.methods.withdrawStake(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
+      const response = await schnoodleStaking.methods.withdrawStake(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -220,11 +222,6 @@ export class Staking extends Component {
               <div class="stat">
                 <div class="stat-title">Staking fund balance</div>
                 <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
-                <div class="stat-desc text-secondary">{token}</div>
-              </div>
-              <div class="stat">
-              <div class="stat-title">Staking pool balance</div>
-                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingPoolBalance)}</div>
                 <div class="stat-desc text-secondary">{token}</div>
               </div>
             </div>

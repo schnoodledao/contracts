@@ -94,14 +94,14 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         emit FeePercentChanged(percent);
     }
 
+    function feePercent() external view returns(uint256) {
+        return _feePercent;
+    }
+
     function changeEleemosynary(address account, uint256 percent) external onlyOwner {
         _eleemosynary = account;
         _donationPercent = percent;
         emit EleemosynaryChanged(account, percent);
-    }
-
-    function feePercent() external view returns(uint256) {
-        return _feePercent;
     }
 
     function eleemosynary() external view returns(address, uint256) {

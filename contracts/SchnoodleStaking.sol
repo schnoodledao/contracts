@@ -2,17 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/ERC777Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "abdk-libraries-solidity/ABDKMathQuad.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
-/// @title A token staking superclass
-/// Provides staking functionality to any token contract that inherits it
-contract Stakeable is Initializable {
-    ERC777Upgradeable private _stakingToken;
-    address private _stakingFund;
+contract SchnoodleStaking is Initializable, ContextUpgradeable {
+    address private _stakingToken;
     mapping(address => Stake[]) private _stakes;
-    mapping(address => uint256) private _totals;
     uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
     uint256 private _lastBlockNumber;
@@ -25,28 +21,31 @@ contract Stakeable is Initializable {
         uint256 claimable;
     }
 
-    function __Stakeable_init(address stakingToken, address stakingFund) internal initializer {
-        _stakingToken = ERC777Upgradeable(stakingToken);
-        _stakingFund = stakingFund;
+    function initialize(address stakingToken) internal initializer {
+        __Context_init();
+        _stakingToken = stakingToken;
     }
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
     function addStake(uint256 amount, uint256 vestingBlocks) external {
-        require(amount <= _stakingToken.balanceOf(msg.sender) - stakedBalanceOf(msg.sender), "Stake amount exceeds unstaked balance");
+        address msgSender = _msgSender();
+
+        require(amount <= balanceOf(msgSender) - stakedBalanceOf(msgSender), "Stake amount exceeds unstaked balance");
         require(amount > 0, "Stake must be nonzero");
 
         uint256 blockNumber = block.number;
-        _stakes[msg.sender].push(Stake(amount, blockNumber, vestingBlocks, 0));
-        _totals[msg.sender] += amount;
+        _stakes[msgSender].push(Stake(amount, blockNumber, vestingBlocks, 0));
+        adjustStakedBalance(int256(amount));
 
         _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, vestingBlocks);
 
-        emit Staked(msg.sender, amount, blockNumber);
+        emit Staked(msgSender, amount, blockNumber);
     }
 
     /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
-    function withdraw(uint256 index, uint256 amount) internal returns(uint256, uint256) {
-        Stake[] memory stakes = _stakes[msg.sender];
+    function withdraw(uint256 index, uint256 amount) external {
+        address msgSender = _msgSender();
+        Stake[] memory stakes = _stakes[msgSender];
         Stake memory stake = stakes[index];
         require(stake.amount >= amount, "Cannot withdraw more than staked");
 
@@ -57,19 +56,21 @@ contract Stakeable is Initializable {
 
         _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks);
 
-        _stakes[msg.sender][index].amount -= amount;
-        _totals[msg.sender] -= amount;
+        _stakes[msgSender][index].amount -= amount;
+        adjustStakedBalance(-int256(amount));
 
         // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
-        if (_stakes[msg.sender][index].amount == 0) {
-            _stakes[msg.sender][index] = stakes[stakes.length - 1];
-            _stakes[msg.sender].pop();
+        if (_stakes[msgSender][index].amount == 0) {
+            _stakes[msgSender][index] = stakes[stakes.length - 1];
+            _stakes[msgSender].pop();
         }
 
-        return (netReward, grossReward);
+        stakingReward(netReward, grossReward);
+
+        emit Withdrawn(msgSender, index, amount, netReward, grossReward);
     }
 
-    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private view returns(uint256, uint256, uint256) {
+    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private returns(uint256, uint256, uint256) {
         // Calculate the stake amount multiplied across the number of blocks since the start of the stake
         uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
 
@@ -96,7 +97,7 @@ contract Stakeable is Initializable {
 
             // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
             uint256 accuracy = 1000;
-            grossReward = _stakingToken.balanceOf(_stakingFund) * cumulativeAmount / newCumulativeTotal;
+            grossReward = balanceOf(stakingFund()) * cumulativeAmount / newCumulativeTotal;
             netReward = (_multitplier(accuracy, x) * grossReward) / accuracy;
 
             // The returned new cumulative total should not include the reward
@@ -117,7 +118,7 @@ contract Stakeable is Initializable {
         );
     }
 
-    function _reward(Stake memory stake, uint256 blockNumber) private view returns(uint256) {
+    function _reward(Stake memory stake, uint256 blockNumber) private returns(uint256) {
         (uint256 reward,,) = _rewardInfo(stake, stake.amount, blockNumber);
         return reward;
     }
@@ -136,11 +137,7 @@ contract Stakeable is Initializable {
         _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks));
     }
 
-    function stakedBalanceOf(address account) public view returns(uint256) {
-        return _totals[account];
-    }
-
-    function stakingSummary(address account) public view virtual returns(Stake[] memory) {
+    function stakingSummary(address account) public virtual returns(Stake[] memory) {
         Stake[] memory stakes = _stakes[account];
         uint256 blockNumber = block.number;
 
@@ -151,7 +148,37 @@ contract Stakeable is Initializable {
         return stakes;
     }
 
-    event Staked(address indexed user, uint256 amount, uint256 blockNumber);
+    // Delegate calls
 
-    event Withdrawn(address indexed user, uint256 index, uint256 amount, uint256 reward);
+    function stakingFund() private returns (address) {
+        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakingFund()"));
+        assert(success);
+        return abi.decode(result, (address));
+    }
+
+    function balanceOf(address account) private returns(uint256) {
+        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("balanceOf(address)", account));
+        assert(success);
+        return abi.decode(result, (uint256));
+    }
+
+    function adjustStakedBalance(int256 amount) private {
+        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("adjustStakedBalance(int256)", int256(amount)));
+        assert(success);
+    }
+
+    function stakedBalanceOf(address account) private returns(uint256) {
+        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakedBalanceOf(address)", account));
+        assert(success);
+        return abi.decode(result, (uint256));
+    }
+
+    function stakingReward(uint256 netReward, uint256 grossReward) private {
+        (bool success, bytes memory result) = _stakingToken.delegatecall(abi.encodeWithSignature("stakingReward(uint256,uint256)", netReward, grossReward));
+        assert(success);
+    }
+
+    event Staked(address indexed account, uint256 amount, uint256 blockNumber);
+
+    event Withdrawn(address indexed account, uint256 index, uint256 amount, uint256 netReward, uint256 grossReward);
 }
