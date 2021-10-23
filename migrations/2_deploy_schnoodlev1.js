@@ -1,10 +1,7 @@
 // migrations/2_deploy_schnoodlev1.js
 
 const { deployProxy, admin } = require('@openzeppelin/truffle-upgrades');
-const contractsFile = require('../scripts/contracts-file.js');
-
 const contractName = 'SchnoodleV1';
-const Schnoodle = artifacts.require(contractName);
 
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 const { singletons } = require('@openzeppelin/test-helpers');
@@ -21,9 +18,11 @@ module.exports = async function (deployer, network, accounts) {
     await singletons.ERC1820Registry(serviceAccount);
   }
 
+  const Schnoodle = artifacts.require(contractName);
   const schnoodle = await deployProxy(Schnoodle, [initialization.initialTokens, serviceAccount], { deployer });
   schnoodle.changeFeePercent(initialization.feePercent);
   schnoodle.changeEleemosynary(eleemosynary, initialization.donationPercent);
 
+  const contractsFile = require('../scripts/contracts-file.js');
   contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(schnoodle.address)}`);
 };

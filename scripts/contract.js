@@ -7,25 +7,25 @@ module.exports = {
       if (contractName != testContract) return;
     }
 
-    const SchnoodleNew = artifacts.require(contractName);
+    const contract = artifacts.require(contractName);
     const SchnoodleOld = artifacts.require('SchnoodleV1');
 
     const proxy = await SchnoodleOld.deployed();
 
     if (network === 'develop') {
       const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-      await upgradeProxy(proxy.address, SchnoodleNew, { deployer });
+      await upgradeProxy(proxy.address, contract, { deployer });
     } else {
       const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
       const contractsFile = require('../scripts/contracts-file.js');
-      const schnoodleNewAddress = await prepareUpgrade(proxy.address, SchnoodleNew);
+      const address = await prepareUpgrade(proxy.address, contract);
 
       const proxyAdmin = await admin.getInstance();
       console.log("Write 'upgrade' at ProxyAdmin address:", proxyAdmin.address);
       console.log("Proxy address:", proxy.address);
-      console.log("Implementation address:", schnoodleNewAddress);
+      console.log("Implementation address:", address);
 
-      contractsFile.append(`${contractName}@${schnoodleNewAddress}`);
+      contractsFile.append(`${contractName}@${address}`);
     }
 
     return proxy;

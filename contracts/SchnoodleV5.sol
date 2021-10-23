@@ -9,6 +9,7 @@ import "./imports/DelegateCallee.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
 contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCallee {
+    uint256 private _version;
     uint256 private _stakingPercent;
     address private _stakingFund;
     mapping(address => uint256) private _stakedBalances;
@@ -17,9 +18,12 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCalle
     bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
-    function initialize(uint256 initialTokens, address serviceAccount) public initializer {
-        __SchnoodleV5Base_init(initialTokens, serviceAccount);
-        __AccessControl_init();
+    function upgrade(address schnoodleStaking) external onlyOwner {
+        require(_version < 5, "Schnoodle: already upgraded");
+        _version = 5;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, owner());
+        grantRole(STAKING_CONTRACT, schnoodleStaking);
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
     }
 
@@ -73,4 +77,6 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCalle
     }
 
     event StakingPercentChanged(uint256 percent);
+
+    uint256[50] private __gap;
 }

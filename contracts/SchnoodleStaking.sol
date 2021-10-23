@@ -185,4 +185,6 @@ contract SchnoodleStaking is Initializable, ContextUpgradeable {
     event Staked(address indexed account, uint256 amount, uint256 blockNumber);
 
     event Withdrawn(address indexed account, uint256 index, uint256 amount, uint256 netReward, uint256 grossReward);
+
+    uint256[50] private __gap;
 }

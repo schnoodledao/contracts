@@ -13,10 +13,10 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
     address private _eleemosynary;
     uint256 private _donationPercent;
 
-    function __SchnoodleV5Base_init(uint256 initialTokens, address serviceAccount) internal initializer {
+    function initialize(uint256 initialTokens, address serviceAccount) public initializer {
+        __Ownable_init();
         _totalSupply = initialTokens * 10 ** decimals();
         __ERC777PresetFixedSupply_init("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
-        __Ownable_init_unchained();
     }
 
     function totalSupply() public view virtual override returns (uint256) {
