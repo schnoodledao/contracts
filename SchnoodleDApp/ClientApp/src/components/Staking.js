@@ -254,7 +254,7 @@ export class Staking extends Component {
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
                 <div class="card-body my-6 md:my-10 rounded-4xl">
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                  <div class="shadow bottomstats stats ">
+                  <div class="shadow-sm bottomstats stats ">
                     <div class="stat">
                       <div class="stat-title">Total balance</div>
                       <div class="stat-value purplefade">{balance}</div>

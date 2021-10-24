@@ -61,8 +61,16 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
 .stats {
   @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-10;
 }
+
+
+.stats.stats .stat+.stat {
+  border-left-width: 0;
+  border-top-width: 1px;
+  @apply border-neutral-focus;
+}
 .stat {
-  @apply place-items-center place-content-center;
+  @apply place-items-center place-content-center border-neutral-focus;
+
 }
 .stat-value {
   @apply text-3xl xl:text-5xl;
