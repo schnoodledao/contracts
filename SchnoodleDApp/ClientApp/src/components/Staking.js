@@ -238,12 +238,13 @@ export class Staking extends Component {
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
                   <div class="stat-desc text-secondary">{token}</div>
                 </div>
+
                 {this.state.tripMeter.blockNumber > 0 && (
                   <div class="stat">
                     <div class="stat-title">BARK rewards</div>
                     <div class="stat-value greenfade">
                       {this.scaleDownUnits(this.state.balance - this.state.tripMeter.netBalance)}
-                      <button onClick={this.resetTripMeter}>Reset</button>
+                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" onClick={this.resetTripMeter} title="Reset" />
                     </div>
                     <div class="stat-desc text-secondary">{token} since block {this.state.tripMeter.blockNumber}</div>
                   </div>
