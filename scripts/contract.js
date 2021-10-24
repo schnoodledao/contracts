@@ -3,8 +3,8 @@
 module.exports = {
   upgrade: async function (deployer, network, contractName) {
     if (network === 'develop') {
-      const { testContract } = require(`../migrations-config.${network}.js`);
-      if (contractName != testContract) return;
+      const { testContracts } = require(`../migrations-config.${network}.js`);
+      if (contractName != testContracts.schnoodle) return;
     }
 
     const contract = artifacts.require(contractName);

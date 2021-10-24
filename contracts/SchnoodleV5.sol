@@ -5,14 +5,13 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "./imports/SchnoodleV5Base.sol";
-import "./imports/DelegateCallee.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
-contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCallee {
+contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     uint256 private _version;
-    uint256 private _stakingPercent;
+    address private _schnoodleStaking;
     address private _stakingFund;
-    mapping(address => uint256) private _stakedBalances;
+    uint256 private _stakingPercent;
 
     bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
     bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
@@ -24,6 +23,7 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCalle
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner());
         grantRole(STAKING_CONTRACT, schnoodleStaking);
+        _schnoodleStaking = schnoodleStaking;
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
     }
 
@@ -47,18 +47,9 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCalle
         return _stakingPercent;
     }
 
-    function stakedBalanceOf(address account) external view returns(uint256) {
-        return _stakedBalances[account];
-    }
-
-    function adjustStakedBalance(int256 amount) external onlyDelegateCall {
-        require(hasRole(STAKING_CONTRACT, address(this)));
-        _stakedBalances[_msgSender()] = uint256(int256(_stakedBalances[_msgSender()]) + amount);
-    }
-
-    function stakingReward(uint256 netReward, uint256 grossReward) external onlyDelegateCall {
-        require(hasRole(STAKING_CONTRACT, address(this)));
-        _transferFromReflected(_stakingFund, _msgSender(), _getReflectedAmount(netReward));
+    function stakingReward(address account, uint256 netReward, uint256 grossReward) external {
+        require(hasRole(STAKING_CONTRACT, _msgSender()));
+        _transferFromReflected(_stakingFund, account, _getReflectedAmount(netReward));
 
         // Burn the unused part of the gross reward
         _burn(_stakingFund, grossReward - netReward, "", "");
@@ -70,10 +61,18 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable, DelegateCalle
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
-            require(standardAmount > balance || standardAmount <= balance - _stakedBalances[from], "Schnoodle: transfer amount exceeds unstaked balance");
+            require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
+    }
+
+    // Calls to the SchnoodleStaking proxy contract
+
+    function stakedBalanceOf(address account) private returns(uint256) {
+        (bool success, bytes memory result) = _schnoodleStaking.call(abi.encodeWithSignature("stakedBalanceOf(address)", account));
+        assert(success);
+        return abi.decode(result, (uint256));
     }
 
     event StakingPercentChanged(uint256 percent);

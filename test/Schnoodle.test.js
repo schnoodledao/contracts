@@ -1,11 +1,11 @@
 // test/Schnoodle.test.js
 
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
-const [ serviceAccount, stakingPool, eleemosynary ] = accounts;
+const [ serviceAccount, eleemosynary ] = accounts;
 const { BN, singletons, time } = require('@openzeppelin/test-helpers');
 
-const { testContract } = require(`../migrations-config.develop.js`);
-const Schnoodle = contract.fromArtifact(testContract);
+const { testContracts } = require(`../migrations-config.develop.js`);
+const Schnoodle = contract.fromArtifact(testContracts.schnoodle);
 
 const { assert } = require('chai');
 require('chai').should();
@@ -18,7 +18,6 @@ let schnoodle;
 let initialTokens;
 let feePercent;
 let donationPercent;
-let stakingPercent;
 
 const data = web3.utils.sha3(chance.string());
 
@@ -26,7 +25,6 @@ beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
   feePercent = chance.integer({ min: 1, max: 20 });
   donationPercent = chance.integer({ min: 1, max: 20 });
-  stakingPercent = chance.integer({ min: 1, max: 20 });
 
   await singletons.ERC1820Registry(serviceAccount);
 
@@ -34,7 +32,6 @@ beforeEach(async function () {
   await schnoodle.initialize(initialTokens, serviceAccount);
   await schnoodle.changeFeePercent(feePercent);
   await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
-  await schnoodle.changeStaking(stakingPool, stakingPercent);
 });
 
 describe('Balance', () => {
@@ -77,6 +74,25 @@ describe("Burning", () => {
 });
 
 describe('Transfer', () => {
+  let amounts;
+  let senderCandidates;
+  let sender;
+  let recipient;
+  
+  beforeEach(async function () {
+    await _populateAccounts();
+
+    amounts = {};
+    for (const account of accounts) {
+      amounts[account] = BigInt(await schnoodle.balanceOf(account));
+    }
+
+    // Randomly pick different sender and recipient accounts ensuring they're not the eleemosynary account
+    senderCandidates = accounts.filter(a => a != eleemosynary);
+    sender = chance.pickone(senderCandidates);
+    recipient = chance.pickone(senderCandidates.filter(a => a != sender));
+  });
+
   it('should transfer some ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
     await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _transfer(schnoodle, sender, recipient, amount));
   });
@@ -116,18 +132,6 @@ describe('Transfer', () => {
   }
 
   async function _testTransfer(amountCallback, transferCallback) {
-    await _populateAccounts();
-
-    let amounts = {};
-    for (const account of accounts) {
-      amounts[account] = BigInt(await schnoodle.balanceOf(account));
-    }
-
-    // Randomly pick different sender and recipient accounts ensuring they're not the eleemosynary account
-    senderCandidates = accounts.filter(a => a != eleemosynary);
-    sender = chance.pickone(senderCandidates);
-    recipient = chance.pickone(senderCandidates.filter(a => a != sender));
-
     // Invoke the callback function to get the desired amount to transfer for this test
     const transferAmount = amountCallback(BigInt(await schnoodle.balanceOf(sender)));
 
@@ -143,7 +147,7 @@ describe('Transfer', () => {
       const deltaPercent = account == sender
         ? -100
         : (account == recipient
-          ? 100 - feePercent - donationPercent - stakingPercent
+          ? 100 - feePercent - donationPercent
           : (account == eleemosynary
             ? donationPercent - feePercent / 10 // A fee is also paid on the donation itself
             : 0));
@@ -165,57 +169,73 @@ describe('Transfer', () => {
 });
 
 describe('Staking', () => {
+  let schnoodleStaking;
   let stakeholder;
   let stakeAmount;
-  let startBalance;
+  let stakingFund;
+  let stakeholderStartBalance;
+  let stakingFundStartBalance;
 
   beforeEach(async function () {
+    const SchnoodleStaking = contract.fromArtifact(testContracts.schnoodleStaking);
+    schnoodleStaking = await SchnoodleStaking.new();
+    await schnoodleStaking.initialize(schnoodle.address);
+    await schnoodle.upgrade(schnoodleStaking.address);
+    await schnoodle.changeStakingPercent(chance.integer({ min: 1, max: 20 }));
+
     await _populateAccounts();
-    stakeholderCandidates = accounts.filter(a => a != stakingPool);
-    stakeholder = chance.pickone(stakeholderCandidates);
+    stakeholder = chance.pickone(accounts);
     stakeAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeholder))));
-    startBalance = BigInt(await schnoodle.balanceOf(stakeholder));
+    stakingFund = await schnoodle.stakingFund();
+    stakeholderStartBalance = BigInt(await schnoodle.balanceOf(stakeholder));
+    stakingFundStartBalance = BigInt(await schnoodle.balanceOf(stakingFund));
   });
 
   it('should increase the stakeholder\'s balance by a nonzero reward when a stake with 1 vesting block is withdrawn', async() => {
-    await schnoodle.addStake(stakeAmount, 1, { from: stakeholder });
-    await time.advanceBlock();
-    const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
-    const reward = BigInt(receipt.logs.find(l => l.event == 'Withdrawn').args.reward);
-    assert.isTrue(reward > 0n, 'Staking reward is not positive');
-    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance wasn\'t increased by the reward amount');
+    [netReward, grossReward] = await addStakeAndWithdraw(1);
+
+    assert.isTrue(netReward > 0n && grossReward > 0n, 'Staking reward value is not positive');
+    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), stakeholderStartBalance + netReward, 'Stakeholder balance wasn\'t increased by the net reward amount');
+    assert.equal(BigInt(await schnoodle.balanceOf(stakingFund)), stakingFundStartBalance - grossReward, 'Staking fund wasn\'t reduced by the gross reward amount');
   });
 
   it('should not increase the stakeholder\'s balance when a stake with no vesting blocks is withdrawn', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
-    await time.advanceBlock();
-    const receipt = await schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder });
-    const reward = BigInt(receipt.logs.find(l => l.event == 'Withdrawn').args.reward);
-    assert.isTrue(reward == 0n, 'Staking reward is not zero');
-    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), startBalance + reward, 'Stakeholder balance was wrongly increased');
+    [netReward, grossReward] = await addStakeAndWithdraw(0);
+
+    assert.isTrue(netReward == 0n && grossReward == 0n, 'Staking reward value is not zero');
+    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), stakeholderStartBalance + netReward, 'Stakeholder balance was wrongly increased');
+    assert.equal(BigInt(await schnoodle.balanceOf(stakingFund)), stakingFundStartBalance - grossReward, 'Staking fund was wrongly reduced');
   });
 
   it('should revert on attempt to withdraw during vesting blocks', async() => {
-    await schnoodle.addStake(stakeAmount, chance.integer({ min: 1 }), { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.withdrawStake(0, stakeAmount, { from: stakeholder }), "SchnoodleStaking: cannot withdraw during vesting blocks");
+    await truffleAssert.reverts(addStakeAndWithdraw(chance.integer({ min: 2 })), "SchnoodleStaking: cannot withdraw during vesting blocks");
   });
 
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
-    const additionalStake = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
-    await truffleAssert.reverts(schnoodle.addStake(additionalStake, 0, { from: stakeholder }), "SchnoodleStaking: stake amount exceeds unstaked balance");
+    await schnoodleStaking.addStake(stakeAmount, 0, { from: stakeholder });
+    const additionalStake = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + BigInt(1), stakeholderStartBalance));
+    await truffleAssert.reverts(schnoodleStaking.addStake(additionalStake, 0, { from: stakeholder }), "SchnoodleStaking: stake amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are unstaked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
-    const transferAmount = BigInt(bigInt.randBetween(startBalance - stakeAmount + BigInt(1), startBalance));
+    await schnoodleStaking.addStake(stakeAmount, 0, { from: stakeholder });
+    const transferAmount = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + BigInt(1), stakeholderStartBalance));
     await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are available including staked', async() => {
-    await schnoodle.addStake(stakeAmount, 0, { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(startBalance + BigInt(1)), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
+    await schnoodleStaking.addStake(stakeAmount, 0, { from: stakeholder });
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(stakeholderStartBalance + BigInt(1)), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
   });
+
+  async function addStakeAndWithdraw(vestingBlocks) {
+    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, { from: stakeholder });
+    await time.advanceBlock();
+    const receipt = await schnoodleStaking.withdraw(0, stakeAmount, { from: stakeholder });
+
+    let withdrawnEvent = receipt.logs.find(l => l.event == 'Withdrawn');
+    return [BigInt(withdrawnEvent.args.netReward), BigInt(withdrawnEvent.args.grossReward)];
+  }
 });
 
 async function _populateAccounts() {

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Schnoodle from "../contracts/SchnoodleV5.json";
-import SchnoodleStaking from "../contracts/SchnoodleStaking.json";
+import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
 const bigInt = require("big-integer");
 
@@ -54,14 +54,14 @@ export class Staking extends Component {
   }
 
   async getInfo() {
-    const { web3, schnoodle, selectedAddress } = this.state;
+    const { web3, schnoodle, schnoodleStaking, selectedAddress } = this.state;
 
     const decimals = await schnoodle.methods.decimals().call();
     this.setState({ decimals: decimals });
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
-    const stakedBalance = await schnoodle.methods.stakedBalanceOf(selectedAddress).call();
+    const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
     const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
@@ -118,7 +118,7 @@ export class Staking extends Component {
   async withdrawStake(i) {
     try {
       const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
-      const response = await schnoodleStaking.methods.withdrawStake(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      const response = await schnoodleStaking.methods.withdraw(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -252,7 +252,7 @@ export class Staking extends Component {
 
                 <div class="card-actions text-center mx-auto w-full">
                   <form class=" justify-center fullhalfwidth mx-auto mt-5">
-                    <fieldset disabled={true}>
+                    <fieldset disabled={stakeableAmount === 0}>
                       <div class="form-control">
                         <div>
                           <label class="label">

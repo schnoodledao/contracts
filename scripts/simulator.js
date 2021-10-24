@@ -11,14 +11,21 @@ module.exports = async function main(callback) {
     const accounts = await web3.eth.getAccounts();
     const serviceAccount = accounts[0];
     const eleemosynary = accounts[1];
-    const stakingPool = accounts[2];
 
     await singletons.ERC1820Registry(serviceAccount);
 
-    const { testContract } = require(`../migrations-config.develop.js`);
-    const Schnoodle = artifacts.require(testContract);
+    const { testContracts } = require(`../migrations-config.develop.js`);
+
+    // Set up Schnoodle contract
+    const Schnoodle = artifacts.require(testContracts.schnoodle);
     const schnoodle = await Schnoodle.new();
     await schnoodle.initialize(100000, serviceAccount);
+
+    // Set up SchnoodleStaking contract
+    const SchnoodleStaking = artifacts.require(testContracts.schnoodleStaking);
+    const schnoodleStaking = await SchnoodleStaking.new();
+    await schnoodleStaking.initialize(schnoodle.address);
+    await schnoodle.upgrade(schnoodleStaking.address);
     const stakingFund = await schnoodle.stakingFund();
 
     const chance = new Chance();
@@ -27,11 +34,10 @@ module.exports = async function main(callback) {
     const stakingPercent = chance.integer({ min: 1, max: 5 });
     await schnoodle.changeFeePercent(feePercent);
     await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
-    await schnoodle.changeStaking(stakingPool, stakingPercent);
+    await schnoodle.changeStakingPercent(stakingPercent);
 
     console.log(`Service Account: ${serviceAccount}`);
     console.log(`Eleemosynary:    ${eleemosynary}`);
-    console.log(`Staking Pool:    ${stakingPool}`);
     console.log(`Staking Fund:    ${stakingFund}`);
     console.log(`Fee: ${feePercent}% | Donation: ${donationPercent}% | Staking: ${stakingPercent}%`);
 
@@ -44,7 +50,7 @@ module.exports = async function main(callback) {
 
     // Set up some trades from the service account (negative means a transfer to the service account)
     let trades = [
-      { account: stakingPool, amount: 10000 },
+      { account: accounts[2], amount: 10000 },
       { account: accounts[3], amount: 100 },
       { account: accounts[4], amount: 1000 },
       { account: accounts[4], amount: -500 },
@@ -90,10 +96,10 @@ module.exports = async function main(callback) {
       // Add or withdraw stake depending on the add stake action being true or false
       if (stake.add) {
         amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stake.account))));
-        await schnoodle.addStake(amount, 1, { from: stake.account });
+        await schnoodleStaking.addStake(amount, 1, { from: stake.account });
       } else {
-        amount = -BigInt(await schnoodle.stakedBalanceOf(stake.account));
-        await schnoodle.withdrawStake(0, -amount, { from: stake.account });
+        amount = -BigInt(await schnoodleStaking.stakedBalanceOf(stake.account));
+        await schnoodleStaking.withdraw(0, -amount, { from: stake.account });
       }
 
       await _printBalances(stake.account, amount / decimalsFactor);
