@@ -20,7 +20,7 @@ export class Staking extends Component {
       decimals: null,
       stakingFundBalance: 0,
       balance: 0,
-      netBalance: 0,
+      tripMeter: {"blockNumber": 0, "netBalance": 0},
       amountToStake: 1,
       vestingBlocks: 1,
       stakedBalance: 0,
@@ -31,6 +31,7 @@ export class Staking extends Component {
 
     this.stakeAll = this.stakeAll.bind(this);
     this.addStake = this.addStake.bind(this);
+    this.resetTripMeter = this.resetTripMeter.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
   }
@@ -62,7 +63,7 @@ export class Staking extends Component {
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
-    const netBalance = await schnoodle.methods.netBalanceOf(selectedAddress).call();
+    const tripMeter = await schnoodle.methods.tripMeter(selectedAddress).call();
     const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
     const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
@@ -72,7 +73,7 @@ export class Staking extends Component {
       withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, netBalance: netBalance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, tripMeter: tripMeter, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -121,6 +122,16 @@ export class Staking extends Component {
     try {
       const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
       const response = await schnoodleStaking.methods.withdraw(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      this.handleResponse(response);
+    } catch (err) {
+      await this.handleError(err);
+    }
+  }
+
+  async resetTripMeter() {
+    try {
+      const { schnoodle, selectedAddress } = this.state;
+      const response = await schnoodle.methods.resetTripMeter().send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -227,11 +238,16 @@ export class Staking extends Component {
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
                   <div class="stat-desc text-secondary">{token}</div>
                 </div>
-                <div class="stat">
-                  <div class="stat-title">BARK rewards</div>
-                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.balance - this.state.netBalance)}</div>
-                  <div class="stat-desc text-secondary">{token}</div>
-                </div>
+                {this.state.tripMeter.blockNumber > 0 && (
+                  <div class="stat">
+                    <div class="stat-title">BARK rewards</div>
+                    <div class="stat-value greenfade">
+                      {this.scaleDownUnits(this.state.balance - this.state.tripMeter.netBalance)}
+                      <button onClick={this.resetTripMeter}>Reset</button>
+                    </div>
+                    <div class="stat-desc text-secondary">{token} since block {this.state.tripMeter.blockNumber}</div>
+                  </div>
+                )}
               </div>
 
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
