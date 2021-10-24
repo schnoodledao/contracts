@@ -25,7 +25,7 @@ export class NavMenu extends Component {
     return (
       <header>
         <Navbar className="navbar mb-2 shadow-lg bg-neutral text-neutral-content font-roboto" light>
-          <Container className="m-auto">
+          <div className="m-auto w-full">
             <div class="flex-1 px-2 mx-2">
               <span class="text-lg font-bold">
                 <NavbarBrand tag={Link} to="/" className="leading-tight uppercase">Schnoodle X</NavbarBrand>
@@ -48,7 +48,7 @@ export class NavMenu extends Component {
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </Navbar>
       </header>
     );

@@ -199,7 +199,7 @@ export class Staking extends Component {
         <div class="overflow-hidden antialiased font-roboto mx-4">
           <div class="h-noheader md:flex">
             <div class="flex items-center justify-center w-full">
-              <div class="container">
+              <div class="px-4">
               <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
                 <div class="maintitles pb-4">Staking</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
@@ -212,7 +212,7 @@ export class Staking extends Component {
     }
     return (
       <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
-        <div class="text-center container px-1 md:px-5 ">
+        <div class="text-center px-1 md:px-4 ">
           <div class="text-base-200 w-full ">
             <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
             <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
