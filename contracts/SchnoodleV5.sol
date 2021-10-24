@@ -12,6 +12,7 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     address private _schnoodleStaking;
     address private _stakingFund;
     uint256 private _stakingPercent;
+    mapping(address => uint256) private _netBalances;
 
     bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
     bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
@@ -32,6 +33,10 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
             super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
             _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
         }
+    }
+
+    function netBalanceOf(address account) external view returns (uint256) {
+        return _netBalances[account];
     }
 
     function stakingFund() external view returns (address) {
@@ -62,6 +67,12 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
             require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
+
+            if (_netBalances[from] == 0) _netBalances[from] = balance;
+            if (_netBalances[to] == 0) _netBalances[to] = balanceOf(to);
+
+            _netBalances[from] -= standardAmount;
+            _netBalances[to] += standardAmount;
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
@@ -76,6 +87,4 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     }
 
     event StakingPercentChanged(uint256 percent);
-
-    uint256[50] private __gap;
 }

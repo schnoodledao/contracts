@@ -20,6 +20,7 @@ export class Staking extends Component {
       decimals: null,
       stakingFundBalance: 0,
       balance: 0,
+      netBalance: 0,
       amountToStake: 1,
       vestingBlocks: 1,
       stakedBalance: 0,
@@ -61,6 +62,7 @@ export class Staking extends Component {
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
+    const netBalance = await schnoodle.methods.netBalanceOf(selectedAddress).call();
     const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
     const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
@@ -70,7 +72,7 @@ export class Staking extends Component {
       withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, netBalance: netBalance, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -222,6 +224,11 @@ export class Staking extends Component {
               <div class="stat">
                 <div class="stat-title">Staking fund balance</div>
                 <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
+                <div class="stat-desc text-secondary">{token}</div>
+              </div>
+              <div class="stat">
+                <div class="stat-title">BARK rewards</div>
+                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.balance - this.state.netBalance)}</div>
                 <div class="stat-desc text-secondary">{token}</div>
               </div>
             </div>

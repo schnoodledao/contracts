@@ -24,8 +24,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        uint256 reflectedBalance = super.balanceOf(account);
-        return _getStandardAmount(reflectedBalance);
+        return _getStandardAmount(super.balanceOf(account));
     }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
