@@ -12,11 +12,16 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     address private _schnoodleStaking;
     address private _stakingFund;
     uint256 private _stakingPercent;
-    mapping(address => uint256) private _netBalances;
+    mapping(address => TripMeter) private _tripMeters;
 
     bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
     bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
+
+    struct TripMeter {
+        uint256 blockNumber;
+        uint256 netBalance;
+    }
 
     function upgrade(address schnoodleStaking) external onlyOwner {
         require(_version < 5, "Schnoodle: already upgraded");
@@ -35,8 +40,16 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
         }
     }
 
-    function netBalanceOf(address account) external view returns (uint256) {
-        return _netBalances[account];
+    function tripMeter(address account) external view returns (TripMeter memory) {
+        return _tripMeters[account];
+    }
+
+    function resetTripMeter() public {
+        _resetTripMeter(_msgSender());
+    }
+
+    function _resetTripMeter(address account) public {
+        _tripMeters[account] = TripMeter(block.number, balanceOf(account));
     }
 
     function stakingFund() external view returns (address) {
@@ -63,16 +76,19 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
         require(!hasRole(NO_TRANSFER, from));
 
+        uint256 standardAmount = _getStandardAmount(amount);
+
         if (from != address(0)) {
-            uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
             require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
 
-            if (_netBalances[from] == 0) _netBalances[from] = balance;
-            if (_netBalances[to] == 0) _netBalances[to] = balanceOf(to);
+            if (_tripMeters[from].blockNumber == 0) _resetTripMeter(from);
+            _tripMeters[from].netBalance -= standardAmount;
+        }
 
-            _netBalances[from] -= standardAmount;
-            _netBalances[to] += standardAmount;
+        if (to != address(0)) {
+            if (_tripMeters[to].blockNumber == 0) _resetTripMeter(to);
+            _tripMeters[to].netBalance += standardAmount;
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
