@@ -1,86 +1,90 @@
-// contracts/Schnoodle.sol
+// contracts/SchnoodleV5.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "./imports/Stakeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "./imports/SchnoodleV5Base.sol";
 
-contract SchnoodleV5 is SchnoodleV5Base, Stakeable {
-    address private _stakingPool;
+/// @author Jason Payne (https://twitter.com/Neo42)
+contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
+    uint256 private _version;
+    address private _schnoodleStaking;
     address private _stakingFund;
     uint256 private _stakingPercent;
+    mapping(address => uint256) private _netBalances;
 
-    function initialize(uint256 initialTokens, address serviceAccount) public initializer {
-        __SchnoodleV5Base_init(initialTokens, serviceAccount);
+    bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
+    bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
+    bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
+
+    function upgrade(address schnoodleStaking) external onlyOwner {
+        require(_version < 5, "Schnoodle: already upgraded");
+        _version = 5;
+
+        _setupRole(DEFAULT_ADMIN_ROLE, owner());
+        grantRole(STAKING_CONTRACT, schnoodleStaking);
+        _schnoodleStaking = schnoodleStaking;
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
-        __Stakeable_init(address(this), _stakingFund);
     }
 
-    function payFeeAndDonate(address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
-        super.payFeeAndDonate(recipient, amount, reflectedAmount, transferCallback);
-        _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
+    function payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
+        if (!hasRole(FEE_EXEMPT, sender)) {
+            super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
+            _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
+        }
     }
 
-    function stakingFund() public view returns (address) {
+    function netBalanceOf(address account) external view returns (uint256) {
+        return _netBalances[account];
+    }
+
+    function stakingFund() external view returns (address) {
         return _stakingFund;
     }
 
-    function changeStaking(address stakingPool, uint256 percent) public onlyOwner {
-        _stakingPool = stakingPool;
+    function changeStakingPercent(uint256 percent) external onlyOwner {
         _stakingPercent = percent;
-        emit StakingChanged(stakingPool, percent);
+        emit StakingPercentChanged(percent);
     }
 
-    function staking() public view returns(address, uint256) {
-        return (_stakingPool, _stakingPercent);
+    function stakingPercent() external view returns (uint256) {
+        return _stakingPercent;
+    }
+
+    function stakingReward(address account, uint256 netReward, uint256 grossReward) external {
+        require(hasRole(STAKING_CONTRACT, _msgSender()));
+        _transferFromReflected(_stakingFund, account, _getReflectedAmount(netReward));
+
+        // Burn the unused part of the gross reward
+        _burn(_stakingFund, grossReward - netReward, "", "");
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        require(from != address(0x79A1ddA6625Dc4842625EF05591e4f2322232120) &&
-                from != address(0x5d22e32398CAE8F8448df5491b50C39B7F271016) &&
-                from != address(0x3443036E7c2dfC1f09a309c96b502b4f20F32e42) &&
-                from != address(0xA51dc67ec00a9B082EC1ebc4A901A9Cb447E30E4));
+        require(!hasRole(NO_TRANSFER, from));
 
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
             require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
+
+            if (_netBalances[from] == 0) _netBalances[from] = balance;
+            if (_netBalances[to] == 0) _netBalances[to] = balanceOf(to);
+
+            _netBalances[from] -= standardAmount;
+            _netBalances[to] += standardAmount;
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
     }
 
-    function withdrawStake(uint256 index, uint256 amount) public virtual override returns(uint256) {
-        uint256 rewardFromFund = super.withdrawStake(index, amount);
-        _transferFromReflected(_stakingFund, _msgSender(), _getReflectedAmount(rewardFromFund));
+    // Calls to the SchnoodleStaking proxy contract
 
-        uint256 rewardFromPool = _rewardFromPool(rewardFromFund);
-        if (rewardFromPool > 0) {
-            _transferFromReflected(_stakingPool, _msgSender(), _getReflectedAmount(rewardFromPool));
-        }
-
-        uint256 rewardTotal = rewardFromFund + rewardFromPool;
-        emit Withdrawn(_msgSender(), index, amount, rewardTotal);
-        
-        return rewardTotal;
+    function stakedBalanceOf(address account) private returns(uint256) {
+        (bool success, bytes memory result) = _schnoodleStaking.call(abi.encodeWithSignature("stakedBalanceOf(address)", account));
+        assert(success);
+        return abi.decode(result, (uint256));
     }
 
-    function stakingSummary(address account) public view virtual override returns(Stake[] memory) {
-        Stake[] memory stakes = super.stakingSummary(account);
-
-        for (uint256 i = 0; i < stakes.length; i++) {
-            stakes[i].claimable += _rewardFromPool(stakes[i].claimable);
-        }
-
-        return stakes;
-    }
-
-    function _rewardFromPool(uint256 rewardFromFund) private view returns(uint256) {
-        return _stakingPool == address(0) ? 0 : balanceOf(_stakingPool) * rewardFromFund / totalSupply();
-    }
-
-    event StakingChanged(address stakingPool, uint256 percent);
+    event StakingPercentChanged(uint256 percent);
 }
