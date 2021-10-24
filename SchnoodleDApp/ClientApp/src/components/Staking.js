@@ -196,14 +196,15 @@ export class Staking extends Component {
 
     if (!this.state.web3) {
       return (
-        <div class="overflow-hidden antialiased font-roboto mx-4">
+        <div class="overflow-hidden antialiased font-roboto mx-4">  
           <div class="h-noheader md:flex">
             <div class="flex items-center justify-center w-full">
               <div class="px-4">
-              <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                <div class="maintitles pb-4">Staking</div>
+              <img class="object-cover w-1/2 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <div class="maintitles">SCHNOODLE X</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
-                <p class="text-4xl font-light leading-normal text-gray-600 md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
+                <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
+
               </div>
             </div>
           </div>
@@ -211,92 +212,94 @@ export class Staking extends Component {
       );
     }
     return (
-      <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
-        <div class="text-center px-1 md:px-4 ">
-          <div class="text-base-200 w-full ">
-            <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
-            <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
-              <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
-              <span class="hidden md:block text-left">{stakeTokens} {earnTokens}</span>
-            </p>
-      
-            <div class="stats topstats">
-              <div class="stat">
-                <div class="stat-title">Staking fund balance</div>
-                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
-                <div class="stat-desc text-secondary">{token}</div>
-              </div>
-              <div class="stat">
-                <div class="stat-title">BARK rewards</div>
-                <div class="stat-value greenfade">{this.scaleDownUnits(this.state.balance - this.state.netBalance)}</div>
-                <div class="stat-desc text-secondary">{token}</div>
-              </div>
-            </div>
-
-            <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
-              <div class="card-body my-6 md:my-10 rounded-4xl">
-                <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                <div class="shadow bottomstats stats ">
-                  <div class="stat">
-                    <div class="stat-title">Total balance</div>
-                    <div class="stat-value purplefade">{balance}</div>
-                    <div class="stat-desc">{token}</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-title">Staked balance</div>
-                    <div class="stat-value purplefade">{stakedBalance}</div>
-                    <div class="stat-desc">{token}</div>
-                  </div>
-                  <div class="stat">
-                    <div class="stat-title">Stakeable amount</div>
-                    <div class="stat-value purplefade">{stakeableAmount}</div>
-                    <div class="stat-desc">{token}</div>
-                  </div>
+      <div class="m-auto px-4 max-w-screen-2xl">
+        <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
+          <div class="text-center px-1 md:px-4 ">
+            <div class="text-base-200 w-full ">
+              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
+              <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
+                <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
+                <span class="hidden md:block text-left">{stakeTokens} {earnTokens}</span>
+              </p>
+        
+              <div class="stats topstats">
+                <div class="stat">
+                  <div class="stat-title">Staking fund balance</div>
+                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
+                  <div class="stat-desc text-secondary">{token}</div>
                 </div>
-                <div class="divider mt-10">
-                  <h3 class="staketitle text-2xl md:text-3xl leading-tight">Add Stake</h3>
+                <div class="stat">
+                  <div class="stat-title">BARK rewards</div>
+                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.balance - this.state.netBalance)}</div>
+                  <div class="stat-desc text-secondary">{token}</div>
                 </div>
+              </div>
 
-                <div class="card-actions text-center mx-auto w-full">
-                  <form class=" justify-center fullhalfwidth mx-auto mt-5">
-                    <fieldset disabled={stakeableAmount === 0}>
-                      <div class="form-control">
-                        <div>
-                          <label class="label">
-                            <span class="label-text">Amount</span>
-                          </label> 
-                          <div class="relative">
-                            <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
-                            <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
+              <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
+                <div class="card-body my-6 md:my-10 rounded-4xl">
+                  <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
+                  <div class="shadow bottomstats stats ">
+                    <div class="stat">
+                      <div class="stat-title">Total balance</div>
+                      <div class="stat-value purplefade">{balance}</div>
+                      <div class="stat-desc">{token}</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-title">Staked balance</div>
+                      <div class="stat-value purplefade">{stakedBalance}</div>
+                      <div class="stat-desc">{token}</div>
+                    </div>
+                    <div class="stat">
+                      <div class="stat-title">Stakeable amount</div>
+                      <div class="stat-value purplefade">{stakeableAmount}</div>
+                      <div class="stat-desc">{token}</div>
+                    </div>
+                  </div>
+                  <div class="divider mt-10">
+                    <h3 class="staketitle text-2xl md:text-3xl leading-tight">Add Stake</h3>
+                  </div>
+
+                  <div class="card-actions text-center mx-auto w-full">
+                    <form class=" justify-center fullhalfwidth mx-auto mt-5">
+                      <fieldset disabled={stakeableAmount === 0}>
+                        <div class="form-control">
+                          <div>
+                            <label class="label">
+                              <span class="label-text">Amount</span>
+                            </label> 
+                            <div class="relative">
+                              <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
+                              <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="mb-3 form-control">
-                        <label class="label">
-                          <span class="label-text">Vesting blocks</span>
-                        </label>
-                        <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
-                      </div>
-                      <div class="mb-3 form-control">
-                        <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
-                      </div>
-                    </fieldset>
-                  </form>
+                        <div class="mb-3 form-control">
+                          <label class="label">
+                            <span class="label-text">Vesting blocks</span>
+                          </label>
+                          <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                        </div>
+                        <div class="mb-3 form-control">
+                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
+                        </div>
+                      </fieldset>
+                    </form>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {this.state.stakingSummary.length > 0 && (
-              <div class="staketable">
-                <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
-                <div class="overflow-x-auto text-secondary my-5 ">
-                  {this.renderStakingSummaryTable(this.state.stakingSummary)}
+              {this.state.stakingSummary.length > 0 && (
+                <div class="staketable">
+                  <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
+                  <div class="overflow-x-auto text-secondary my-5 ">
+                    {this.renderStakingSummaryTable(this.state.stakingSummary)}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <div class="my-5">
-              <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+              <div class="my-5">
+                <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+              </div>
             </div>
           </div>
         </div>

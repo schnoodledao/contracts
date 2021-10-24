@@ -10,7 +10,7 @@ export class Home extends Component {
       <div class="h-noheader md:flex">
         <div class="flex items-center justify-center w-full">
           <div class="px-4">
-          <img class="object-cover w-1/4 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+          <img class="object-cover w-1/2 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
             <div class="maintitles">SCHNOODLE X</div>
             <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
             <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">STAKING</p>
