@@ -205,7 +205,7 @@ export class Staking extends Component {
     const stakeTokens = `Stake ${token} tokens.`;
     const earnTokens = `Earn ${token} tokens.`;
 
-    if (!this.state.web3) {
+    if (this.state.web3) {
       return (
         <div class="overflow-hidden antialiased font-roboto mx-4">  
           <div class="h-noheader md:flex">
@@ -215,6 +215,7 @@ export class Staking extends Component {
                 <div class="maintitles">SCHNOODLE X</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6"></div>
                 <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
+                <div class="px-4 mt-4" style="height:37px">&nbsp;</div>
               </div>
             </div>
           </div>
