@@ -64,14 +64,14 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
   @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-10;
 }
 
-
-.stats.stats .stat+.stat {
+/* .stats.stats .stat+.stat {
   border-left-width: 0;
-  border-top-width: 1px;
-  @apply border-neutral-focus;
-}
+  border-top-width: 0px;
+  @apply border-neutral-focus b-top;
+} */
+
 .stat {
-  @apply place-items-center place-content-center border-neutral-focus;
+  @apply place-items-center place-content-center;
 
 }
 .stat-value {
