@@ -76,19 +76,23 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
         require(!hasRole(NO_TRANSFER, from));
 
-        uint256 standardAmount = _getStandardAmount(amount);
+        // This would only ever be false when the initial supply is first minted
+        if (ERC777Upgradeable.totalSupply() > 0)
+        {
+            uint256 standardAmount = _getStandardAmount(amount);
 
-        if (from != address(0)) {
-            uint256 balance = balanceOf(from);
-            require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
+            if (from != address(0)) {
+                uint256 balance = balanceOf(from);
+                require(standardAmount > balance || standardAmount <= balance - lockedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
 
-            if (_tripMeters[from].blockNumber == 0) _resetTripMeter(from);
-            _tripMeters[from].netBalance -= standardAmount;
-        }
+                if (_tripMeters[from].blockNumber == 0) _resetTripMeter(from);
+                _tripMeters[from].netBalance -= standardAmount;
+            }
 
-        if (to != address(0)) {
-            if (_tripMeters[to].blockNumber == 0) _resetTripMeter(to);
-            _tripMeters[to].netBalance += standardAmount;
+            if (to != address(0)) {
+                if (_tripMeters[to].blockNumber == 0) _resetTripMeter(to);
+                _tripMeters[to].netBalance += standardAmount;
+            }
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
