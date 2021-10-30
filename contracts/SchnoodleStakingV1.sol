@@ -10,6 +10,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     address private _schnoodle;
     mapping(address => Stake[]) private _stakes;
     mapping(address => uint256) private _balances;
+    mapping(address => Unbond[]) private _unbonds;
     uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
     uint256 private _lastBlockNumber;
@@ -22,7 +23,13 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         uint256 amount;
         uint256 blockNumber;
         uint256 vestingBlocks;
+        uint256 unbondingBlocks;
         uint256 claimable;
+    }
+
+    struct Unbond {
+        uint256 amount;
+        uint256 expiryBlock;
     }
 
     struct SigmoidParams {
@@ -37,17 +44,17 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     }
 
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
-    function addStake(uint256 amount, uint256 vestingBlocks) external {
+    function addStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
         address msgSender = _msgSender();
 
-        require(amount <= balanceOf(msgSender) - _balances[msgSender], "SchnoodleStaking: stake amount exceeds unstaked balance");
+        require(amount <= balanceOf(msgSender) - stakedBalanceOf(msgSender), "SchnoodleStaking: stake amount exceeds unstaked balance");
         require(amount > 0, "Stake must be nonzero");
 
         uint256 blockNumber = block.number;
-        _stakes[msgSender].push(Stake(amount, blockNumber, vestingBlocks, 0));
+        _stakes[msgSender].push(Stake(amount, blockNumber, vestingBlocks, unbondingBlocks, 0));
         _balances[msgSender] += amount;
 
-        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, vestingBlocks);
+        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, vestingBlocks, unbondingBlocks);
 
         emit Staked(msgSender, amount, blockNumber);
     }
@@ -64,10 +71,11 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
         (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
-        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks);
+        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks, stake.unbondingBlocks);
 
         _stakes[msgSender][index].amount -= amount;
         _balances[msgSender] -= amount;
+        _unbonds[msgSender].push(Unbond(amount, blockNumber + stake.unbondingBlocks));
 
         // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
         if (_stakes[msgSender][index].amount == 0) {
@@ -99,15 +107,16 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         uint256 netReward;
 
         if (cumulativeAmount > 0 && _totalStakeWeight > 0) {
-            uint256 vestingBlocksWeightedAverage = _totalStakeWeight / _totalTokens;
+            uint256 lockProduct = stake.vestingBlocks * stake.unbondingBlocks;
+            uint256 lockProductWeightedAverage = _totalStakeWeight / _totalTokens;
 
-            // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + e⁻ˣ) where x is the stake's vesting blocks delta from the weighted average
+            // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + e⁻ˣ) where x is the stake's lock product delta from the weighted average
             int128 x = ABDKMath64x64.mul(
                 ABDKMath64x64.div(
                     ABDKMath64x64.fromInt(-int256(_sigmoidParams.k)),
-                    ABDKMath64x64.fromUInt(vestingBlocksWeightedAverage)
+                    ABDKMath64x64.fromUInt(lockProductWeightedAverage)
                 ),
-                ABDKMath64x64.fromUInt(stake.vestingBlocks - vestingBlocksWeightedAverage)
+                ABDKMath64x64.fromInt(int256(lockProduct) - int256(lockProductWeightedAverage))
             );
 
             // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
@@ -151,17 +160,39 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return _cumulativeTotal + _totalTokens * (blockNumber - _lastBlockNumber);
     }
 
-    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 vestingBlocks) private {
+    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 vestingBlocks, uint256 unbondingBlocks) private {
         _cumulativeTotal = cumulativeTotal;
         _lastBlockNumber = blockNumber;
         _totalTokens = uint256(int256(_totalTokens) + amountDelta);
 
         // Adjust the sum of products of staked tokens and vesting blocks to get a total weight - this is used to calculate the weighted average later
-        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks));
+        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks));
     }
 
-    function stakedBalanceOf(address account) external view returns(uint256) {
+    function stakedBalanceOf(address account) public view returns(uint256) {
         return _balances[account];
+    }
+
+    function unbondingBalanceOf(address account) public returns(uint256) {
+        uint256 blockNumber = block.number;
+        uint256 total;
+
+        for (uint256 i = 0; i < _unbonds[account].length; i++) {
+            Unbond memory unbond = _unbonds[account][i];
+            if (unbond.expiryBlock > blockNumber) {
+                total += unbond.amount;
+            } else {
+                // The unbond has expired, so remove it from the array
+                _unbonds[account][i--] = _unbonds[account][_unbonds[account].length - 1];
+                _unbonds[account].pop();
+            }
+        }
+
+        return total;
+    }
+
+    function lockedBalanceOf(address account) external returns (uint256) {
+        return unbondingBalanceOf(account) + stakedBalanceOf(account);
     }
 
     function stakingSummary(address account) public returns(Stake[] memory) {
@@ -173,6 +204,10 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         }
 
         return stakes;
+    }
+
+    function unbondingSummary(address account) public view returns(Unbond[] memory) {
+        return _unbonds[account];
     }
 
     // Calls to the Schnoodle proxy contract

@@ -33,6 +33,37 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
     }
 
+    // Transfer overrides
+
+    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+        bool result = super.transfer(recipient, amount);
+        _updateTripMeter(_msgSender(), recipient, amount);
+        return result;
+    }
+
+    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+        bool result = super.transferFrom(sender, recipient, amount);
+        _updateTripMeter(sender, recipient, amount);
+        return result;
+    }
+
+    function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
+        super._send(from, to, amount, userData, operatorData, requireReceptionAck);
+        _updateTripMeter(from, to, amount);
+    }
+
+    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
+        require(!hasRole(NO_TRANSFER, from));
+
+        if (from != address(0)) {
+            uint256 standardAmount = _getStandardAmount(amount);
+            uint256 balance = balanceOf(from);
+            require(standardAmount > balance || standardAmount <= balance - lockedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
+        }
+
+        super._beforeTokenTransfer(operator, from, to, amount);
+    }
+
     function payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
         if (!hasRole(FEE_EXEMPT, sender)) {
             super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
@@ -40,17 +71,7 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
         }
     }
 
-    function tripMeter(address account) external view returns (TripMeter memory) {
-        return _tripMeters[account];
-    }
-
-    function resetTripMeter() public {
-        _resetTripMeter(_msgSender());
-    }
-
-    function _resetTripMeter(address account) public {
-        _tripMeters[account] = TripMeter(block.number, balanceOf(account));
-    }
+    // Staking functions
 
     function stakingFund() external view returns (address) {
         return _stakingFund;
@@ -73,31 +94,37 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
         _burn(_stakingFund, grossReward - netReward, "", "");
     }
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        require(!hasRole(NO_TRANSFER, from));
+    // Trip meter functions
 
-        uint256 standardAmount = _getStandardAmount(amount);
+    function tripMeter(address account) external view returns (TripMeter memory) {
+        return _tripMeters[account];
+    }
 
-        if (from != address(0)) {
-            uint256 balance = balanceOf(from);
-            require(standardAmount > balance || standardAmount <= balance - stakedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
+    function _updateTripMeter(address from, address to, uint256 amount) private {
+        _updateTripMeter(from, -int256(amount));
+        _updateTripMeter(to, int256(amount));
+    }
 
-            if (_tripMeters[from].blockNumber == 0) _resetTripMeter(from);
-            _tripMeters[from].netBalance -= standardAmount;
+    function _updateTripMeter(address account, int256 amount) private {
+        if (account != address(0)) {
+            if (_tripMeters[account].blockNumber == 0) _resetTripMeter(account);
+            _tripMeters[account].netBalance = uint256(int256(_tripMeters[account].netBalance) + amount);
         }
+    }
 
-        if (to != address(0)) {
-            if (_tripMeters[to].blockNumber == 0) _resetTripMeter(to);
-            _tripMeters[to].netBalance += standardAmount;
-        }
+    function resetTripMeter() public {
+        _resetTripMeter(_msgSender());
+    }
 
-        super._beforeTokenTransfer(operator, from, to, amount);
+    function _resetTripMeter(address account) public {
+        _tripMeters[account] = TripMeter(block.number, balanceOf(account));
     }
 
     // Calls to the SchnoodleStaking proxy contract
 
-    function stakedBalanceOf(address account) private returns(uint256) {
-        (bool success, bytes memory result) = _schnoodleStaking.call(abi.encodeWithSignature("stakedBalanceOf(address)", account));
+    function lockedBalanceOf(address account) private returns(uint256) {
+        if (_schnoodleStaking == address(0)) return 0;
+        (bool success, bytes memory result) = _schnoodleStaking.call(abi.encodeWithSignature("lockedBalanceOf(address)", account));
         assert(success);
         return abi.decode(result, (uint256));
     }

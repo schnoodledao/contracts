@@ -23,8 +23,10 @@ export class Staking extends Component {
       tripMeter: {"blockNumber": 0, "netBalance": 0},
       amountToStake: 1,
       vestingBlocks: 1,
+      unbondingBlocks: 1,
       stakedBalance: 0,
       stakingSummary: [],
+      unbondingSummary: [],
       blockNumber: 0,
       withdrawItems: []
     };
@@ -34,6 +36,7 @@ export class Staking extends Component {
     this.resetTripMeter = this.resetTripMeter.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
+    this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
   }
 
   async componentDidMount() {
@@ -66,6 +69,7 @@ export class Staking extends Component {
     const tripMeter = await schnoodle.methods.tripMeter(selectedAddress).call();
     const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
     const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
+    const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
     let withdrawItems = [];
@@ -73,7 +77,7 @@ export class Staking extends Component {
       withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, tripMeter: tripMeter, stakedBalance: stakedBalance, stakingSummary: stakingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, tripMeter: tripMeter, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -110,8 +114,8 @@ export class Staking extends Component {
 
   async addStake() {
     try {
-      const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks } = this.state;
-      const response = await schnoodleStaking.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks).send({ from: selectedAddress });
+      const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks, unbondingBlocks } = this.state;
+      const response = await schnoodleStaking.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -154,6 +158,11 @@ export class Staking extends Component {
     this.setState({ vestingBlocks: vestingBlocks });
   }
 
+  updateUnbondingBlocks(e) {
+    const unbondingBlocks = e.target.value;
+    this.setState({ unbondingBlocks: unbondingBlocks });
+  }
+
   renderStakingSummaryTable(stakingSummary) {
     return (
       <table className='table table-striped w-full mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
@@ -188,6 +197,32 @@ export class Staking extends Component {
                   </form>
                 </td>
                 <td>{this.scaleDownUnits(stake.claimable)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
+
+  renderUnbondingSummaryTable(unbondingSummary) {
+    return (
+      <table className='table table-striped w-full mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
+        <thead>
+          <tr>
+            <th class="hidden md:table-cell">Amount</th>
+            <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
+          </tr>
+        </thead>
+        <tbody class=''>
+          {unbondingSummary.map((unbond, i) => {
+            const amount = this.scaleDownUnits(unbond.amount);
+            const blocksPending = parseInt(unbond.expiryBlock) - this.state.blockNumber;
+            return blocksPending > 0 && (
+              <tr key={unbond.expiryBlock}>
+                <td class="hidden md:table-cell">{unbond.blockNumber}</td>
+                <td>{amount}</td>
+                <td>{blocksPending}</td>
               </tr>
             );
           })}
@@ -297,7 +332,13 @@ export class Staking extends Component {
                           <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
                         </div>
                         <div class="mb-3 form-control">
-                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
+                          <label class="label">
+                            <span class="label-text">Unbonding blocks</span>
+                          </label>
+                          <input type="number" min="1" value={this.state.unbondingBlocks} onChange={this.updateUnbondingBlocks} class="stakeinput" />
+                        </div>
+                        <div class="mb-3 form-control">
+                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                         </div>
                       </fieldset>
                     </form>
@@ -310,6 +351,15 @@ export class Staking extends Component {
                   <h3 class="mb-5 headingfont staketitle mt-10">Your Stakes</h3>
                   <div class="overflow-x-auto text-secondary my-5 ">
                     {this.renderStakingSummaryTable(this.state.stakingSummary)}
+                  </div>
+                </div>
+              )}
+
+              {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
+                <div class="staketable">
+                  <h3 class="mb-5 headingfont staketitle mt-10">Unbonding</h3>
+                  <div class="overflow-x-auto text-secondary my-5 ">
+                    {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                   </div>
                 </div>
               )}
