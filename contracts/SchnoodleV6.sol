@@ -107,8 +107,11 @@ contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
 
     function _updateTripMeter(address account, int256 amount) private {
         if (account != address(0)) {
-            if (_tripMeters[account].blockNumber == 0) _resetTripMeter(account);
-            _tripMeters[account].netBalance = uint256(int256(_tripMeters[account].netBalance) + amount);
+            if (_tripMeters[account].blockNumber == 0) {
+                _resetTripMeter(account);
+            } else {
+                _tripMeters[account].netBalance = uint256(int256(_tripMeters[account].netBalance) + amount);
+            }
         }
     }
 
