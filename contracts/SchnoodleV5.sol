@@ -1,133 +1,117 @@
-// contracts/SchnoodleV5.sol
+// contracts/Schnoodle.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "./imports/SchnoodleV5Base.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-/// @author Jason Payne (https://twitter.com/Neo42)
-contract SchnoodleV5 is SchnoodleV5Base, AccessControlUpgradeable {
-    uint256 private _version;
-    address private _schnoodleStaking;
-    address private _stakingFund;
-    uint256 private _stakingPercent;
-    mapping(address => TripMeter) private _tripMeters;
+contract SchnoodleV5 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
+    uint256 private constant MAX = ~uint256(0);
+    uint256 private _totalSupply;
+    uint256 private _feePercent;
+    address private _eleemosynary;
+    uint256 private _donationPercent;
 
-    bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
-    bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
-    bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
-
-    struct TripMeter {
-        uint256 blockNumber;
-        uint256 netBalance;
+    function initialize(uint256 initialTokens, address serviceAccount) public initializer {
+        __Ownable_init();
+        _totalSupply = initialTokens * 10 ** decimals();
+        super.initialize("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
     }
 
-    function upgrade(address schnoodleStaking) external onlyOwner {
-        require(_version < 5, "Schnoodle: already upgraded");
-        _version = 5;
-
-        _setupRole(DEFAULT_ADMIN_ROLE, owner());
-        grantRole(STAKING_CONTRACT, schnoodleStaking);
-        _schnoodleStaking = schnoodleStaking;
-        _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
+    function totalSupply() public view virtual override returns (uint256) {
+        return _totalSupply;
     }
 
-    // Transfer overrides
+    function balanceOf(address account) public view override returns (uint256) {
+        uint256 reflectedBalance = super.balanceOf(account);
+        require(reflectedBalance <= super.totalSupply(), "Schnoodle: Reflected balance must be less than total reflections");
+        return reflectedBalance / _getRate();
+    }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        bool result = super.transfer(recipient, amount);
-        _updateTripMeter(_msgSender(), recipient, amount);
+        uint256 reflectedAmount = _getReflectedAmount(amount);
+        bool result = super.transfer(recipient, reflectedAmount);
+        emit Transfer(_msgSender(), recipient, amount);
+        _payFeeAndDonate(recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
+    function allowance(address holder, address spender) public view virtual override returns (uint256) {
+        return super.allowance(holder, spender) / _getRate();
+    }
+
+    function approve(address spender, uint256 value) public virtual override returns (bool) {
+        return super.approve(spender, _getReflectedAmount(value));
+    }
+
     function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        bool result = super.transferFrom(sender, recipient, amount);
-        _updateTripMeter(sender, recipient, amount);
+        uint256 reflectedAmount = _getReflectedAmount(amount);
+        bool result = super.transferFrom(sender, recipient, reflectedAmount);
+        emit Transfer(sender, recipient, amount);
+        _payFeeAndDonate(recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
-        super._send(from, to, amount, userData, operatorData, requireReceptionAck);
-        _updateTripMeter(from, to, amount);
+        uint256 reflectedAmount = _getReflectedAmount(amount);
+        super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
+        emit Transfer(from, to, amount);
+        _payFeeAndDonate(to, amount, reflectedAmount, _sendToEleemosynary);
     }
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        require(!hasRole(NO_TRANSFER, from));
-
-        if (from != address(0)) {
-            uint256 standardAmount = _getStandardAmount(amount);
-            uint256 balance = balanceOf(from);
-            require(standardAmount > balance || standardAmount <= balance - lockedBalanceOf(from), "Schnoodle: transfer amount exceeds unstaked balance");
-        }
-
-        super._beforeTokenTransfer(operator, from, to, amount);
+    function _transferToEleemosynary(address recipient, uint256 reflectedDonationAmount) internal {
+        _approve(recipient, _msgSender(), reflectedDonationAmount);
+        super.transferFrom(recipient, _eleemosynary, reflectedDonationAmount);
     }
 
-    function payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
-        if (!hasRole(FEE_EXEMPT, sender)) {
-            super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
-            _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
-        }
+    function _sendToEleemosynary(address recipient, uint256 reflectedDonationAmount) internal {
+        super._send(recipient, _eleemosynary, reflectedDonationAmount, "", "", true);
     }
 
-    // Staking functions
-
-    function stakingFund() external view returns (address) {
-        return _stakingFund;
-    }
-
-    function changeStakingPercent(uint256 percent) external onlyOwner {
-        _stakingPercent = percent;
-        emit StakingPercentChanged(percent);
-    }
-
-    function stakingPercent() external view returns (uint256) {
-        return _stakingPercent;
-    }
-
-    function stakingReward(address account, uint256 netReward, uint256 grossReward) external {
-        require(hasRole(STAKING_CONTRACT, _msgSender()));
-        _transferFromReflected(_stakingFund, account, _getReflectedAmount(netReward));
-
-        // Burn the unused part of the gross reward
-        _burn(_stakingFund, grossReward - netReward, "", "");
-    }
-
-    // Trip meter functions
-
-    function tripMeter(address account) external view returns (TripMeter memory) {
-        return _tripMeters[account];
-    }
-
-    function _updateTripMeter(address from, address to, uint256 amount) private {
-        _updateTripMeter(from, -int256(amount));
-        _updateTripMeter(to, int256(amount));
-    }
-
-    function _updateTripMeter(address account, int256 amount) private {
-        if (account != address(0)) {
-            if (_tripMeters[account].blockNumber == 0) _resetTripMeter(account);
-            _tripMeters[account].netBalance = uint256(int256(_tripMeters[account].netBalance) + amount);
+    function _payFeeAndDonate(address recipient, uint256 amount, uint256 reflectedAmount, function(address, uint256) internal donateCallback) private {
+        _payFee(recipient, amount, reflectedAmount);
+        
+        // The eleemosynary fund is optional
+        if (_eleemosynary != address(0)) {
+            uint256 donationAmount = amount * _donationPercent / 100;
+            uint256 reflectedDonationAmount = _getReflectedAmount(donationAmount);
+            donateCallback(recipient, reflectedDonationAmount);
+            emit Transfer(recipient, _eleemosynary, donationAmount);
+            _payFee(_eleemosynary, donationAmount, reflectedDonationAmount);
         }
     }
 
-    function resetTripMeter() public {
-        _resetTripMeter(_msgSender());
+    function _payFee(address recipient, uint256 amount, uint256 reflectedAmount) private {
+        super._burn(recipient, reflectedAmount / 100 * _feePercent, "", "");
+        emit Transfer(recipient, address(0), amount * _feePercent / 100);
     }
 
-    function _resetTripMeter(address account) public {
-        _tripMeters[account] = TripMeter(block.number, balanceOf(account));
+    function changeFeePercent(uint256 percent) public onlyOwner {
+        _feePercent = percent;
+        emit FeePercentChanged(percent);
     }
 
-    // Calls to the SchnoodleStaking proxy contract
-
-    function lockedBalanceOf(address account) private returns(uint256) {
-        if (_schnoodleStaking == address(0)) return 0;
-        (bool success, bytes memory result) = _schnoodleStaking.call(abi.encodeWithSignature("lockedBalanceOf(address)", account));
-        assert(success);
-        return abi.decode(result, (uint256));
+    function changeEleemosynary(address account, uint256 percent) public onlyOwner {
+        _eleemosynary = account;
+        _donationPercent = percent;
+        emit EleemosynaryChanged(account, percent);
     }
 
-    event StakingPercentChanged(uint256 percent);
+    function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
+        super._burn(account, _getReflectedAmount(amount), data, operatorData);
+        _totalSupply -= amount;
+    }
+
+    function _getReflectedAmount(uint256 amount) private view returns(uint256) {
+        return amount * _getRate();
+    }
+
+    function _getRate() private view returns(uint256) {
+        return super.totalSupply() / totalSupply();
+    }
+
+    event FeePercentChanged(uint256 percent);
+
+    event EleemosynaryChanged(address indexed account, uint256 percent);
 }
