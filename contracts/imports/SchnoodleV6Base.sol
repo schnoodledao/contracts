@@ -6,12 +6,18 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
+contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _totalSupply;
     uint256 private _feePercent;
     address private _eleemosynary;
     uint256 private _donationPercent;
+    mapping(address => TripMeter) private _tripMeters;
+
+    struct TripMeter {
+        uint256 blockNumber;
+        uint256 netBalance;
+    }
 
     function initialize(uint256 initialTokens, address serviceAccount) public initializer {
         __Ownable_init();
@@ -34,6 +40,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
         payFeeAndDonate(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
+        _resetTripMeters(_msgSender(), recipient);
         return result;
     }
 
@@ -50,12 +57,19 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
         payFeeAndDonate(sender, recipient, amount, reflectedAmount, _transferFromReflected);
+        _resetTripMeters(sender, recipient);
         return result;
+    }
+
+    function _mint(address account, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
+        super._mint(account, amount, userData, operatorData, requireReceptionAck);
+        _resetTripMeter(account);
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;
+        _resetTripMeter(account);
     }
 
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
@@ -63,6 +77,7 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
         payFeeAndDonate(from, to, amount, reflectedAmount, _sendReflected);
+        _resetTripMeters(from, to);
     }
 
     // Reflection convenience functions
@@ -130,6 +145,25 @@ contract SchnoodleV5Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
 
     function eleemosynary() external view returns(address, uint256) {
         return (_eleemosynary, _donationPercent);
+    }
+
+    // Trip meter functions
+
+    function tripMeter(address account) external view returns (TripMeter memory) {
+        return _tripMeters[account];
+    }
+
+    function resetTripMeter() public {
+        _resetTripMeter(_msgSender());
+    }
+
+    function _resetTripMeters(address account1, address account2) private {
+        _resetTripMeter(account1);
+        _resetTripMeter(account2);
+    }
+
+    function _resetTripMeter(address account) private {
+        _tripMeters[account] = TripMeter(block.number, balanceOf(account));
     }
 
     // Maintenance functions

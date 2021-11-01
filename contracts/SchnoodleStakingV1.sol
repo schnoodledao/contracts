@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "abdk-libraries-solidity/ABDKMath64x64.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
+/// Delivers Lambo posthaste
 contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     address private _schnoodle;
     mapping(address => Stake[]) private _stakes;
@@ -13,7 +14,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     mapping(address => Unbond[]) private _unbonds;
     uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
-    uint256 private _lastBlockNumber;
+    uint256 private _checkpointBlock;
     uint256 private _totalStakeWeight;
 
     // Adjust to change the sigmoid curve of the multiplier
@@ -43,6 +44,12 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         _sigmoidParams = SigmoidParams(5, 1);
     }
 
+    function forecastReward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external returns(uint256) {
+        (Stake memory stake, uint256 cumulativeTotal) = _addStake(amount, vestingBlocks, unbondingBlocks);
+        (uint256 totalTokens, uint256 totalStakeWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
+        return _reward(stake, stake.blockNumber, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
+    }
+
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
     function addStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
         address msgSender = _msgSender();
@@ -50,13 +57,18 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         require(amount <= balanceOf(msgSender) - stakedBalanceOf(msgSender), "SchnoodleStaking: stake amount exceeds unstaked balance");
         require(amount > 0, "Stake must be nonzero");
 
-        uint256 blockNumber = block.number;
-        _stakes[msgSender].push(Stake(amount, blockNumber, vestingBlocks, unbondingBlocks, 0));
+        (Stake memory stake, uint256 cumulativeTotal) = _addStake(amount, vestingBlocks, unbondingBlocks);
+        _stakes[msgSender].push(Stake(amount, stake.blockNumber, vestingBlocks, unbondingBlocks, 0));
         _balances[msgSender] += amount;
 
-        _updateTracking(int256(amount), _newCumulativeTotal(blockNumber), blockNumber, vestingBlocks, unbondingBlocks);
+        _updateTracking(int256(amount), cumulativeTotal, stake.blockNumber, vestingBlocks, unbondingBlocks);
 
-        emit Staked(msgSender, amount, blockNumber);
+        emit Staked(msgSender, amount, stake.blockNumber);
+    }
+
+    function _addStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns (Stake memory, uint256) {
+        uint256 blockNumber = block.number;
+        return (Stake(amount, blockNumber, vestingBlocks, unbondingBlocks, 0), _newCumulativeTotal(blockNumber));
     }
 
     /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
@@ -66,16 +78,16 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         Stake memory stake = stakes[index];
         require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
 
-        uint256 blockNumber = block.number;
-        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
+        uint256 rewardBlock = block.number;
+        require(stake.blockNumber + stake.vestingBlocks < rewardBlock, "SchnoodleStaking: cannot withdraw during vesting blocks");
 
-        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
+        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, rewardBlock);
 
-        _updateTracking(-int256(amount), newCumulativeTotal, blockNumber, stake.vestingBlocks, stake.unbondingBlocks);
+        _updateTracking(-int256(amount), newCumulativeTotal, rewardBlock, stake.vestingBlocks, stake.unbondingBlocks);
 
         _stakes[msgSender][index].amount -= amount;
         _balances[msgSender] -= amount;
-        _unbonds[msgSender].push(Unbond(amount, blockNumber + stake.unbondingBlocks));
+        _unbonds[msgSender].push(Unbond(amount, rewardBlock + stake.unbondingBlocks));
 
         // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
         if (_stakes[msgSender][index].amount == 0) {
@@ -96,19 +108,23 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return _sigmoidParams;
     }
 
-    function _rewardInfo(Stake memory stake, uint256 amount, uint256 blockNumber) private returns(uint256, uint256, uint256) {
+    function _rewardInfo(Stake memory stake, uint256 amount, uint256 rewardBlock) private returns(uint256, uint256, uint256) {
+        return _rewardInfo(stake, amount, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
+    }
+
+    function _rewardInfo(Stake memory stake, uint256 amount, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private returns(uint256, uint256, uint256) {
         // Calculate the stake amount multiplied across the number of blocks since the start of the stake
-        uint256 cumulativeAmount = amount * (blockNumber - stake.blockNumber);
+        uint256 cumulativeAmount = amount * (rewardBlock - stake.blockNumber);
 
         // Get the new cumulative total of all stakes as the current stored value is from the previous staking activity
-        uint256 newCumulativeTotal = _newCumulativeTotal(blockNumber);
+        uint256 newCumulativeTotal = _newCumulativeTotal(checkpointBlock, rewardBlock, cumulativeTotal, totalTokens);
 
         uint256 grossReward;
         uint256 netReward;
 
-        if (cumulativeAmount > 0 && _totalStakeWeight > 0) {
+        if (cumulativeAmount > 0 && totalStakeWeight > 0) {
             uint256 lockProduct = stake.vestingBlocks * stake.unbondingBlocks;
-            uint256 lockProductWeightedAverage = _totalStakeWeight / _totalTokens;
+            uint256 lockProductWeightedAverage = totalStakeWeight / totalTokens;
 
             // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + e⁻ˣ) where x is the stake's lock product delta from the weighted average
             int128 x = ABDKMath64x64.mul(
@@ -150,23 +166,35 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         );
     }
 
-    function _reward(Stake memory stake, uint256 blockNumber) private returns(uint256) {
-        (uint256 reward,,) = _rewardInfo(stake, stake.amount, blockNumber);
+    function _reward(Stake memory stake, uint256 rewardBlock) private returns(uint256) {
+        return _reward(stake, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
+    }
+
+    function _reward(Stake memory stake, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private returns(uint256) {
+        (uint256 reward,,) = _rewardInfo(stake, stake.amount, checkpointBlock, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
         return reward;
     }
 
-    function _newCumulativeTotal(uint256 blockNumber) private view returns(uint256) {
-        // Add the total of all stakes multiplied across all blocks since the previous calculation to the cumulative total
-        return _cumulativeTotal + _totalTokens * (blockNumber - _lastBlockNumber);
+    function _newCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
+        return _newCumulativeTotal(_checkpointBlock, rewardBlock, _cumulativeTotal, _totalTokens);
     }
 
-    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 blockNumber, uint256 vestingBlocks, uint256 unbondingBlocks) private {
-        _cumulativeTotal = cumulativeTotal;
-        _lastBlockNumber = blockNumber;
-        _totalTokens = uint256(int256(_totalTokens) + amountDelta);
+    function _newCumulativeTotal(uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
+        // Add the total of all stakes multiplied across all blocks since the previous checkpoint calculation to the cumulative total
+        return cumulativeTotal + totalTokens * (rewardBlock - checkpointBlock);
+    }
 
-        // Adjust the sum of products of staked tokens and vesting blocks to get a total weight - this is used to calculate the weighted average later
-        _totalStakeWeight = uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks));
+    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 checkpointBlock, uint256 vestingBlocks, uint256 unbondingBlocks) private {
+        _cumulativeTotal = cumulativeTotal;
+        _checkpointBlock = checkpointBlock;
+        (_totalTokens, _totalStakeWeight) = _updateTracking(amountDelta, vestingBlocks, unbondingBlocks);
+    }
+
+    function _updateTracking(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256) {
+        return (
+            uint256(int256(_totalTokens) + amountDelta), // Update total tokens
+            uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks)) // Update total stake weight
+        );
     }
 
     function stakedBalanceOf(address account) public view returns(uint256) {
@@ -197,10 +225,10 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
     function stakingSummary(address account) public returns(Stake[] memory) {
         Stake[] memory stakes = _stakes[account];
-        uint256 blockNumber = block.number;
+        uint256 rewardBlock = block.number;
 
         for (uint256 i = 0; i < stakes.length; i++) {
-            stakes[i].claimable = _reward(stakes[i], blockNumber);
+            stakes[i].claimable = _reward(stakes[i], rewardBlock);
         }
 
         return stakes;

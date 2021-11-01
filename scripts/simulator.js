@@ -96,7 +96,7 @@ module.exports = async function main(callback) {
       // Add or withdraw stake depending on the add stake action being true or false
       if (stake.add) {
         amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stake.account))));
-        await schnoodleStaking.addStake(amount, 1, { from: stake.account });
+        await schnoodleStaking.addStake(amount, 1, 1, { from: stake.account });
       } else {
         amount = -BigInt(await schnoodleStaking.stakedBalanceOf(stake.account));
         await schnoodleStaking.withdraw(0, -amount, { from: stake.account });

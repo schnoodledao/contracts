@@ -16,22 +16,16 @@ const truffleAssert = require('truffle-assertions');
 const chance = new Chance();
 let schnoodle;
 let initialTokens;
-let feePercent;
-let donationPercent;
 
 const data = web3.utils.sha3(chance.string());
 
 beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
-  feePercent = chance.integer({ min: 1, max: 20 });
-  donationPercent = chance.integer({ min: 1, max: 20 });
 
   await singletons.ERC1820Registry(serviceAccount);
 
   schnoodle = await Schnoodle.new();
   await schnoodle.initialize(initialTokens, serviceAccount);
-  await schnoodle.changeFeePercent(feePercent);
-  await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
 });
 
 describe('Balance', () => {
@@ -61,7 +55,7 @@ describe("Burning", () => {
   it("should revert on attempt to burn more tokens than are available", async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
     await schnoodle.burn(1, data, { from: serviceAccount });
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + BigInt(1)), "ERC777: burn amount exceeds balance");
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), "ERC777: burn amount exceeds balance");
   });
 
   async function _testBurning(amount) {
@@ -83,8 +77,15 @@ describe('Transfer', () => {
   let senderCandidates;
   let sender;
   let recipient;
-  
+  let feePercent;
+  let donationPercent;
+
   beforeEach(async function () {
+    feePercent = chance.integer({ min: 1, max: 20 });
+    donationPercent = chance.integer({ min: 1, max: 20 });
+
+    await schnoodle.changeFeePercent(feePercent);
+    await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
     await _populateAccounts();
 
     amounts = {};
@@ -142,7 +143,7 @@ describe('Transfer', () => {
 
     await transferCallback(schnoodle, sender, recipient, transferAmount);
 
-    let totalBalance = BigInt(0);
+    let totalBalance = 0n;
 
     // Check the balances of all accounts to ensure they match the expected algorithm
     for (const account of accounts) {
@@ -158,7 +159,7 @@ describe('Transfer', () => {
             : 0));
 
       // The old amount is adjusted by a percentage of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)
-      const baseBalance = oldAmount + transferAmount * BigInt(deltaPercent * 10) / BigInt(1000);
+      const baseBalance = oldAmount + transferAmount * BigInt(Math.round(deltaPercent * 10)) / 1000n;
 
       // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
       const newBalance = BigInt(await schnoodle.balanceOf(account));
@@ -166,7 +167,16 @@ describe('Transfer', () => {
       totalBalance += newBalance;
 
       const accountRole = account == sender ? 'sender' : (account == recipient ? 'recipient' : (account == eleemosynary ? 'eleemosynary' : ''));
-      assert.isTrue(newBalance >= baseBalance, `Account ${account}${accountRole == '' ? '' : (` (${accountRole})`)} incorrect after transfer`);
+      const accountIdentity = `${account}${accountRole == '' ? '' : (` (${accountRole})`)}`;
+      assert.isTrue(newBalance >= baseBalance, `Account ${accountIdentity} balance incorrect after transfer`);
+
+      const tripMeter = await schnoodle.tripMeter(account);
+      if (account != sender && account != recipient) {
+        // Check that the trip meter shows less than the actual balance due to distribution of fees
+        assert.isTrue(BigInt(tripMeter.netBalance) > 0n && newBalance > BigInt(tripMeter.netBalance), `Account ${accountIdentity} balance not more than the trip meter net balance`);
+      } else {
+        assert.isTrue(newBalance == BigInt(tripMeter.netBalance), `Account ${accountIdentity} balance not equal to the trip meter net balance`);
+      }
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
@@ -227,19 +237,19 @@ describe('Staking', () => {
 
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
     await schnoodleStaking.addStake(stakeAmount, 0, 0, { from: stakeholder });
-    const additionalStake = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + BigInt(1), stakeholderStartBalance));
+    const additionalStake = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + 1n, stakeholderStartBalance));
     await truffleAssert.reverts(schnoodleStaking.addStake(additionalStake, 0, 0, { from: stakeholder }), "SchnoodleStaking: stake amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are unstaked', async() => {
     await schnoodleStaking.addStake(stakeAmount, 0, 0, { from: stakeholder });
-    const transferAmount = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + BigInt(1), stakeholderStartBalance));
+    const transferAmount = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + 1n, stakeholderStartBalance));
     await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
   });
 
   it('should revert on attempt to transfer more tokens than are available including staked', async() => {
     await schnoodleStaking.addStake(stakeAmount, 0, 0, { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(stakeholderStartBalance + BigInt(1)), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(stakeholderStartBalance + 1n), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
   });
 
   async function addStakeAndWithdraw(vestingBlocks, unbondingBlocks) {
@@ -252,6 +262,29 @@ describe('Staking', () => {
     let withdrawnEvent = receipt.logs.find(l => l.event == 'Withdrawn');
     return [BigInt(withdrawnEvent.args.netReward), BigInt(withdrawnEvent.args.grossReward)];
   }
+});
+
+describe('Trip Meter', () => {
+  let sender;
+  
+  beforeEach(async function () {
+    await _populateAccounts();
+
+    sender = chance.pickone(accounts);
+    recipient = chance.pickone(accounts.filter(a => a != sender));
+  });
+
+  it('should have a net balance equal to the account balance', async() => {
+    const tripMeter = await schnoodle.tripMeter(sender);
+    assert.equal(BigInt(tripMeter.netBalance), BigInt(await schnoodle.balanceOf(sender)), 'Trip meter balance is not equal to the account balance');
+  });
+
+  it('should have a higher block number after a reset', async() => {
+    const blockNumberBeforeReset = (await schnoodle.tripMeter(sender)).blockNumber;
+    await schnoodle.resetTripMeter({ from: sender });
+    const blockNumberAfterReset = (await schnoodle.tripMeter(sender)).blockNumber;
+    assert.isAbove(parseInt(blockNumberAfterReset), parseInt(blockNumberBeforeReset), 'Block number was not reset');
+  });
 });
 
 async function _populateAccounts() {
