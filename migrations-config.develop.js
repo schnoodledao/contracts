@@ -1,7 +1,7 @@
 module.exports = {
   ...require("./migrations-config.testnet.js"),
   testContracts: {
-    schnoodle: 'SchnoodleV5',
+    schnoodle: 'SchnoodleV6',
     schnoodleStaking: 'SchnoodleStakingV1'
   }
 };

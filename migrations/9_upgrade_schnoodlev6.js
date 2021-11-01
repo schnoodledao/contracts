@@ -1,6 +1,6 @@
-// migrations/7_upgrade_schnoodlev4.js
+// migrations/9_upgrade_schnoodlev6.js
 
 module.exports = async function (deployer, network) {
   const contract = require('../scripts/contract.js');
-  await contract.upgrade(deployer, network, 'SchnoodleV4');
+  await contract.upgrade(deployer, network, 'SchnoodleV6');
 };

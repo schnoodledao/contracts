@@ -32,24 +32,26 @@ beforeEach(async function () {
   await schnoodleTimelock.initialize(schnoodle.address, chance.pickone(accounts), moment().add(timelockSeconds, 'seconds').unix());
 });
 
-it('should release tokens to the beneficiary after the timelock period', async () => {
-  const lockAmount = BigInt(bigInt.randBetween(1, initialTokens * 10 ** await schnoodle.decimals()));
+describe('Timelock', () => {
+  it('should release tokens to the beneficiary after the timelock period', async () => {
+    const lockAmount = BigInt(bigInt.randBetween(1, initialTokens * 10 ** await schnoodle.decimals()));
 
-  await schnoodle.transfer(schnoodleTimelock.address, lockAmount, { from: serviceAccount });
+    await schnoodle.transfer(schnoodleTimelock.address, lockAmount, { from: serviceAccount });
 
-  // Attempt to release tokens before the timelock period
-  await truffleAssert.reverts(schnoodleTimelock.release(), 'TokenTimelock: current time is before release time');
-  (await schnoodle.balanceOf(await schnoodleTimelock.beneficiary())).should.be.bignumber.equal(new BN(0), 'Beneficiary balance is not zero before timelock release');
+    // Attempt to release tokens before the timelock period
+    await truffleAssert.reverts(schnoodleTimelock.release(), 'TokenTimelock: current time is before release time');
+    (await schnoodle.balanceOf(await schnoodleTimelock.beneficiary())).should.be.bignumber.equal(new BN(0), 'Beneficiary balance is not zero before timelock release');
 
-  await sleep(timelockSeconds * 1000);
+    await sleep(timelockSeconds * 1000);
 
-  // Attempt to release tokens after the timelock period
-  await schnoodleTimelock.release();
+    // Attempt to release tokens after the timelock period
+    await schnoodleTimelock.release();
 
-  currentBalance = BigInt(await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()));
-  assert.isTrue(currentBalance - lockAmount < lockAmount * BigInt(10) / BigInt(100), 'Locked amount wasn\'t released by the timelock');
+    currentBalance = BigInt(await schnoodle.balanceOf(await schnoodleTimelock.beneficiary()));
+    assert.isTrue(currentBalance - lockAmount < lockAmount * BigInt(10) / BigInt(100), 'Locked amount wasn\'t released by the timelock');
 
-  function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
-  }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  });
 });
