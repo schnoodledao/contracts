@@ -93,8 +93,10 @@ describe('Transfer', () => {
       amounts[account] = BigInt(await schnoodle.balanceOf(account));
     }
 
-    // Randomly pick different sender and recipient accounts ensuring they're not the eleemosynary account
-    senderCandidates = accounts.filter(a => a != eleemosynary);
+    // Exclude the eleemosynary account, and also the service account and last account populated as these received no fee distribution
+    senderCandidates = accounts.slice(0, -1).filter(a => a != eleemosynary && a != serviceAccount);
+
+    // Randomly pick different sender and recipient accounts for performing the transfer test
     sender = chance.pickone(senderCandidates);
     recipient = chance.pickone(senderCandidates.filter(a => a != sender));
   });
@@ -170,13 +172,8 @@ describe('Transfer', () => {
       const accountIdentity = `${account}${accountRole == '' ? '' : (` (${accountRole})`)}`;
       assert.isTrue(newBalance >= baseBalance, `Account ${accountIdentity} balance incorrect after transfer`);
 
-      const tripMeter = await schnoodle.tripMeter(account);
-      if (account != sender && account != recipient) {
-        // Check that the trip meter shows less than the actual balance due to distribution of fees
-        assert.isTrue(BigInt(tripMeter.netBalance) > 0n && newBalance > BigInt(tripMeter.netBalance), `Account ${accountIdentity} balance not more than the trip meter net balance`);
-      } else {
-        assert.isTrue(newBalance == BigInt(tripMeter.netBalance), `Account ${accountIdentity} balance not equal to the trip meter net balance`);
-      }
+      const {1: deltaBalance} = await schnoodle.reflectTracker(account);
+      assert.isTrue(BigInt(deltaBalance) > 0n, `Account ${accountIdentity} delta balance is zero`);
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
@@ -264,9 +261,9 @@ describe('Staking', () => {
   }
 });
 
-describe('Trip Meter', () => {
+describe('Reflect Tracker', () => {
   let sender;
-  
+
   beforeEach(async function () {
     await _populateAccounts();
 
@@ -274,15 +271,15 @@ describe('Trip Meter', () => {
     recipient = chance.pickone(accounts.filter(a => a != sender));
   });
 
-  it('should have a net balance equal to the account balance', async() => {
-    const tripMeter = await schnoodle.tripMeter(sender);
-    assert.equal(BigInt(tripMeter.netBalance), BigInt(await schnoodle.balanceOf(sender)), 'Trip meter balance is not equal to the account balance');
+  it('should have a delta balance equal to zero given no fee percent', async() => {
+    const {1: deltaBalance} = await schnoodle.reflectTracker(sender);
+    assert.equal(BigInt(deltaBalance), 0n, 'Delta balance is not equal to zero');
   });
 
   it('should have a higher block number after a reset', async() => {
-    const blockNumberBeforeReset = (await schnoodle.tripMeter(sender)).blockNumber;
-    await schnoodle.resetTripMeter({ from: sender });
-    const blockNumberAfterReset = (await schnoodle.tripMeter(sender)).blockNumber;
+    const {0: blockNumberBeforeReset} = await schnoodle.reflectTracker(sender);
+    await schnoodle.resetReflectTracker({ from: sender });
+    const {0: blockNumberAfterReset} = await schnoodle.reflectTracker(sender);
     assert.isAbove(parseInt(blockNumberAfterReset), parseInt(blockNumberBeforeReset), 'Block number was not reset');
   });
 });
