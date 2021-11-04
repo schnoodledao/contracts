@@ -4,13 +4,14 @@ module.exports = async function main(callback) {
   try {
     const accounts = await web3.eth.getAccounts();
 
-    const { testContracts } = require(`../migrations-config.develop.js`);
-    const Schnoodle = artifacts.require(testContracts.schnoodle);
-    const schnoodle = await Schnoodle.deployed();
+    const SchnoodleV1 = artifacts.require("SchnoodleV1");
+    const SchnoodleV6 = artifacts.require("SchnoodleV6");
+    const proxy = new SchnoodleV6((await SchnoodleV1.deployed()).address);
     
-    const stakingFund = accounts[2];
-    await schnoodle.changeStakingPercent(1);
-    await schnoodle.transfer(stakingFund, BigInt(400000000000) * BigInt(10 ** 18));
+    await proxy.changeStakingPercent(1);
+
+    // Populate the staking fund for development test purposes
+    await proxy.transfer(accounts[2], BigInt(400000000000) * BigInt(10 ** 18));
 
     callback(0);
   } catch (error) {

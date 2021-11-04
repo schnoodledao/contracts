@@ -1,4 +1,4 @@
-// contracts/SchnoodleV5.sol
+// contracts/SchnoodleV6.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -18,8 +18,8 @@ contract SchnoodleV6 is SchnoodleV6Base, AccessControlUpgradeable {
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
     function upgrade(address schnoodleStaking) external onlyOwner {
-        require(_version < 5, "Schnoodle: already upgraded");
-        _version = 5;
+        require(_version < 6, "Schnoodle: already upgraded");
+        _version = 6;
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner());
         grantRole(STAKING_CONTRACT, schnoodleStaking);
