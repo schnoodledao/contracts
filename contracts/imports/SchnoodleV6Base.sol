@@ -1,4 +1,4 @@
-// contracts/imports/SchnoodleV5Base.sol
+// contracts/imports/SchnoodleV6Base.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -155,8 +155,9 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
 
     // Reflect Tracker functions
 
-    function reflectTracker(address account) external view returns (uint256, uint256, uint256) {
-        return (_reflectTrackers[account].blockNumber, _reflectTrackers[account].deltaBalance + balanceOf(account) - _reflectTrackers[account].checkpointBalance, _reflectTrackers[account].checkpointBalance);
+    function reflectTrackerInfo(address account) external view returns (uint256, uint256) {
+        ReflectTracker storage reflectTracker = _reflectTrackers[account];
+        return (reflectTracker.blockNumber, _currentDeltaBalance(account, reflectTracker));
     }
 
     function _captureReflectedBalances(address account1, address account2) private {
@@ -166,12 +167,17 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
 
     function _captureReflectedBalance(address account) private {
         if (account == address(0)) return;
+        ReflectTracker storage reflectTracker = _reflectTrackers[account];
 
-        if (_reflectTrackers[account].blockNumber == 0) {
+        if (reflectTracker.blockNumber == 0) {
              _resetReflectTracker(account);
         } else {
-            _reflectTrackers[account].deltaBalance += balanceOf(account) - _reflectTrackers[account].checkpointBalance;
+            reflectTracker.deltaBalance = _currentDeltaBalance(account, reflectTracker);
         }
+    }
+
+    function _currentDeltaBalance(address account, ReflectTracker storage reflectTracker) private view returns(uint256) {
+        return reflectTracker.deltaBalance + balanceOf(account) - reflectTracker.checkpointBalance;
     }
 
     function _reflectTrackerCheckpoints(address account1, address account2) private {

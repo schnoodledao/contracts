@@ -1,20 +1,15 @@
 // scripts/contract.js
 
 module.exports = {
-  upgrade: async function (deployer, network, contractName) {
-    if (network === 'develop') {
-      const { testContracts } = require(`../migrations-config.${network}.js`);
-      if (contractName != testContracts.schnoodle) return;
-    }
-
+  upgrade: async function (deployer, network, contractName, call) {
     const contract = artifacts.require(contractName);
-    const SchnoodleOld = artifacts.require('SchnoodleV1');
+    const Schnoodle = artifacts.require('SchnoodleV1');
 
-    const proxy = await SchnoodleOld.deployed();
+    const proxy = await Schnoodle.deployed();
 
     if (network === 'develop') {
       const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-      await upgradeProxy(proxy.address, contract, { deployer });
+      return await upgradeProxy(proxy.address, contract, { deployer, call });
     } else {
       const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
       const contractsFile = require('../scripts/contracts-file.js');

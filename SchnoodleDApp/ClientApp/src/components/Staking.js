@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import Schnoodle from "../contracts/SchnoodleV5.json";
+import SchnoodleV1 from "../contracts/SchnoodleV1.json";
+import SchnoodleV6 from "../contracts/SchnoodleV6.json";
 import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
 const bigInt = require("big-integer");
@@ -20,7 +21,7 @@ export class Staking extends Component {
       decimals: null,
       stakingFundBalance: 0,
       balance: 0,
-      tripMeter: {"blockNumber": 0, "netBalance": 0},
+      reflectTrackerInfo: {"blockNumber": 0, "deltaBalance": 0},
       amountToStake: 1,
       vestingBlocks: 1,
       unbondingBlocks: 1,
@@ -33,7 +34,7 @@ export class Staking extends Component {
 
     this.stakeAll = this.stakeAll.bind(this);
     this.addStake = this.addStake.bind(this);
-    this.resetTripMeter = this.resetTripMeter.bind(this);
+    this.resetReflectTracker = this.resetReflectTracker.bind(this);
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
@@ -43,8 +44,8 @@ export class Staking extends Component {
     try {
       const web3 = await getWeb3();
 
-      const schnoodleDeployedNetwork = Schnoodle.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
+      const schnoodle = new web3.eth.Contract(SchnoodleV6.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
       const schnoodleStaking = new web3.eth.Contract(SchnoodleStaking.abi, schnoodleStakingDeployedNetwork && schnoodleStakingDeployedNetwork.address);
 
@@ -66,18 +67,18 @@ export class Staking extends Component {
     const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
 
     const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
-    const tripMeter = await schnoodle.methods.tripMeter(selectedAddress).call();
+    const reflectTrackerInfo = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
     const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
-    const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.blockNumber > b.blockNumber ? 1 : -1);
+    const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1);
     const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
     let withdrawItems = [];
     for (let i = 0; i < stakingSummary.length; i++) {
-      withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].amount);
+      withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].stake.amount);
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, tripMeter: tripMeter, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, reflectTrackerInfo: reflectTrackerInfo, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
   }
 
   scaleDownUnits(amount) {
@@ -132,10 +133,10 @@ export class Staking extends Component {
     }
   }
 
-  async resetTripMeter() {
+  async resetReflectTracker() {
     try {
       const { schnoodle, selectedAddress } = this.state;
-      const response = await schnoodle.methods.resetTripMeter().send({ from: selectedAddress });
+      const response = await schnoodle.methods.resetReflectTracker().send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -169,21 +170,23 @@ export class Staking extends Component {
         <thead>
           <tr>
             <th class="hidden md:table-cell">Block Number</th>
-            <th><span class="hidemd">Staked<br/>Amount</span><span class="hidesm">Staked Amount</span></th>
-            <th><span class="hidemd">Blocks<br/>Pending</span><span class="hidesm">Blocks Pending</span></th>
+            <th><span class="hidemd">Staked<br />Amount</span><span class="hidesm">Staked Amount</span></th>
+            <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
+            <th><span class="hidemd">Unbonding<br />Blocks</span><span class="hidesm">Unbonding Blocks</span></th>
             <th>Withdraw</th>
             <th><span class="hidemd">Claimable<br />Rewards</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
         <tbody class=''>
-          {stakingSummary.map((stake, i) => {
-            const amount = this.scaleDownUnits(stake.amount);
-            const blocksPending = Math.max(0, parseInt(stake.blockNumber) + parseInt(stake.vestingBlocks) - this.state.blockNumber);
+          {stakingSummary.map((stakeReward, i) => {
+            const amount = this.scaleDownUnits(stakeReward.stake.amount);
+            const blocksPending = Math.max(0, parseInt(stakeReward.stake.blockNumber) + parseInt(stakeReward.stake.vestingBlocks) - this.state.blockNumber);
             return (
-              <tr key={stake.blockNumber}>
-                <td class="hidden md:table-cell">{stake.blockNumber}</td>
+              <tr key={stakeReward.stake.blockNumber}>
+                <td class="hidden md:table-cell">{stakeReward.stake.blockNumber}</td>
                 <td>{amount}</td>
                 <td>{blocksPending}</td>
+                <td>{stakeReward.stake.unbondingBlocks}</td>
                 <td>
                   <form>
                     <fieldset disabled={blocksPending > 0}>
@@ -196,7 +199,7 @@ export class Staking extends Component {
                     </fieldset>
                   </form>
                 </td>
-                <td>{this.scaleDownUnits(stake.claimable)}</td>
+                <td>{this.scaleDownUnits(stakeReward.reward)}</td>
               </tr>
             );
           })}
@@ -220,7 +223,6 @@ export class Staking extends Component {
             const blocksPending = parseInt(unbond.expiryBlock) - this.state.blockNumber;
             return blocksPending > 0 && (
               <tr key={unbond.expiryBlock}>
-                <td class="hidden md:table-cell">{unbond.blockNumber}</td>
                 <td>{amount}</td>
                 <td>{blocksPending}</td>
               </tr>
@@ -275,14 +277,14 @@ export class Staking extends Component {
                   <div class="stat-desc text-secondary">{token}</div>
                 </div>
 
-                {this.state.tripMeter.blockNumber > 0 && (
+                {this.state.reflectTrackerInfo.blockNumber > 0 && (
                   <div class="stat">
                     <div class="stat-title">BARK rewards</div>
                     <div class="stat-value greenfade">
-                      {this.scaleDownUnits(this.state.balance - this.state.tripMeter.netBalance)}
-                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" onClick={this.resetTripMeter} title="Reset" />
+                      {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
+                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" onClick={this.resetReflectTracker} title="Reset" />
                     </div>
-                    <div class="stat-desc text-secondary">{token} since block {this.state.tripMeter.blockNumber}</div>
+                    <div class="stat-desc text-secondary">{token} since block {this.state.reflectTracker.blockNumber}</div>
                   </div>
                 )}
               </div>

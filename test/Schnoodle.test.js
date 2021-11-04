@@ -172,7 +172,7 @@ describe('Transfer', () => {
       const accountIdentity = `${account}${accountRole == '' ? '' : (` (${accountRole})`)}`;
       assert.isTrue(newBalance >= baseBalance, `Account ${accountIdentity} balance incorrect after transfer`);
 
-      const {1: deltaBalance} = await schnoodle.reflectTracker(account);
+      const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(account);
       assert.isTrue(BigInt(deltaBalance) > 0n, `Account ${accountIdentity} delta balance is zero`);
     }
 
@@ -272,14 +272,14 @@ describe('Reflect Tracker', () => {
   });
 
   it('should have a delta balance equal to zero given no fee percent', async() => {
-    const {1: deltaBalance} = await schnoodle.reflectTracker(sender);
+    const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(sender);
     assert.equal(BigInt(deltaBalance), 0n, 'Delta balance is not equal to zero');
   });
 
   it('should have a higher block number after a reset', async() => {
-    const {0: blockNumberBeforeReset} = await schnoodle.reflectTracker(sender);
+    const {0: blockNumberBeforeReset} = await schnoodle.reflectTrackerInfo(sender);
     await schnoodle.resetReflectTracker({ from: sender });
-    const {0: blockNumberAfterReset} = await schnoodle.reflectTracker(sender);
+    const {0: blockNumberAfterReset} = await schnoodle.reflectTrackerInfo(sender);
     assert.isAbove(parseInt(blockNumberAfterReset), parseInt(blockNumberBeforeReset), 'Block number was not reset');
   });
 });
