@@ -66,6 +66,11 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
 .stat {
   @apply place-items-center place-content-center;
 }
+
+.stats.stats .stat+.stat { 
+ @apply border-t-2 lg:border-base-200;
+}
+
 .stat-value {
   @apply text-3xl xl:text-5xl;
 }

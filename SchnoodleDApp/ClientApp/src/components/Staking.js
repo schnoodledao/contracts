@@ -274,7 +274,7 @@ export class Staking extends Component {
                 <div class="stat">
                   <div class="stat-title">Staking fund balance</div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
-                  <div class="stat-desc text-secondary">{token}</div>
+                  <div class="stat-desc">{token}</div>
                 </div>
 
                 {this.state.reflectTrackerInfo.blockNumber > 0 && (
@@ -282,9 +282,9 @@ export class Staking extends Component {
                     <div class="stat-title">BARK rewards</div>
                     <div class="stat-value greenfade">
                       {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
-                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" onClick={this.resetReflectTracker} title="Reset" />
+                      <input class="ml-4 max-h-6 lg:max-h-8" type="image" src="../../assets/img/svg/reset.svg" onClick={this.resetReflectTracker} title="Reset" />
                     </div>
-                    <div class="stat-desc text-secondary">{token} since block {this.state.reflectTracker.blockNumber}</div>
+                    <div class="stat-desc">{token} since block {this.state.reflectTracker.blockNumber}</div>
                   </div>
                 )}
               </div>
@@ -298,12 +298,12 @@ export class Staking extends Component {
                       <div class="stat-value purplefade">{balance}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
-                    <div class="stat border-t-1 md:border-t-0 md:border-base-200">
+                    <div class="stat ">
                       <div class="stat-title">Staked balance</div>
                       <div class="stat-value purplefade">{stakedBalance}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
-                    <div class="stat border-t-1 md:border-t-0 md:border-base-200">
+                    <div class="stat ">
                       <div class="stat-title">Stakeable amount</div>
                       <div class="stat-value purplefade">{stakeableAmount}</div>
                       <div class="stat-desc">{token}</div>
