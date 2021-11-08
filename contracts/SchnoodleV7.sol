@@ -1,13 +1,13 @@
-// contracts/SchnoodleV6.sol
+// contracts/SchnoodleV7.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "./imports/SchnoodleV6Base.sol";
+import "./imports/SchnoodleV7Base.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
-contract SchnoodleV6 is SchnoodleV6Base, AccessControlUpgradeable {
+contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     uint256 private _version;
     address private _schnoodleStaking;
     address private _stakingFund;

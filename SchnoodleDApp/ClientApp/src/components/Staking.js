@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
-import SchnoodleV6 from "../contracts/SchnoodleV6.json";
+import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
 const moment = require('moment');
@@ -48,7 +48,7 @@ export class Staking extends Component {
       const web3 = await getWeb3();
 
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(SchnoodleV6.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodle = new web3.eth.Contract(SchnoodleV7.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
       const schnoodleStaking = new web3.eth.Contract(SchnoodleStaking.abi, schnoodleStakingDeployedNetwork && schnoodleStakingDeployedNetwork.address);
 

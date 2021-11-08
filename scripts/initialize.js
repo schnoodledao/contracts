@@ -5,8 +5,8 @@ module.exports = async function main(callback) {
     const accounts = await web3.eth.getAccounts();
 
     const SchnoodleV1 = artifacts.require("SchnoodleV1");
-    const SchnoodleV6 = artifacts.require("SchnoodleV6");
-    const proxy = new SchnoodleV6((await SchnoodleV1.deployed()).address);
+    const SchnoodleV7 = artifacts.require("SchnoodleV7");
+    const proxy = new SchnoodleV7((await SchnoodleV1.deployed()).address);
     
     await proxy.changeStakingPercent(1);
 
