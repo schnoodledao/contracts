@@ -12,9 +12,9 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     address private _schnoodleStaking;
     address private _stakingFund;
     uint256 private _stakingPercent;
+    mapping(address => TokenMeter) private _sellsTrackers;
 
-    bytes32 public constant FEE_EXEMPT = keccak256("FEE_EXEMPT");
-    bytes32 public constant NO_TRANSFER = keccak256("NO_TRANSFER");
+    bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
     function upgrade(address schnoodleStaking) external onlyOwner {
@@ -27,9 +27,26 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
     }
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        require(!hasRole(NO_TRANSFER, from));
+    // Transfer overrides
 
+    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
+        // Prevent large sells by limiting the daily sell limit to the liquidity token
+        if (hasRole(LIQUIDITY, to))
+        {
+            TokenMeter storage sellsTracker = _sellsTrackers[from];
+            uint256 blockTimestamp = block.timestamp;
+
+            if (sellsTracker.blockMetric < blockTimestamp - 1 days) {
+                 sellsTracker.blockMetric = blockTimestamp;
+                 sellsTracker.amount = 0;
+            }
+
+            uint256 standardAmount = _getStandardAmount(amount);
+            sellsTracker.amount += standardAmount;
+            require(sellsTracker.amount < totalSupply() / 10000, "Schnoodle: Transfer exceeds sell limit of 0.01% of total supply per day");
+        }
+
+        // Ensure the sender has enough unstaked balance to perform the transfer
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
@@ -40,12 +57,10 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     }
 
     function payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
-        if (sender == recipient) return;
+        if (sender == recipient || !hasRole(LIQUIDITY, sender)) return;
 
-        if (!hasRole(FEE_EXEMPT, sender)) {
-            super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
-            _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
-        }
+        super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
+        _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
     }
 
     // Staking functions
