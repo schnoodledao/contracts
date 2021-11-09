@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
@@ -117,6 +118,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     }
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
+        // Prevent large sells by limiting the daily sell limit to the liquidity token
         if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
         {
             TokenMeter storage sellsTracker = _sellsTrackers[from];
@@ -129,7 +131,11 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
 
             uint256 standardAmount = amount / _getRate();
             sellsTracker.amount += standardAmount;
-            require(sellsTracker.amount < totalSupply() / 10000, "Schnoodle: Transfer exceeds sell limit of 0.01% of total supply per day");
+
+            // Calculate the limit as the lesser of 10% of the sender's balance and 1‰ of the total supply, but no less than 1‱ of the total supply
+            uint256 limit = MathUpgradeable.max(MathUpgradeable.min(balanceOf(from), totalSupply() / 100) / 10, totalSupply() / 10000);
+
+            require(sellsTracker.amount <= limit, "Schnoodle: Transfer amount exceeds sell limit defined as max(1 permil of TS, min(10% of balance, 1 bp of TS))");
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);

@@ -13,6 +13,7 @@ module.exports = {
       websockets: true,
       network_id: 3,
       gasPrice: 10e9,
+      gas: 10e6,
       skipDryRun: true
     },
     rinkeby: {
@@ -20,6 +21,7 @@ module.exports = {
       websockets: true,
       network_id: 4,
       gasPrice: 10e9,
+      gas: 10e6,
       skipDryRun: true
     },
     kovan: {
@@ -27,6 +29,7 @@ module.exports = {
       websockets: true,
       network_id: 42,
       gasPrice: 10e9,
+      gas: 10e6,
       skipDryRun: true
     },
     goerli: {
@@ -34,13 +37,15 @@ module.exports = {
       websockets: true,
       network_id: 5,
       gasPrice: 10e9,
+      gas: 10e6,
       skipDryRun: true
     },
     mainnet: {
       provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
       websockets: true,
       network_id: 1,
-      gasPrice: 32e9,
+      gasPrice: 10e9,
+      gas: 10e6,
       skipDryRun: true
     }
   },
