@@ -13,6 +13,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private _feeRate;
     address private _eleemosynary;
     uint256 private _donationRate;
+    uint256 private _sellLimit;
     mapping(address => TokenMeter) private _sellsTrackers;
 
     struct TokenMeter {
@@ -24,6 +25,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         __Ownable_init();
         _totalSupply = initialTokens * 10 ** decimals();
         super.initialize("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
+        _sellLimit = 5000000000*10**decimals();
     }
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -40,7 +42,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
-        _payFeeAndDonate(recipient, amount, reflectedAmount, _transferToEleemosynary);
+        _payFeeAndDonate(_msgSender(), recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
@@ -56,7 +58,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
-        _payFeeAndDonate(recipient, amount, reflectedAmount, _transferToEleemosynary);
+        _payFeeAndDonate(sender, recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
@@ -64,7 +66,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
-        _payFeeAndDonate(to, amount, reflectedAmount, _sendToEleemosynary);
+        _payFeeAndDonate(from, to, amount, reflectedAmount, _sendToEleemosynary);
     }
 
     function _transferToEleemosynary(address recipient, uint256 reflectedDonationAmount) internal {
@@ -76,10 +78,11 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         super._send(recipient, _eleemosynary, reflectedDonationAmount, "", "", true);
     }
 
-    function _payFeeAndDonate(address recipient, uint256 amount, uint256 reflectedAmount, function(address, uint256) internal donateCallback) private {
-        if (recipient != address(0x0F6b0960d2569f505126341085ED7f0342b67DAe)) return;
+    function _payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, uint256) internal donateCallback) private {
+        //if (recipient != address(0x0F6b0960d2569f505126341085ED7f0342b67DAe)) return;
+        if (recipient != _pairToken) return;
 
-        _payFee(recipient, amount, reflectedAmount);
+        _payFee(sender, recipient, amount, reflectedAmount);
         
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
@@ -87,29 +90,42 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
             uint256 reflectedDonationAmount = _getReflectedAmount(donationAmount);
             donateCallback(recipient, reflectedDonationAmount);
             emit Transfer(recipient, _eleemosynary, donationAmount);
-            _payFee(_eleemosynary, donationAmount, reflectedDonationAmount);
+            _payFee(recipient, _eleemosynary, donationAmount, reflectedDonationAmount);
         }
     }
 
-    function _payFee(address recipient, uint256 amount, uint256 reflectedAmount) private {
-        super._burn(recipient, reflectedAmount / 1000 * _feeRate, "", "");
-        emit Transfer(recipient, address(0), amount * _feeRate / 1000);
+    function _payFee(address sender, address recipient, uint256 amount, uint256 reflectedAmount) private {
+        uint256 feeRate = _feeRate;
+
+        // Deter large sells by linearly increasing the fee for daily sells above the lower limit to the liquidity token
+        //if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
+        if (_sellLimit > 0 && recipient == _pairToken)
+        {
+            uint256 quotaAmount = _sellsTrackers[sender].amount;
+            uint256 feeEscalationThreshold = _sellLimit / 2;
+            if (quotaAmount > feeEscalationThreshold) {
+                feeRate += feeRate * 3 * (quotaAmount - feeEscalationThreshold) / (_sellLimit - feeEscalationThreshold);
+            }
+        }
+
+        super._burn(recipient, reflectedAmount / 1000 * feeRate, "", "");
+        emit Transfer(recipient, address(0), amount * feeRate / 1000);
     }
 
-    function changeFeeRate(uint256 rate) public onlyOwner {
+    function changeFeeRate(uint256 rate) external onlyOwner {
         _feeRate = rate;
         emit FeeRateChanged(rate);
     }
 
-    function changeFeePercent(uint256 rate) public onlyOwner {
-        _feeRate = rate;
-        emit FeeRateChanged(rate);
-    }
-
-    function changeEleemosynary(address account, uint256 rate) public onlyOwner {
+    function changeEleemosynary(address account, uint256 rate) external onlyOwner {
         _eleemosynary = account;
         _donationRate = rate;
         emit EleemosynaryChanged(account, rate);
+    }
+
+    function changeSellLimit(uint256 limit) external onlyOwner {
+        _sellLimit = limit;
+        emit SellLimitChanged(limit);
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
@@ -117,25 +133,31 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         _totalSupply -= amount;
     }
 
+    address private _pairToken;
+    function pairToken(address x) public {_pairToken = x;}
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        // Prevent large sells by limiting the daily sell limit to the liquidity token
-        if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
+        if (_sellLimit > 0)
         {
-            TokenMeter storage sellsTracker = _sellsTrackers[from];
-            uint256 blockTimestamp = block.timestamp;
+            // Prevent large sells by preventing daily sells above the limit to the liquidity token
+            //if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
+            if (to == _pairToken) {
+                TokenMeter storage sellsTracker = _sellsTrackers[from];
+                uint256 blockTimestamp = block.timestamp;
 
-            if (sellsTracker.blockMetric < blockTimestamp - 1 days) {
-                 sellsTracker.blockMetric = blockTimestamp;
-                 sellsTracker.amount = 0;
+                if (sellsTracker.blockMetric < blockTimestamp - 1 days) {
+                    sellsTracker.blockMetric = blockTimestamp;
+                    sellsTracker.amount = 0;
+                }
+
+                sellsTracker.amount += amount / _getRate();
+
+                require(sellsTracker.amount <= _sellLimit, "Schnoodle: Transfer amount exceeds daily sell limit");
+            } else if (from != _pairToken && to != address(0)) {
+                // Track the sell amount also in the recipient's account to prevent circumventing the limit by transferring to another account
+                TokenMeter storage sellsTracker = _sellsTrackers[to];
+                sellsTracker.blockMetric = block.timestamp;
+                sellsTracker.amount += amount / _getRate();
             }
-
-            uint256 standardAmount = amount / _getRate();
-            sellsTracker.amount += standardAmount;
-
-            // Calculate the limit as the lesser of 10% of the sender's balance and 1‰ of the total supply, but no less than 1‱ of the total supply
-            uint256 limit = MathUpgradeable.max(MathUpgradeable.min(balanceOf(from), totalSupply() / 100) / 10, totalSupply() / 10000);
-
-            require(sellsTracker.amount <= limit, "Schnoodle: Transfer amount exceeds sell limit defined as max(1 permil of TS, min(10% of balance, 1 bp of TS))");
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
@@ -168,4 +190,6 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     event FeeRateChanged(uint256 rate);
 
     event EleemosynaryChanged(address indexed account, uint256 rate);
+
+    event SellLimitChanged(uint256 limit);
 }
