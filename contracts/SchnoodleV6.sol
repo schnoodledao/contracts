@@ -14,18 +14,17 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     address private _eleemosynary;
     uint256 private _donationRate;
     uint256 private _sellLimit;
-    mapping(address => TokenMeter) private _sellsTrackers;
+    TokenMeter private _sellQuota;
 
     struct TokenMeter {
         uint256 blockMetric;
-        uint256 amount;
+        int256 amount;
     }
 
     function initialize(uint256 initialTokens, address serviceAccount) public initializer {
         __Ownable_init();
         _totalSupply = initialTokens * 10 ** decimals();
         super.initialize("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
-        _sellLimit = 5000000000*10**decimals();
     }
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -42,7 +41,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
-        _payFeeAndDonate(_msgSender(), recipient, amount, reflectedAmount, _transferToEleemosynary);
+        _processSwap(_msgSender(), recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
@@ -58,7 +57,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
-        _payFeeAndDonate(sender, recipient, amount, reflectedAmount, _transferToEleemosynary);
+        _processSwap(sender, recipient, amount, reflectedAmount, _transferToEleemosynary);
         return result;
     }
 
@@ -66,7 +65,7 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
-        _payFeeAndDonate(from, to, amount, reflectedAmount, _sendToEleemosynary);
+        _processSwap(from, to, amount, reflectedAmount, _sendToEleemosynary);
     }
 
     function _transferToEleemosynary(address recipient, uint256 reflectedDonationAmount) internal {
@@ -78,34 +77,46 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
         super._send(recipient, _eleemosynary, reflectedDonationAmount, "", "", true);
     }
 
-    function _payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, uint256) internal donateCallback) private {
-        //if (recipient != address(0x0F6b0960d2569f505126341085ED7f0342b67DAe)) return;
-        if (recipient != _pairToken) return;
+    function _processSwap(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, uint256) internal donateCallback) private {
+        address liquidityToken = address(0x0F6b0960d2569f505126341085ED7f0342b67DAe);
 
-        _payFee(sender, recipient, amount, reflectedAmount);
-        
-        // The eleemosynary fund is optional
-        if (_eleemosynary != address(0)) {
-            uint256 donationAmount = amount * _donationRate / 1000;
-            uint256 reflectedDonationAmount = _getReflectedAmount(donationAmount);
-            donateCallback(recipient, reflectedDonationAmount);
-            emit Transfer(recipient, _eleemosynary, donationAmount);
-            _payFee(recipient, _eleemosynary, donationAmount, reflectedDonationAmount);
+        if (sender == liquidityToken || recipient == liquidityToken) {
+            // Maintain a sell quota as the net of all daily buys and sells, plus a predefined limit
+            if (_sellLimit > 0) {
+                uint256 blockTimestamp = block.timestamp;
+
+                if (_sellQuota.blockMetric < blockTimestamp - 1 days) {
+                    _sellQuota.blockMetric = blockTimestamp;
+                    _sellQuota.amount = int256(_sellLimit);
+                    emit SellQuotaChanged(_sellQuota.blockMetric, _sellQuota.amount);
+                }
+
+                _sellQuota.amount += (sender == liquidityToken ? int256(1) : -1) * int256(amount);
+                emit SellQuotaChanged(_sellQuota.blockMetric, _sellQuota.amount);
+            }
+
+            if (recipient != liquidityToken) return;
+
+            _payFee(recipient, amount, reflectedAmount);
+
+            // Optionally donate to the eleemosynary fund
+            if (_eleemosynary != address(0)) {
+                uint256 donationAmount = amount * _donationRate / 1000;
+                uint256 reflectedDonationAmount = _getReflectedAmount(donationAmount);
+                donateCallback(recipient, reflectedDonationAmount);
+                emit Transfer(recipient, _eleemosynary, donationAmount);
+                _payFee(_eleemosynary, donationAmount, reflectedDonationAmount);
+            }
         }
     }
 
-    function _payFee(address sender, address recipient, uint256 amount, uint256 reflectedAmount) private {
+    function _payFee(address recipient, uint256 amount, uint256 reflectedAmount) private {
         uint256 feeRate = _feeRate;
 
-        // Deter large sells by linearly increasing the fee for daily sells above the lower limit to the liquidity token
-        //if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
-        if (_sellLimit > 0 && recipient == _pairToken)
+        // Increase the fee linearly when the sell quota is negative (more daily sells than buys including the predefined limit)
+        if (_sellLimit > 0 && _sellQuota.amount < 0)
         {
-            uint256 quotaAmount = _sellsTrackers[sender].amount;
-            uint256 feeEscalationThreshold = _sellLimit / 2;
-            if (quotaAmount > feeEscalationThreshold) {
-                feeRate += feeRate * 3 * (quotaAmount - feeEscalationThreshold) / (_sellLimit - feeEscalationThreshold);
-            }
+            feeRate += feeRate * 3 * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellLimit) / _sellLimit;
         }
 
         super._burn(recipient, reflectedAmount / 1000 * feeRate, "", "");
@@ -131,36 +142,6 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;
-    }
-
-    address private _pairToken;
-    function pairToken(address x) public {_pairToken = x;}
-    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        if (_sellLimit > 0)
-        {
-            // Prevent large sells by preventing daily sells above the limit to the liquidity token
-            //if (to == address(0x0F6b0960d2569f505126341085ED7f0342b67DAe))
-            if (to == _pairToken) {
-                TokenMeter storage sellsTracker = _sellsTrackers[from];
-                uint256 blockTimestamp = block.timestamp;
-
-                if (sellsTracker.blockMetric < blockTimestamp - 1 days) {
-                    sellsTracker.blockMetric = blockTimestamp;
-                    sellsTracker.amount = 0;
-                }
-
-                sellsTracker.amount += amount / _getRate();
-
-                require(sellsTracker.amount <= _sellLimit, "Schnoodle: Transfer amount exceeds daily sell limit");
-            } else if (from != _pairToken && to != address(0)) {
-                // Track the sell amount also in the recipient's account to prevent circumventing the limit by transferring to another account
-                TokenMeter storage sellsTracker = _sellsTrackers[to];
-                sellsTracker.blockMetric = block.timestamp;
-                sellsTracker.amount += amount / _getRate();
-            }
-        }
-
-        super._beforeTokenTransfer(operator, from, to, amount);
     }
 
     function _getReflectedAmount(uint256 amount) private view returns(uint256) {
@@ -192,4 +173,6 @@ contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     event EleemosynaryChanged(address indexed account, uint256 rate);
 
     event SellLimitChanged(uint256 limit);
+
+    event SellQuotaChanged(uint256 blockTimestamp, int256 amount);
 }

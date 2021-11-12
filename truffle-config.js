@@ -13,7 +13,6 @@ module.exports = {
       websockets: true,
       network_id: 3,
       gasPrice: 10e9,
-      gas: 10e6,
       skipDryRun: true
     },
     rinkeby: {
