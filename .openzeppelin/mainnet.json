@@ -842,9 +842,9 @@
         }
       }
     },
-    "1f60f96a7ff61a979959b4ae5428c8bf815d9f82016b40a5ff928f91e4e512dd": {
-      "address": "0x51E8922D18306697C9da50f864bb859f9DDd2ecb",
-      "txHash": "0xae2a812f3e82a89da5d82e7f47662e76ae57711f0bb9befd8dae83d3ab029a15",
+    "6e0cb351bbfc66b004f62fdaaf0bd69ca06e684aa4e7b1ef4854992552d76684": {
+      "address": "0xBea9cd356c2d4afF8C3d4cD28E4002DDA551a859",
+      "txHash": "0xe8e6b5d997b18ab8a490b7d622958ce7883148215eea54ba56abc5231902a089",
       "layout": {
         "storage": [
           {
@@ -969,9 +969,15 @@
           },
           {
             "contract": "SchnoodleV6",
-            "label": "_sellsTrackers",
-            "type": "t_mapping(t_address,t_struct(TokenMeter)7340_storage)",
+            "label": "_sellLimit",
+            "type": "t_uint256",
             "src": "..\\project:\\contracts\\SchnoodleV6.sol:16"
+          },
+          {
+            "contract": "SchnoodleV6",
+            "label": "_sellQuota",
+            "type": "t_struct(TokenMeter)7340_storage",
+            "src": "..\\project:\\contracts\\SchnoodleV6.sol:17"
           }
         ],
         "types": {
@@ -980,9 +986,6 @@
           },
           "t_address": {
             "label": "address"
-          },
-          "t_mapping(t_address,t_struct(TokenMeter)7340_storage)": {
-            "label": "mapping(address => struct SchnoodleV6.TokenMeter)"
           },
           "t_struct(TokenMeter)7340_storage": {
             "label": "struct SchnoodleV6.TokenMeter",
@@ -993,9 +996,12 @@
               },
               {
                 "label": "amount",
-                "type": "t_uint256"
+                "type": "t_int256"
               }
             ]
+          },
+          "t_int256": {
+            "label": "int256"
           },
           "t_array(t_uint256)49_storage": {
             "label": "uint256[49]"
