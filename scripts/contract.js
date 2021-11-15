@@ -9,7 +9,7 @@ module.exports = {
 
     if (network === 'develop') {
       const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-      return await upgradeProxy(proxy.address, contract, { deployer, call });
+      return await upgradeProxy(proxy.address, contract, { deployer, call, unsafeAllowRenames: true });
     } else {
       const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
       const contractsFile = require('../scripts/contracts-file.js');
