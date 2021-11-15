@@ -11,15 +11,15 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     uint256 private _version;
     address private _schnoodleStaking;
     address private _stakingFund;
-    uint256 private _stakingPercent;
+    uint256 private _stakingRate;
     mapping(address => TokenMeter) private _sellsTrackers;
 
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
     function upgrade(address schnoodleStaking) external onlyOwner {
-        require(_version < 6, "Schnoodle: already upgraded");
-        _version = 6;
+        require(_version < 7, "Schnoodle: already upgraded");
+        _version = 7;
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner());
         grantRole(STAKING_CONTRACT, schnoodleStaking);
@@ -30,22 +30,6 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     // Transfer overrides
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
-        // Prevent large sells by limiting the daily sell limit to the liquidity token
-        if (hasRole(LIQUIDITY, to))
-        {
-            TokenMeter storage sellsTracker = _sellsTrackers[from];
-            uint256 blockTimestamp = block.timestamp;
-
-            if (sellsTracker.blockMetric < blockTimestamp - 1 days) {
-                 sellsTracker.blockMetric = blockTimestamp;
-                 sellsTracker.amount = 0;
-            }
-
-            uint256 standardAmount = _getStandardAmount(amount);
-            sellsTracker.amount += standardAmount;
-            require(sellsTracker.amount < totalSupply() / 10000, "Schnoodle: Transfer exceeds sell limit of 0.01% of total supply per day");
-        }
-
         // Ensure the sender has enough unstaked balance to perform the transfer
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
@@ -56,11 +40,17 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
         super._beforeTokenTransfer(operator, from, to, amount);
     }
 
-    function payFeeAndDonate(address sender, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
-        if (sender == recipient || !hasRole(LIQUIDITY, sender)) return;
+    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
+        // Only process buys and sells (not account-to-account transfers)
+        if (!(isLiquidityToken(from) || isLiquidityToken(to))) return;
 
-        super.payFeeAndDonate(sender, recipient, amount, reflectedAmount, transferCallback);
-        _transferTax(recipient, _stakingFund, amount, _stakingPercent, transferCallback);
+        super.processSwap(from, to, amount, reflectedAmount, transferCallback);
+        _transferTax(to, _stakingFund, amount, _stakingRate, transferCallback);
+    }
+
+    function isLiquidityToken(address account) internal view virtual override returns(bool)
+    {
+        return hasRole(LIQUIDITY, account);
     }
 
     // Staking functions
@@ -69,13 +59,13 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
         return _stakingFund;
     }
 
-    function changeStakingPercent(uint256 percent) external onlyOwner {
-        _stakingPercent = percent;
-        emit StakingPercentChanged(percent);
+    function changeStakingRate(uint256 rate) external onlyOwner {
+        _stakingRate = rate;
+        emit StakingRateChanged(rate);
     }
 
-    function stakingPercent() external view returns (uint256) {
-        return _stakingPercent;
+    function stakingRate() external view returns (uint256) {
+        return _stakingRate;
     }
 
     function stakingReward(address account, uint256 netReward, uint256 grossReward) external {
@@ -95,5 +85,5 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
         return abi.decode(result, (uint256));
     }
 
-    event StakingPercentChanged(uint256 percent);
+    event StakingRateChanged(uint256 rate);
 }
