@@ -27,7 +27,7 @@ export class Staking extends Component {
       amountToStake: 0,
       vestingBlocks: 1,
       unbondingBlocks: 1,
-      forecastReward: 0,
+      vestForecastReward: 0,
       apy: 0,
       stakedBalance: 0,
       stakingSummary: [],
@@ -75,8 +75,8 @@ export class Staking extends Component {
       const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
 
       // Fetch the staking summary while also calculating the APY for each stake
-      const stakingSummary = await Promise.all([].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1).map(async (stakeReward) => {
-        const apy = await this.calculateApy(stakeReward.stake.amount, stakeReward.stake.vestingBlocks, stakeReward.stake.unbondingBlocks);
+      const stakingSummary = await Promise.all([].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1).map(async (stakeReward, i) => {
+        const apy = this.calculateApy(stakeReward.stake.amount, await schnoodleStaking.methods.reward(i, await this.blockNumberAfterOneYear()).call())
         return { stake: stakeReward.stake, reward: stakeReward.reward, apy: apy };
       }));
 
@@ -133,10 +133,10 @@ export class Staking extends Component {
     }
   }
 
-  async withdrawStake(i) {
+  async withdrawStake(index) {
     try {
       const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
-      const response = await schnoodleStaking.methods.withdraw(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      const response = await schnoodleStaking.methods.withdraw(index, this.scaleUpUnits(withdrawItems[index]).toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -153,9 +153,9 @@ export class Staking extends Component {
     }
   }
 
-  updateWithdrawItem(i, e) {
+  updateWithdrawItem(index, e) {
     let withdrawItems = this.state.withdrawItems;
-    withdrawItems[i] = e.target.value;
+    withdrawItems[index] = e.target.value;
     this.setState({ withdrawItems: withdrawItems });
   }
 
@@ -178,29 +178,29 @@ export class Staking extends Component {
   }
 
   async updateForecastReward() {
-    const { amountToStake, vestingBlocks, unbondingBlocks } = this.state;
-    const forecastReward = await this.calculateForecastReward(amountToStake, vestingBlocks, unbondingBlocks);
-    const apy = this.calculateApyFromForecast(amountToStake, forecastReward);
-    this.setState({ forecastReward: forecastReward, apy: apy });
+    const { schnoodleStaking, amountToStake, vestingBlocks, unbondingBlocks, blockNumber } = this.state;
+    const vestForecastReward = await newStakeForecastReward(blockNumber + vestingBlocks);
+    const yearForecastReward = await newStakeForecastReward(await this.blockNumberAfterOneYear());
+    const apy = this.calculateApy(amountToStake, yearForecastReward);
+    this.setState({ vestForecastReward: vestForecastReward, apy: apy });
+
+    async function newStakeForecastReward(rewardBlock) {
+      if (rewardBlock === 0) return 0;
+      return await schnoodleStaking.methods.reward(amountToStake.toString(), vestingBlocks, unbondingBlocks, rewardBlock).call();
+    }
   }
 
-  async calculateForecastReward(amount, vestingBlocks, unbondingBlocks) {
-    const { web3, schnoodleStaking, blockNumber } = this.state;
+  async blockNumberAfterOneYear() {
+    const { web3, blockNumber } = this.state;
 
-    if (blockNumber == 0) return 0;
+    if (blockNumber === 0) return 0;
     const blocksDenominator = Math.min(500, blockNumber);
     const averageBlockTime = ((await web3.eth.getBlock(blockNumber)).timestamp - (await web3.eth.getBlock(blockNumber - blocksDenominator)).timestamp) / blocksDenominator;
-    const blocksPerYear = moment.duration({ 'y': 1 }).asSeconds() / averageBlockTime;
-
-    return await schnoodleStaking.methods.forecastReward(amount.toString(), vestingBlocks, unbondingBlocks, Math.floor(blocksPerYear)).call();
+    return blockNumber + Math.floor(moment.duration({ 'y': 1 }).asSeconds() / averageBlockTime);
   }
 
-  async calculateApy(amount, vestingBlocks, unbondingBlocks) {
-    return this.calculateApyFromForecast(amount, await this.calculateForecastReward(amount, vestingBlocks, unbondingBlocks));
-  }
-
-  calculateApyFromForecast(amount, forecastReward) {
-    return Math.floor(forecastReward / amount) * 100;
+  calculateApy(amount, reward) {
+    return Math.floor(reward / amount * 100);
   }
 
   renderStakingSummaryTable(stakingSummary) {
@@ -324,7 +324,7 @@ export class Staking extends Component {
                     <div class="stat-title">BARK Rewards</div>
                     <div class="stat-value greenfade">
                       {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
-                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" onClick={this.resetReflectTracker} title="Reset" />
+                      &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
                     </div>
                     <div class="stat-desc text-secondary">{token} since block {this.state.reflectTracker.blockNumber}</div>
                   </div>
@@ -383,8 +383,8 @@ export class Staking extends Component {
                         </div>
                         <div class="shadow-sm bottomstats stats ">
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                            <div class="stat-title">Forecast Reward</div>
-                            <div class="stat-value purplefade">{this.scaleDownUnits(this.state.forecastReward)}</div>
+                            <div class="stat-title">Vest Forecast Reward</div>
+                            <div class="stat-value purplefade">{this.scaleDownUnits(this.state.vestForecastReward)}</div>
                             <div class="stat-desc">{token}</div>
                           </div>
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
