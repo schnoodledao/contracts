@@ -3,6 +3,7 @@ import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
+import debounce from 'lodash.debounce';
 const moment = require('moment');
 const bigInt = require("big-integer");
 
@@ -41,6 +42,8 @@ export class Staking extends Component {
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
+
+    this.updateForecastReward = debounce(this.updateForecastReward, 250);
   }
 
   async componentDidMount() {
@@ -60,6 +63,10 @@ export class Staking extends Component {
       alert(`Failed to load web3, accounts, or contract. Check console for details.`);
       console.error(err);
     }
+  }
+
+  componentWillUnmount() {
+    this.updateForecastReward.cancel();
   }
 
   async getInfo() {
@@ -200,7 +207,7 @@ export class Staking extends Component {
   }
 
   calculateApy(amount, reward) {
-    return Math.floor(reward / amount * 100);
+    return reward === '0' ? 0 : Math.floor(reward / amount * 100);
   }
 
   renderStakingSummaryTable(stakingSummary) {
