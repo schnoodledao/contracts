@@ -198,7 +198,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     // Reflect Tracker functions
 
     function reflectTrackerInfo(address account) external view returns (uint256, uint256) {
-        ReflectTracker storage reflectTracker = _reflectTrackers[account];
+        ReflectTracker memory reflectTracker = _reflectTrackers[account];
         return (reflectTracker.checkpointBalance.blockMetric, _currentDeltaBalance(account, reflectTracker));
     }
 
@@ -218,7 +218,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         }
     }
 
-    function _currentDeltaBalance(address account, ReflectTracker storage reflectTracker) private view returns(uint256) {
+    function _currentDeltaBalance(address account, ReflectTracker memory reflectTracker) private view returns(uint256) {
         return reflectTracker.deltaBalance + balanceOf(account) - uint256(reflectTracker.checkpointBalance.amount);
     }
 

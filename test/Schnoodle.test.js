@@ -9,7 +9,7 @@ const { testContracts } = require(`../migrations-config.develop.js`);
 const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');
-const bigInt = require('big-integer')
+const bigInt = require('big-integer');
 const truffleAssert = require('truffle-assertions');
 
 const chance = new Chance();

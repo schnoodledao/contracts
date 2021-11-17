@@ -24,7 +24,7 @@ export class Staking extends Component {
       stakingFundBalance: 0,
       blockNumber: 0,
       balance: 0,
-      reflectTrackerInfo: {"blockNumber": 0, "deltaBalance": 0},
+      reflectTrackerInfo: { 'blockNumber': 0, 'deltaBalance': 0 },
       amountToStake: 0,
       vestingBlocks: 1,
       unbondingBlocks: 1,
@@ -78,7 +78,7 @@ export class Staking extends Component {
       const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
 
       const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
-      const reflectTrackerInfo = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
+      const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
       const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
 
       // Fetch the staking summary while also calculating the APY for each stake
@@ -94,7 +94,7 @@ export class Staking extends Component {
         withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].stake.amount);
       }
 
-      this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, reflectTrackerInfo: reflectTrackerInfo, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, withdrawItems: withdrawItems });
+      this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, reflectTrackerInfo: { blockNumber, deltaBalance }, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, withdrawItems: withdrawItems });
     });
   }
 
@@ -333,7 +333,7 @@ export class Staking extends Component {
                       {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
                       &nbsp;<input class="max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
                     </div>
-                    <div class="stat-desc text-secondary">{token} since block {this.state.reflectTracker.blockNumber}</div>
+                    <div class="stat-desc text-secondary">{token} since block {this.state.reflectTrackerInfo.blockNumber}</div>
                   </div>
                 )}
               </div>
