@@ -125,7 +125,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         if (_sellThreshold > 0) {
             uint256 blockTimestamp = block.timestamp;
 
-            if (_sellQuota.blockMetric < blockTimestamp - 1 days) {
+            if (_sellQuota.blockMetric == 0 || _sellQuota.blockMetric < blockTimestamp - 1 days) {
                 _sellQuota.blockMetric = blockTimestamp;
                 _sellQuota.amount = int256(_sellThreshold);
                 emit SellQuotaChanged(_sellQuota.blockMetric, _sellQuota.amount);
@@ -155,16 +155,9 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     }
 
     function _payFee(address to, uint256 amount, uint256 reflectedAmount) private {
-        uint256 adjustedFeeRate = _feeRate;
-
-        // Increase the fee linearly when the sell quota is negative (more daily sells than buys including the predefined threshold)
-        if (_sellThreshold > 0 && _sellQuota.amount < 0)
-        {
-            adjustedFeeRate += adjustedFeeRate * 3 * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellThreshold) / _sellThreshold;
-        }
-
-        super._burn(to, reflectedAmount / 1000 * adjustedFeeRate, "", "");
-        emit Transfer(to, address(0), amount * adjustedFeeRate / 1000);
+        uint256 operativeFeeRate = getOperativeFeeRate();
+        super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
+        emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
     }
 
     function changeFeeRate(uint256 rate) external onlyOwner {
@@ -173,6 +166,16 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     }
 
     function feeRate() external view returns(uint256) {
+        return _feeRate;
+    }
+
+    function getOperativeFeeRate() public view returns(uint256) {
+        // Increase the fee linearly when the sell quota is negative (more daily sells than buys including the predefined threshold)
+        if (_sellThreshold > 0 && _sellQuota.amount < 0)
+        {
+            return _feeRate + _feeRate * 3 * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellThreshold) / _sellThreshold;
+        }
+
         return _feeRate;
     }
 
@@ -193,6 +196,10 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function sellThreshold() external view returns(uint256) {
         return _sellThreshold;
+    }
+
+    function sellQuota() external view returns(TokenMeter memory) {
+        return _sellQuota;
     }
 
     // Reflect Tracker functions

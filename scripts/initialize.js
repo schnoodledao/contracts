@@ -11,9 +11,10 @@ module.exports = async function main(callback) {
     const schnoodle = new SchnoodleV7((await SchnoodleV1.deployed()).address);
     
     await schnoodle.changeStakingRate(10);
+    await schnoodle.changeSellThreshold(BigInt(1 * 10 ** 9) * BigInt(10 ** 18));
 
     // Populate the staking fund for development test purposes
-    await schnoodle.transfer(await schnoodle.stakingFund(), BigInt(400000000000) * BigInt(10 ** 18));
+    await schnoodle.transfer(await schnoodle.stakingFund(), BigInt(400 * 10 ** 9) * BigInt(10 ** 18));
 
     // Before populating the accounts, make the last one a liquidity token to simulate a sell and thus a fee distribution to all other accounts
     await schnoodle.grantRole(await schnoodle.LIQUIDITY(), accounts[accounts.length - 1]);

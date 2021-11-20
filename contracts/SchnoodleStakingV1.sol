@@ -112,8 +112,8 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return _reward(stake, stake.blockNumber, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
     }
 
-    function reward(uint256 index, uint256 rewardBlock) external view returns(uint256) {
-        return _reward(_accountStakes[_msgSender()][index], rewardBlock);
+    function reward(address account, uint256 index, uint256 rewardBlock) external view returns(uint256) {
+        return _reward(_accountStakes[account][index], rewardBlock);
     }
 
     function _reward(Stake memory stake, uint256 rewardBlock) private view returns(uint256) {
