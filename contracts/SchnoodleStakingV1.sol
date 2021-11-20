@@ -48,12 +48,6 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         _sigmoidParams = SigmoidParams(5, 1);
     }
 
-    function forecastReward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external view returns(uint256) {
-        (Stake memory stake, uint256 cumulativeTotal) = _addStake(amount, vestingBlocks, unbondingBlocks);
-        (uint256 totalTokens, uint256 totalStakeWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
-        return _reward(stake, stake.blockNumber, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
-    }
-
     /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
     function addStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
         address msgSender = _msgSender();
@@ -65,7 +59,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         _accountStakes[msgSender].push(Stake(amount, stake.blockNumber, vestingBlocks, unbondingBlocks));
         _balances[msgSender] += amount;
 
-        _updateTracking(int256(amount), cumulativeTotal, stake.blockNumber, vestingBlocks, unbondingBlocks);
+        _updateTracking(int256(amount), vestingBlocks, unbondingBlocks, cumulativeTotal, stake.blockNumber);
 
         emit Staked(msgSender, amount, stake.blockNumber);
     }
@@ -87,7 +81,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
         (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, rewardBlock);
 
-        _updateTracking(-int256(amount), newCumulativeTotal, rewardBlock, stake.vestingBlocks, stake.unbondingBlocks);
+        _updateTracking(-int256(amount), stake.vestingBlocks, stake.unbondingBlocks, newCumulativeTotal, rewardBlock);
 
         stake.amount -= amount;
         _balances[msgSender] -= amount;
@@ -110,6 +104,25 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
     function sigmoidParams() external view returns(SigmoidParams memory) {
         return _sigmoidParams;
+    }
+
+    function reward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external view returns(uint256) {
+        (Stake memory stake, uint256 cumulativeTotal) = _addStake(amount, vestingBlocks, unbondingBlocks);
+        (uint256 totalTokens, uint256 totalStakeWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
+        return _reward(stake, stake.blockNumber, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
+    }
+
+    function reward(address account, uint256 index, uint256 rewardBlock) external view returns(uint256) {
+        return _reward(_accountStakes[account][index], rewardBlock);
+    }
+
+    function _reward(Stake memory stake, uint256 rewardBlock) private view returns(uint256) {
+        return _reward(stake, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
+    }
+
+    function _reward(Stake memory stake, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private view returns(uint256) {
+        (uint256 netReward,,) = _rewardInfo(stake, stake.amount, checkpointBlock, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
+        return netReward;
     }
 
     function _rewardInfo(Stake memory stake, uint256 amount, uint256 rewardBlock) private view returns(uint256, uint256, uint256) {
@@ -170,15 +183,6 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         );
     }
 
-    function _reward(Stake memory stake, uint256 rewardBlock) private view returns(uint256) {
-        return _reward(stake, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
-    }
-
-    function _reward(Stake memory stake, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private view returns(uint256) {
-        (uint256 reward,,) = _rewardInfo(stake, stake.amount, checkpointBlock, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
-        return reward;
-    }
-
     function _newCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
         return _newCumulativeTotal(_checkpointBlock, rewardBlock, _cumulativeTotal, _totalTokens);
     }
@@ -188,10 +192,10 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return cumulativeTotal + totalTokens * (rewardBlock - checkpointBlock);
     }
 
-    function _updateTracking(int256 amountDelta, uint256 cumulativeTotal, uint256 checkpointBlock, uint256 vestingBlocks, uint256 unbondingBlocks) private {
+    function _updateTracking(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 cumulativeTotal, uint256 checkpointBlock) private {
+        (_totalTokens, _totalStakeWeight) = _updateTracking(amountDelta, vestingBlocks, unbondingBlocks);
         _cumulativeTotal = cumulativeTotal;
         _checkpointBlock = checkpointBlock;
-        (_totalTokens, _totalStakeWeight) = _updateTracking(amountDelta, vestingBlocks, unbondingBlocks);
     }
 
     function _updateTracking(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256) {

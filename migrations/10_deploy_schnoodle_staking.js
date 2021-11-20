@@ -1,4 +1,4 @@
-// migrations/9_deploy_schnoodle_staking.js
+// migrations/10_deploy_schnoodle_staking.js
 
 const { deployProxy, admin } = require('@openzeppelin/truffle-upgrades');
 const contractName = 'SchnoodleStakingV1';

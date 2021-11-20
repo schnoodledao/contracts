@@ -1,22 +1,29 @@
-// contracts/imports/SchnoodleV6Base.sol
+// contracts/imports/SchnoodleV7Base.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
-contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
+abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
     uint256 private _totalSupply;
-    uint256 private _feePercent;
+    uint256 private _feeRate;
     address private _eleemosynary;
-    uint256 private _donationPercent;
+    uint256 private _donationRate;
+    uint256 private _sellThreshold;
+    TokenMeter private _sellQuota;
     mapping(address => ReflectTracker) private _reflectTrackers;
 
+    struct TokenMeter {
+        uint256 blockMetric;
+        int256 amount;
+    }
+
     struct ReflectTracker {
-        uint256 blockNumber;
-        uint256 checkpointBalance;
+        TokenMeter checkpointBalance;
         uint256 deltaBalance;
     }
 
@@ -41,7 +48,7 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
-        payFeeAndDonate(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
+        processSwap(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
         _reflectTrackerCheckpoints(_msgSender(), recipient);
 
         return result;
@@ -60,7 +67,7 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
-        payFeeAndDonate(sender, recipient, amount, reflectedAmount, _transferFromReflected);
+        processSwap(sender, recipient, amount, reflectedAmount, _transferFromReflected);
         _reflectTrackerCheckpoints(sender, recipient);
 
         return result;
@@ -82,7 +89,7 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
-        payFeeAndDonate(from, to, amount, reflectedAmount, _sendReflected);
+        processSwap(from, to, amount, reflectedAmount, _sendReflected);
         _reflectTrackerCheckpoints(to, from);
     }
 
@@ -98,66 +105,108 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
     }
 
     function _getReflectedAmount(uint256 amount) internal view returns(uint256) {
-        return amount * _getRate();
+        return amount * _getReflectRate();
     }
 
     function _getStandardAmount(uint256 reflectedAmount) internal view returns(uint256) {
         // Condition prevents a divide-by-zero error when the total supply is zero
-        return reflectedAmount == 0 ? 0 : reflectedAmount / _getRate();
+        return reflectedAmount == 0 ? 0 : reflectedAmount / _getReflectRate();
     }
 
-    function _getRate() private view returns(uint256) {
+    function _getReflectRate() private view returns(uint256) {
         uint256 reflectedTotalSupply = super.totalSupply();
         return reflectedTotalSupply == 0 ? 0 : super.totalSupply() / totalSupply();
     }
 
     // Taxation functions
 
-    function payFeeAndDonate(address, address recipient, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
-        _payFee(recipient, amount, reflectedAmount);
-        _transferTax(recipient, _eleemosynary, amount, _donationPercent, transferCallback);
+    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+        // Maintain a sell quota as the net of all daily buys and sells, plus a predefined threshold
+        if (_sellThreshold > 0) {
+            uint256 blockTimestamp = block.timestamp;
+
+            if (_sellQuota.blockMetric == 0 || _sellQuota.blockMetric < blockTimestamp - 1 days) {
+                _sellQuota.blockMetric = blockTimestamp;
+                _sellQuota.amount = int256(_sellThreshold);
+                emit SellQuotaChanged(_sellQuota.blockMetric, _sellQuota.amount);
+            }
+
+            _sellQuota.amount += (isLiquidityToken(from) ? int256(1) : -1) * int256(amount);
+            emit SellQuotaChanged(_sellQuota.blockMetric, _sellQuota.amount);
+        }
+
+        // Proceed to pay fee and tax if only a sell at this point
+        if (!(isLiquidityToken(to))) return;
+
+        _payFee(to, amount, reflectedAmount);
+        _transferTax(to, _eleemosynary, amount, _donationRate, transferCallback);
     }
 
-    function _transferTax(address from, address to, uint256 amount, uint256 percent, function(address, address, uint256) internal transferCallback) internal {
+    function isLiquidityToken(address) internal view virtual returns(bool);
+
+    function _transferTax(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
         // Ignore tax if not enabled
         if (to != address(0)) {
-            uint256 taxAmount = amount * percent / 100;
+            uint256 taxAmount = amount * rate / 1000;
             uint256 reflectedDonationAmount = _getReflectedAmount(taxAmount);
             transferCallback(from, to, reflectedDonationAmount);
             emit Transfer(from, to, taxAmount);
-            _payFee(to, taxAmount, reflectedDonationAmount);
         }
     }
 
-    function _payFee(address recipient, uint256 amount, uint256 reflectedAmount) private {
-        super._burn(recipient, reflectedAmount / 100 * _feePercent, "", "");
-        emit Transfer(recipient, address(0), amount * _feePercent / 100);
+    function _payFee(address to, uint256 amount, uint256 reflectedAmount) private {
+        uint256 operativeFeeRate = getOperativeFeeRate();
+        super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
+        emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
     }
 
-    function changeFeePercent(uint256 percent) external onlyOwner {
-        _feePercent = percent;
-        emit FeePercentChanged(percent);
+    function changeFeeRate(uint256 rate) external onlyOwner {
+        _feeRate = rate;
+        emit FeeRateChanged(rate);
     }
 
-    function feePercent() external view returns(uint256) {
-        return _feePercent;
+    function feeRate() external view returns(uint256) {
+        return _feeRate;
     }
 
-    function changeEleemosynary(address account, uint256 percent) external onlyOwner {
+    function getOperativeFeeRate() public view returns(uint256) {
+        // Increase the fee linearly when the sell quota is negative (more daily sells than buys including the predefined threshold)
+        if (_sellThreshold > 0 && _sellQuota.amount < 0)
+        {
+            return _feeRate + _feeRate * 3 * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellThreshold) / _sellThreshold;
+        }
+
+        return _feeRate;
+    }
+
+    function changeEleemosynary(address account, uint256 rate) external onlyOwner {
         _eleemosynary = account;
-        _donationPercent = percent;
-        emit EleemosynaryChanged(account, percent);
+        _donationRate = rate;
+        emit EleemosynaryChanged(account, rate);
     }
 
     function eleemosynary() external view returns(address, uint256) {
-        return (_eleemosynary, _donationPercent);
+        return (_eleemosynary, _donationRate);
+    }
+
+    function changeSellThreshold(uint256 threshold) external onlyOwner {
+        _sellThreshold = threshold;
+        emit SellThresholdChanged(threshold);
+    }
+
+    function sellThreshold() external view returns(uint256) {
+        return _sellThreshold;
+    }
+
+    function sellQuota() external view returns(TokenMeter memory) {
+        return _sellQuota;
     }
 
     // Reflect Tracker functions
 
     function reflectTrackerInfo(address account) external view returns (uint256, uint256) {
-        ReflectTracker storage reflectTracker = _reflectTrackers[account];
-        return (reflectTracker.blockNumber, _currentDeltaBalance(account, reflectTracker));
+        ReflectTracker memory reflectTracker = _reflectTrackers[account];
+        return (reflectTracker.checkpointBalance.blockMetric, _currentDeltaBalance(account, reflectTracker));
     }
 
     function _captureReflectedBalances(address account1, address account2) private {
@@ -169,15 +218,15 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
         if (account == address(0)) return;
         ReflectTracker storage reflectTracker = _reflectTrackers[account];
 
-        if (reflectTracker.blockNumber == 0) {
+        if (reflectTracker.checkpointBalance.blockMetric == 0) {
              _resetReflectTracker(account);
         } else {
             reflectTracker.deltaBalance = _currentDeltaBalance(account, reflectTracker);
         }
     }
 
-    function _currentDeltaBalance(address account, ReflectTracker storage reflectTracker) private view returns(uint256) {
-        return reflectTracker.deltaBalance + balanceOf(account) - reflectTracker.checkpointBalance;
+    function _currentDeltaBalance(address account, ReflectTracker memory reflectTracker) private view returns(uint256) {
+        return reflectTracker.deltaBalance + balanceOf(account) - uint256(reflectTracker.checkpointBalance.amount);
     }
 
     function _reflectTrackerCheckpoints(address account1, address account2) private {
@@ -187,7 +236,7 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
 
     function _reflectTrackerCheckpoint(address account) private {
         if (account == address(0)) return;
-        _reflectTrackers[account].checkpointBalance = balanceOf(account);
+        _reflectTrackers[account].checkpointBalance.amount = int256(balanceOf(account));
     }
 
     function resetReflectTracker() public {
@@ -200,26 +249,14 @@ contract SchnoodleV6Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeab
     }
 
     function _resetReflectTracker(address account) private {
-        _reflectTrackers[account] = ReflectTracker(block.number, balanceOf(account), 0);
+        _reflectTrackers[account] = ReflectTracker(TokenMeter(block.number, int256(balanceOf(account))), 0);
     }
 
-    // Maintenance functions
+    event FeeRateChanged(uint256 rate);
 
-    function maintenance() external onlyOwner {
-        address holderA1 = address(0x79A1ddA6625Dc4842625EF05591e4f2322232120);
-        address holderA2 = address(0x5d22e32398CAE8F8448df5491b50C39B7F271016);
-        address holderB1 = address(0x3443036E7c2dfC1f09a309c96b502b4f20F32e42);
-        address holderB2 = address(0xA51dc67ec00a9B082EC1ebc4A901A9Cb447E30E4);
+    event EleemosynaryChanged(address indexed account, uint256 rate);
 
-        uint256 balanceA = balanceOf(holderA1) + balanceOf(holderA2);
-        uint256 total = balanceA + balanceOf(holderB1) + balanceOf(holderB2);
+    event SellThresholdChanged(uint256 threshold);
 
-        uint256 reflectedAmount = _getReflectedAmount(balanceA - total / 3);
-        _approve(holderA1, _msgSender(), reflectedAmount);
-        super.transferFrom(holderA1, holderB2, reflectedAmount);
-    }
-
-    event FeePercentChanged(uint256 percent);
-
-    event EleemosynaryChanged(address indexed account, uint256 percent);
+    event SellQuotaChanged(uint256 blockTimestamp, int256 amount);
 }

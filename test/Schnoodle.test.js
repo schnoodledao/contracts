@@ -5,16 +5,16 @@ const [ serviceAccount, eleemosynary ] = accounts;
 const { BN, singletons, time } = require('@openzeppelin/test-helpers');
 
 const { testContracts } = require(`../migrations-config.develop.js`);
-const Schnoodle = contract.fromArtifact(testContracts.schnoodle);
 
 const { assert } = require('chai');
 require('chai').should();
 const Chance = require('chance');
-const bigInt = require('big-integer')
+const bigInt = require('big-integer');
 const truffleAssert = require('truffle-assertions');
 
 const chance = new Chance();
 let schnoodle;
+let schnoodleStaking;
 let initialTokens;
 
 const data = web3.utils.sha3(chance.string());
@@ -23,9 +23,15 @@ beforeEach(async function () {
   initialTokens = chance.integer({ min: 1000 });
 
   await singletons.ERC1820Registry(serviceAccount);
+  const Schnoodle = contract.fromArtifact(testContracts.schnoodle);
+  const SchnoodleStaking = contract.fromArtifact(testContracts.schnoodleStaking);
 
   schnoodle = await Schnoodle.new();
-  await schnoodle.initialize(initialTokens, serviceAccount);
+  await schnoodle.methods['initialize(uint256,address)'](initialTokens, serviceAccount, { from: serviceAccount });
+
+  schnoodleStaking = await SchnoodleStaking.new();
+  await schnoodleStaking.initialize(schnoodle.address);
+  await schnoodle.upgrade(schnoodleStaking.address, { from: serviceAccount });
 });
 
 describe('Balance', () => {
@@ -77,15 +83,15 @@ describe('Transfer', () => {
   let senderCandidates;
   let sender;
   let recipient;
-  let feePercent;
-  let donationPercent;
+  let feeRate;
+  let donationRate;
 
   beforeEach(async function () {
-    feePercent = chance.integer({ min: 1, max: 20 });
-    donationPercent = chance.integer({ min: 1, max: 20 });
+    feeRate = chance.integer({ min: 10, max: 200 });
+    donationRate = chance.integer({ min: 10, max: 200 });
 
-    await schnoodle.changeFeePercent(feePercent);
-    await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
+    await schnoodle.changeFeeRate(feeRate, { from: serviceAccount });
+    await schnoodle.changeEleemosynary(eleemosynary, donationRate, { from: serviceAccount });
     await _populateAccounts();
 
     amounts = {};
@@ -93,12 +99,13 @@ describe('Transfer', () => {
       amounts[account] = BigInt(await schnoodle.balanceOf(account));
     }
 
-    // Exclude the eleemosynary account, and also the service account and last account populated as these received no fee distribution
-    senderCandidates = accounts.slice(0, -1).filter(a => a != eleemosynary && a != serviceAccount);
-
     // Randomly pick different sender and recipient accounts for performing the transfer test
+    senderCandidates = accounts.filter(a => a != eleemosynary);
     sender = chance.pickone(senderCandidates);
     recipient = chance.pickone(senderCandidates.filter(a => a != sender));
+
+    // Class the test transfer as a sell to test the fee distribution algorithm
+    await schnoodle.grantRole(await schnoodle.LIQUIDITY(), recipient, { from: serviceAccount });
   });
 
   it('should transfer some ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
@@ -151,17 +158,17 @@ describe('Transfer', () => {
     for (const account of accounts) {
       const oldAmount = amounts[account];
 
-      // Determine the percent change from the old amount depending on whether the account is the sender (down), recipient (up), eleemosynary (up) or other (zero)
-      const deltaPercent = account == sender
-        ? -100
+      // Determine the rate change from the old amount depending on whether the account is the sender (down), recipient (up), eleemosynary (up) or other (zero)
+      const deltaRate = account == sender
+        ? -1000
         : (account == recipient
-          ? 100 - feePercent - donationPercent
+          ? 1000 - feeRate - donationRate
           : (account == eleemosynary
-            ? donationPercent - feePercent / 10 // A fee is also paid on the donation itself
+            ? donationRate
             : 0));
 
-      // The old amount is adjusted by a percentage of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)
-      const baseBalance = oldAmount + transferAmount * BigInt(Math.round(deltaPercent * 10)) / 1000n;
+      // The old amount is adjusted by a fraction of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)
+      const baseBalance = oldAmount + transferAmount * BigInt(deltaRate) / 1000n;
 
       // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
       const newBalance = BigInt(await schnoodle.balanceOf(account));
@@ -172,8 +179,11 @@ describe('Transfer', () => {
       const accountIdentity = `${account}${accountRole == '' ? '' : (` (${accountRole})`)}`;
       assert.isTrue(newBalance >= baseBalance, `Account ${accountIdentity} balance incorrect after transfer`);
 
-      const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(account);
-      assert.isTrue(BigInt(deltaBalance) > 0n, `Account ${accountIdentity} delta balance is zero`);
+      // Check that fee distribution took place on all accounts but those involved in the transfer
+      if (account != sender && account != recipient) {
+        const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(account);
+        assert.isTrue(BigInt(deltaBalance) > 0n, `Account ${accountIdentity} delta balance is zero`);
+      }
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
@@ -181,7 +191,6 @@ describe('Transfer', () => {
 });
 
 describe('Staking', () => {
-  let schnoodleStaking;
   let stakeholder;
   let stakeAmount;
   let stakingFund;
@@ -189,16 +198,13 @@ describe('Staking', () => {
   let stakingFundStartBalance;
 
   beforeEach(async function () {
-    const SchnoodleStaking = contract.fromArtifact(testContracts.schnoodleStaking);
-    schnoodleStaking = await SchnoodleStaking.new();
-    await schnoodleStaking.initialize(schnoodle.address);
-    await schnoodle.upgrade(schnoodleStaking.address);
-    await schnoodle.changeStakingPercent(chance.integer({ min: 1, max: 20 }));
+    await schnoodle.changeStakingRate(chance.integer({ min: 10, max: 200 }), { from: serviceAccount });
 
     await _populateAccounts();
+    stakingFund = await schnoodle.stakingFund();
+    await schnoodle.transfer(stakingFund, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))), { from: serviceAccount });
     stakeholder = chance.pickone(accounts);
     stakeAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeholder))));
-    stakingFund = await schnoodle.stakingFund();
     stakeholderStartBalance = BigInt(await schnoodle.balanceOf(stakeholder));
     stakingFundStartBalance = BigInt(await schnoodle.balanceOf(stakingFund));
   });
@@ -271,7 +277,7 @@ describe('Reflect Tracker', () => {
     recipient = chance.pickone(accounts.filter(a => a != sender));
   });
 
-  it('should have a delta balance equal to zero given no fee percent', async() => {
+  it('should have a delta balance equal to zero given no fee rate', async() => {
     const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(sender);
     assert.equal(BigInt(deltaBalance), 0n, 'Delta balance is not equal to zero');
   });

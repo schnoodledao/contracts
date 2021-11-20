@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
-import SchnoodleV6 from "../contracts/SchnoodleV6.json";
+import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
+import debounce from 'lodash.debounce';
 const bigInt = require("big-integer");
+const { Duration } = require("luxon");
+const humanizeDuration = require("humanize-duration");
 
 export class Staking extends Component {
   static displayName = Staking.name;
@@ -20,15 +23,23 @@ export class Staking extends Component {
       selectedAddress: null,
       decimals: null,
       stakingFundBalance: 0,
+      blockNumber: 0,
+      averageBlockTime: 0,
+      operativeFeeRate: 0,
+      donationRate: 0,
+      sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
-      reflectTrackerInfo: {"blockNumber": 0, "deltaBalance": 0},
-      amountToStake: 1,
+      reflectTrackerInfo: { 'blockNumber': 0, 'deltaBalance': 0 },
+      amountToStake: 0,
       vestingBlocks: 1,
+      vestingBlocksMax: 0,
       unbondingBlocks: 1,
+      unbondingBlocksMax: 0,
+      vestForecastReward: 0,
+      apy: 0,
       stakedBalance: 0,
       stakingSummary: [],
       unbondingSummary: [],
-      blockNumber: 0,
       withdrawItems: []
     };
 
@@ -38,6 +49,8 @@ export class Staking extends Component {
     this.updateAmountToStake = this.updateAmountToStake.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
+
+    this.updateForecastReward = debounce(this.updateForecastReward, 250);
   }
 
   async componentDidMount() {
@@ -45,7 +58,7 @@ export class Staking extends Component {
       const web3 = await getWeb3();
 
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(SchnoodleV6.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodle = new web3.eth.Contract(SchnoodleV7.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
       const schnoodleStaking = new web3.eth.Contract(SchnoodleStaking.abi, schnoodleStakingDeployedNetwork && schnoodleStakingDeployedNetwork.address);
 
@@ -59,26 +72,62 @@ export class Staking extends Component {
     }
   }
 
+  componentWillUnmount() {
+    this.updateForecastReward.cancel();
+  }
+
   async getInfo() {
     const { web3, schnoodle, schnoodleStaking, selectedAddress } = this.state;
 
     const decimals = await schnoodle.methods.decimals().call();
-    this.setState({ decimals: decimals });
-    const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
-
-    const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
-    const reflectTrackerInfo = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
-    const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
-    const stakingSummary = [].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1);
-    const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
     const blockNumber = await web3.eth.getBlockNumber();
 
-    let withdrawItems = [];
-    for (let i = 0; i < stakingSummary.length; i++) {
-      withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].stake.amount);
+    let averageBlockTime;
+    if (blockNumber > 0) {
+      const blocksDenominator = Math.min(500, blockNumber);
+      averageBlockTime = ((await web3.eth.getBlock(blockNumber)).timestamp - (await web3.eth.getBlock(blockNumber - blocksDenominator)).timestamp) / blocksDenominator;
     }
 
-    this.setState({ stakingFundBalance: stakingFundBalance, balance: balance, reflectTrackerInfo: reflectTrackerInfo, stakedBalance: stakedBalance, stakingSummary: stakingSummary, unbondingSummary: unbondingSummary, blockNumber: blockNumber, withdrawItems: withdrawItems });
+    this.setState({ decimals: decimals, blockNumber: blockNumber, averageBlockTime: averageBlockTime }, async () => {
+      const operativeFeeRate = await schnoodle.methods.getOperativeFeeRate().call();
+      const { 1: donationRate } = await schnoodle.methods.eleemosynary().call();
+      const sellQuota = await schnoodle.methods.sellQuota().call();
+      const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
+
+      const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
+      const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
+      const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
+      const vestingBlocksMax = this.blocksPerDuration({ years: 1 });
+      const unbondingBlocksMax = this.blocksPerDuration({ years: 1 });
+
+      // Fetch the staking summary while also calculating the APY for each stake
+      const stakingSummary = await Promise.all([].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1).map(async (stakeReward, i) => {
+        const apy = this.calculateApy(stakeReward.stake.amount, await schnoodleStaking.methods.reward(selectedAddress, i, await this.blockNumberAfterOneYear()).call())
+        return { stake: stakeReward.stake, reward: stakeReward.reward, apy: apy };
+      }));
+
+      const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
+
+      let withdrawItems = [];
+      for (let i = 0; i < stakingSummary.length; i++) {
+        withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].stake.amount);
+      }
+
+      this.setState({
+        stakingFundBalance: stakingFundBalance,
+        operativeFeeRate: operativeFeeRate,
+        donationRate: donationRate,
+        sellQuota: sellQuota,
+        balance: balance,
+        reflectTrackerInfo: { blockNumber, deltaBalance },
+        vestingBlocksMax: vestingBlocksMax,
+        unbondingBlocksMax: unbondingBlocksMax,
+        stakedBalance: stakedBalance,
+        stakingSummary: stakingSummary,
+        unbondingSummary: unbondingSummary,
+        withdrawItems: withdrawItems
+      });
+    });
   }
 
   scaleDownUnits(amount) {
@@ -110,23 +159,23 @@ export class Staking extends Component {
   }
 
   stakeAll() {
-    this.setState({ amountToStake: this.scaleDownUnits(this.state.balance - this.state.stakedBalance) });
+    this.setState({ amountToStake: this.state.balance - this.state.stakedBalance });
   }
 
   async addStake() {
     try {
       const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks, unbondingBlocks } = this.state;
-      const response = await schnoodleStaking.methods.addStake(this.scaleUpUnits(amountToStake).toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
+      const response = await schnoodleStaking.methods.addStake(amountToStake.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
   }
 
-  async withdrawStake(i) {
+  async withdrawStake(index) {
     try {
       const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
-      const response = await schnoodleStaking.methods.withdraw(i, this.scaleUpUnits(withdrawItems[i]).toString()).send({ from: selectedAddress });
+      const response = await schnoodleStaking.methods.withdraw(index, this.scaleUpUnits(withdrawItems[index]).toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -143,25 +192,59 @@ export class Staking extends Component {
     }
   }
 
-  updateWithdrawItem(i, e) {
+  updateWithdrawItem(index, e) {
     let withdrawItems = this.state.withdrawItems;
-    withdrawItems[i] = e.target.value;
+    withdrawItems[index] = e.target.value;
     this.setState({ withdrawItems: withdrawItems });
   }
 
-  updateAmountToStake(e) {
-    const amountToStake = e.target.value;
-    this.setState({ amountToStake: amountToStake });
+  async updateAmountToStake(e) {
+    const amountToStake = parseInt(e.target.value);
+    if (!Number.isInteger(amountToStake)) return;
+    this.setState({ amountToStake: this.scaleUpUnits(amountToStake) }, async () => await this.updateForecastReward());
   }
 
-  updateVestingBlocks(e) {
-    const vestingBlocks = e.target.value;
-    this.setState({ vestingBlocks: vestingBlocks });
+  async updateVestingBlocks(e) {
+    const vestingBlocks = parseInt(e.target.value);
+    if (!Number.isInteger(vestingBlocks)) return;
+    this.setState({ vestingBlocks: Math.min(vestingBlocks, this.state.vestingBlocksMax) }, async () => await this.updateForecastReward());
   }
 
-  updateUnbondingBlocks(e) {
-    const unbondingBlocks = e.target.value;
-    this.setState({ unbondingBlocks: unbondingBlocks });
+  async updateUnbondingBlocks(e) {
+    const unbondingBlocks = parseInt(e.target.value);
+    if (!Number.isInteger(unbondingBlocks)) return;
+    this.setState({ unbondingBlocks: Math.min(unbondingBlocks, this.state.unbondingBlocksMax) }, async () => await this.updateForecastReward());
+  }
+
+  async updateForecastReward() {
+    const { schnoodleStaking, amountToStake, vestingBlocks, unbondingBlocks, blockNumber } = this.state;
+    const vestForecastReward = await newStakeForecastReward(blockNumber + vestingBlocks);
+    const yearForecastReward = await newStakeForecastReward(await this.blockNumberAfterOneYear());
+    const apy = this.calculateApy(amountToStake, yearForecastReward);
+    this.setState({ vestForecastReward: vestForecastReward, apy: apy });
+
+    async function newStakeForecastReward(rewardBlock) {
+      if (rewardBlock === 0) return 0;
+      return await schnoodleStaking.methods.reward(amountToStake.toString(), vestingBlocks.toString(), unbondingBlocks, rewardBlock).call();
+    }
+  }
+
+  blocksPerDuration(duration) {
+    const { averageBlockTime } = this.state;
+    return averageBlockTime === 0 ? 0 : Math.floor(Duration.fromObject(duration).as('seconds') / averageBlockTime);
+  }
+
+  blocksDurationText(blocks) {
+    return 'Approximately ' + humanizeDuration(Duration.fromObject({ seconds: blocks * this.state.averageBlockTime }), { largest: 2, round: true });
+  }
+
+  blockNumberAfterOneYear() {
+    const { blockNumber } = this.state;
+    return blockNumber + this.blocksPerDuration({ years: 1 });
+  }
+
+  calculateApy(amount, reward) {
+    return reward === '0' ? 0 : Math.floor(reward / amount * 100);
   }
 
   renderStakingSummaryTable(stakingSummary) {
@@ -173,20 +256,22 @@ export class Staking extends Component {
             <th><span class="hidemd">Staked<br />Amount</span><span class="hidesm">Staked Amount</span></th>
             <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
             <th><span class="hidemd">Unbonding<br />Blocks</span><span class="hidesm">Unbonding Blocks</span></th>
+            <th><span class="hidemd">Estimated<br />APY</span><span class="hidesm">Estimated APY</span></th>
             <th>Withdraw</th>
-            <th><span class="hidemd">Claimable<br />Rewards</span><span class="hidesm">Claimable Reward</span></th>
+            <th><span class="hidemd">Claimable<br />Reward</span><span class="hidesm">Claimable Reward</span></th>
           </tr>
         </thead>
-        <tbody class=''>
+        <tbody>
           {stakingSummary.map((stakeReward, i) => {
             const amount = this.scaleDownUnits(stakeReward.stake.amount);
             const blocksPending = Math.max(0, parseInt(stakeReward.stake.blockNumber) + parseInt(stakeReward.stake.vestingBlocks) - this.state.blockNumber);
             return (
               <tr key={stakeReward.stake.blockNumber}>
                 <td class="hidden md:table-cell">{stakeReward.stake.blockNumber}</td>
-                <td>{amount}</td>
-                <td>{blocksPending}</td>
-                <td>{stakeReward.stake.unbondingBlocks}</td>
+                <td>{amount.toLocaleString()}</td>
+                <td title={this.blocksDurationText(blocksPending)}>{blocksPending}</td>
+                <td title={this.blocksDurationText(stakeReward.stake.unbondingBlocks)}>{stakeReward.stake.unbondingBlocks}</td>
+                <td>{stakeReward.apy} %</td>
                 <td>
                   <form>
                     <fieldset disabled={blocksPending > 0}>
@@ -217,13 +302,13 @@ export class Staking extends Component {
             <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
           </tr>
         </thead>
-        <tbody class=''>
+        <tbody>
           {unbondingSummary.map((unbond, i) => {
             const amount = this.scaleDownUnits(unbond.amount);
             const blocksPending = parseInt(unbond.expiryBlock) - this.state.blockNumber;
             return blocksPending > 0 && (
               <tr key={unbond.expiryBlock}>
-                <td>{amount}</td>
+                <td>{amount.toLocaleString()}</td>
                 <td>{blocksPending}</td>
               </tr>
             );
@@ -237,6 +322,7 @@ export class Staking extends Component {
     const balance = this.scaleDownUnits(this.state.balance);
     const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
     const stakeableAmount = balance - stakedBalance;
+    const amountToStake = this.scaleDownUnits(this.state.amountToStake);
 
     const token = 'SNOOD';
     const stakeTokens = `Stake ${token} tokens.`;
@@ -269,56 +355,66 @@ export class Staking extends Component {
                 <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
                 <span class="hidden md:block text-left">{stakeTokens} {earnTokens}</span>
               </p>
-              {this.state.reflectTrackerInfo.blockNumber > 0 && (
-              <div class="stats barkstats">
-                <div class="stat text-error">
-                    <div class="stat-title font-extrabold">BARK rewards</div>
-                    <div class="stat-value text-accent">
-                    {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
-                      <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-yellow.svg" onClick={this.resetReflectTracker} title="Reset" alt="reset"/>
-                    </div>
-                    <div class="stat-desc font-extrabold">{token} since block {this.state.reflectTracker.blockNumber}</div>
-                  </div>
-                
-              </div>
-               )}
               <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">Staking fund balance</div>
-                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance)}</div>
+                  <div class="stat-title">Block Number</div>
+                  <div class="stat-value greenfade">{this.state.blockNumber}</div>
+                  <div class="stat-desc">&nbsp;</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-title">Sell Quota</div>
+                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
+                  <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-title">Operative Fee Rate</div>
+                  <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
+                  <div class="stat-desc">%</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-title">Eleemosynary Donation Rate</div>
+                  <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
+                  <div class="stat-desc">%</div>
+                </div>
+              </div>
+
+              <div class="stats topstats">
+                <div class="stat">
+                  <div class="stat-title">Staking Fund Balance</div>
+                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance).toLocaleString()}</div>
                   <div class="stat-desc">{token}</div>
                 </div>
-
-               
-                {this.state.reflectTrackerInfo.blockNumber > 0 && (
-                  <div class="stat">
-                    <div class="stat-title">BARK rewards</div>
-                    <div class="stat-value greenfade">
-                      {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance)}
-                      <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset.svg" onClick={this.resetReflectTracker} title="Reset" />
-                    </div>
-                    <div class="stat-desc">{token} since block {this.state.reflectTracker.blockNumber}</div>
-                  </div>
-                )}
               </div>
 
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
                 <div class="card-body my-6 md:my-10 rounded-4xl">
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
+                  {this.state.reflectTrackerInfo.blockNumber > 0 && (
+                    <div class="stats barkstats">
+                      <div class="stat text-error">
+                        <div class="stat-title font-extrabold">BARK Rewards</div>
+                        <div class="stat-value text-accent">
+                          {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
+                          <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
+                        </div>
+                        <div class="stat-desc font-extrabold">{token} since block {this.state.reflectTrackerInfo.blockNumber}</div>
+                      </div>
+                    </div>
+                  )}
                   <div class="shadow-sm bottomstats stats ">
                     <div class="stat border-t-0">
-                      <div class="stat-title">Total balance</div>
-                      <div class="stat-value purplefade">{balance}</div>
+                      <div class="stat-title">Total Balance</div>
+                      <div class="stat-value purplefade">{balance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
-                    <div class="stat ">
-                      <div class="stat-title">Staked balance</div>
-                      <div class="stat-value purplefade">{stakedBalance}</div>
+                    <div class="stat">
+                      <div class="stat-title">Staked Balance</div>
+                      <div class="stat-value purplefade">{stakedBalance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
-                    <div class="stat ">
-                      <div class="stat-title">Stakeable amount</div>
-                      <div class="stat-value purplefade">{stakeableAmount}</div>
+                    <div class="stat">
+                      <div class="stat-title">Stakeable Amount</div>
+                      <div class="stat-value purplefade">{stakeableAmount.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
                   </div>
@@ -335,25 +431,39 @@ export class Staking extends Component {
                               <span class="label-text">Amount</span>
                             </label> 
                             <div class="relative">
-                              <input type='number' min='1' max={stakeableAmount} value={this.state.amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
+                              <input type='number' min='1' max={stakeableAmount} value={amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
                               <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
                             </div>
                           </div>
                         </div>
                         <div class="mb-3 form-control">
                           <label class="label">
-                            <span class="label-text">Vesting blocks</span>
+                            <span class="label-text">Vesting Blocks</span>
                           </label>
-                          <input type="number" min="1" value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                          <input type="number" min="1" max={this.state.vestingBlocksMax} value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                          {this.blocksDurationText(this.state.vestingBlocks)}
                         </div>
                         <div class="mb-3 form-control">
                           <label class="label">
-                            <span class="label-text">Unbonding blocks</span>
+                            <span class="label-text">Unbonding Blocks</span>
                           </label>
-                          <input type="number" min="1" value={this.state.unbondingBlocks} onChange={this.updateUnbondingBlocks} class="stakeinput" />
+                          <input type="number" min="1" max={this.state.unbondingBlocksMax} value={this.state.unbondingBlocks} onChange={this.updateUnbondingBlocks} class="stakeinput" />
+                          {this.blocksDurationText(this.state.unbondingBlocks)}
+                        </div>
+                        <div class="shadow-sm bottomstats stats ">
+                          <div class="stat border-t-1 md:border-t-0 md:border-base-200">
+                            <div class="stat-title">Vest Forecast Reward</div>
+                            <div class="stat-value purplefade">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
+                            <div class="stat-desc">{token}</div>
+                          </div>
+                          <div class="stat border-t-1 md:border-t-0 md:border-base-200">
+                            <div class="stat-title">Estimated APY</div>
+                            <div class="stat-value purplefade">{this.state.apy}</div>
+                            <div class="stat-desc">%</div>
+                          </div>
                         </div>
                         <div class="mb-3 form-control">
-                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
+                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                         </div>
                       </fieldset>
                     </form>
