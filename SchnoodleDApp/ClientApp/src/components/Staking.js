@@ -284,7 +284,7 @@ export class Staking extends Component {
                     </fieldset>
                   </form>
                 </td>
-                <td>{this.scaleDownUnits(stakeReward.reward)}</td>
+                <td>{this.scaleDownUnits(stakeReward.reward).toLocaleString()}</td>
               </tr>
             );
           })}
