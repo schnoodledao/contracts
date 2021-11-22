@@ -364,8 +364,7 @@ export class Staking extends Component {
                 <div class="stat">
                   <div class="stat-title">Sell Quota</div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
-                  <div class="stat-desc">{token}<br />
-                  <span class="opacity-60 text-xs">since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</span></div>
+                  <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">Operative Fee Rate</div>
