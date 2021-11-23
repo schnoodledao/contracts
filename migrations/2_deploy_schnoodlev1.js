@@ -19,10 +19,10 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   const Schnoodle = artifacts.require(contractName);
-  const proxy = await deployProxy(Schnoodle, [initialization.initialTokens, serviceAccount], { deployer });
-  proxy.changeFeePercent(initialization.feePercent);
-  proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
+  const schnoodle = await deployProxy(Schnoodle, [initialization.initialTokens, serviceAccount], { deployer });
+  schnoodle.changeFeePercent(initialization.feePercent);
+  schnoodle.changeEleemosynary(eleemosynary, initialization.donationPercent);
 
   const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
+  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(schnoodle.address)}`);
 };

@@ -17,7 +17,7 @@ If ($Reset) {
 If ($Rebuild) {
     $Filter = ($Network -eq "develop") ? "unknown-*.json" : "$Network.json"
     Remove-Item .openzeppelin\$Filter -ErrorAction Ignore
-    Remove-Item build\contracts\*.json
+    Remove-Item SchnoodleDApp\ClientApp\src\contracts\*.json
 }
 
 $LogsPath = "logs"

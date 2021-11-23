@@ -16,9 +16,6 @@ module.exports = async function main(callback) {
     // Populate the staking fund for development test purposes
     await schnoodle.transfer(await schnoodle.stakingFund(), BigInt(400 * 10 ** 9) * BigInt(10 ** 18));
 
-    // Before populating the accounts, make the last one a liquidity token to simulate a sell and thus a fee distribution to all other accounts
-    await schnoodle.grantRole(await schnoodle.LIQUIDITY(), accounts[accounts.length - 1]);
-
     // Populate all accounts with some tokens from the service account
     for (const account of accounts) {
       await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)) / BigInt(accounts.length))), { from: serviceAccount });
