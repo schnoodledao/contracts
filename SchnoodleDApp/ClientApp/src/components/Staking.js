@@ -319,6 +319,7 @@ export class Staking extends Component {
           <tr>
             <th class="hidden md:table-cell">Amount</th>
             <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
+            <th><span class="hidemd">Time<br />Remaining</span><span class="hidesm">Time Remaining</span></th>
           </tr>
         </thead>
         <tbody>
@@ -328,7 +329,8 @@ export class Staking extends Component {
             return blocksPending > 0 && (
               <tr key={unbond.expiryBlock}>
                 <td>{amount.toLocaleString()}</td>
-                <td title={this.blocksDurationText(blocksPending)}>{blocksPending}</td>
+                <td>{blocksPending}</td>
+                <td>{this.blocksDurationText(blocksPending)}</td>
               </tr>
             );
           })}
@@ -421,8 +423,7 @@ export class Staking extends Component {
                          {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
                           <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
                         </div>
-                        <div class="stat-desc">{token}<br />
-                  <span class="opacity-60 text-xs">since block {this.state.reflectTrackerInfo.blockNumber}</span></div>
+                        <div class="stat-desc">{token}<br /><span class="opacity-60 text-xs">since block {this.state.reflectTrackerInfo.blockNumber}</span></div>
                       </div>
                     </div>
                    )} 
