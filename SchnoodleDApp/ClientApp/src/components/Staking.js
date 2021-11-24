@@ -21,12 +21,14 @@ export class Staking extends Component {
       schnoodle: null,
       schnoodleStaking: null,
       selectedAddress: null,
+      getInfoIntervalId: 0,
       decimals: null,
       stakingFundBalance: 0,
       blockNumber: 0,
       averageBlockTime: 0,
       operativeFeeRate: 0,
       donationRate: 0,
+      stakingRate: 0,
       sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
       reflectTrackerInfo: { 'blockNumber': 0, 'deltaBalance': 0 },
@@ -38,6 +40,7 @@ export class Staking extends Component {
       vestForecastReward: 0,
       apy: 0,
       stakedBalance: 0,
+      stakeableAmount: 0,
       stakingSummary: [],
       unbondingSummary: [],
       withdrawItems: []
@@ -62,7 +65,11 @@ export class Staking extends Component {
       const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
       const schnoodleStaking = new web3.eth.Contract(SchnoodleStaking.abi, schnoodleStakingDeployedNetwork && schnoodleStakingDeployedNetwork.address);
 
-      this.setState({ web3, schnoodle: schnoodle, schnoodleStaking: schnoodleStaking, selectedAddress: web3.currentProvider.selectedAddress }, this.getInfo);
+      this.setState({ web3, schnoodle, schnoodleStaking, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
+        await this.getInfo();
+        const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
+        this.setState({ getInfoIntervalId });
+      });
 
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
@@ -73,6 +80,7 @@ export class Staking extends Component {
   }
 
   componentWillUnmount() {
+    clearInterval(this.state.getInfoIntervalId);
     this.updateForecastReward.cancel();
   }
 
@@ -88,22 +96,24 @@ export class Staking extends Component {
       averageBlockTime = ((await web3.eth.getBlock(blockNumber)).timestamp - (await web3.eth.getBlock(blockNumber - blocksDenominator)).timestamp) / blocksDenominator;
     }
 
-    this.setState({ decimals: decimals, blockNumber: blockNumber, averageBlockTime: averageBlockTime }, async () => {
+    this.setState({ decimals, blockNumber, averageBlockTime }, async () => {
       const operativeFeeRate = await schnoodle.methods.getOperativeFeeRate().call();
       const { 1: donationRate } = await schnoodle.methods.eleemosynary().call();
+      const stakingRate = await schnoodle.methods.stakingRate().call();
       const sellQuota = await schnoodle.methods.sellQuota().call();
-      const stakingFundBalance = await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call();
+      const stakingFundBalance = bigInt(await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call());
 
-      const balance = await schnoodle.methods.balanceOf(selectedAddress).call();
+      const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
-      const stakedBalance = await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call();
+      const stakedBalance = bigInt(await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call());
+      const stakeableAmount = bigInt(balance - stakedBalance);
       const vestingBlocksMax = this.blocksPerDuration({ years: 1 });
       const unbondingBlocksMax = this.blocksPerDuration({ years: 1 });
 
       // Fetch the staking summary while also calculating the APY for each stake
       const stakingSummary = await Promise.all([].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1).map(async (stakeReward, i) => {
         const apy = this.calculateApy(stakeReward.stake.amount, await schnoodleStaking.methods.reward(selectedAddress, i, await this.blockNumberAfterOneYear()).call())
-        return { stake: stakeReward.stake, reward: stakeReward.reward, apy: apy };
+        return { stake: bigInt(stakeReward.stake), reward: bigInt(stakeReward.reward), apy: apy };
       }));
 
       const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
@@ -114,18 +124,20 @@ export class Staking extends Component {
       }
 
       this.setState({
-        stakingFundBalance: stakingFundBalance,
-        operativeFeeRate: operativeFeeRate,
-        donationRate: donationRate,
-        sellQuota: sellQuota,
-        balance: balance,
+        stakingFundBalance,
+        operativeFeeRate,
+        donationRate,
+        stakingRate,
+        sellQuota,
+        balance,
         reflectTrackerInfo: { blockNumber, deltaBalance },
-        vestingBlocksMax: vestingBlocksMax,
-        unbondingBlocksMax: unbondingBlocksMax,
-        stakedBalance: stakedBalance,
-        stakingSummary: stakingSummary,
-        unbondingSummary: unbondingSummary,
-        withdrawItems: withdrawItems
+        vestingBlocksMax,
+        unbondingBlocksMax,
+        stakedBalance,
+        stakeableAmount,
+        stakingSummary,
+        unbondingSummary,
+        withdrawItems
       });
     });
   }
@@ -154,12 +166,8 @@ export class Staking extends Component {
       message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
     }
 
-    this.setState({ success: false, message: message });
+    this.setState({ success: false, message });
     alert(message);
-  }
-
-  stakeAll() {
-    this.setState({ amountToStake: this.state.balance - this.state.stakedBalance });
   }
 
   async addStake() {
@@ -192,36 +200,47 @@ export class Staking extends Component {
     }
   }
 
+  async stakeAll() {
+    this.setState({ amountToStake: this.state.stakeableAmount }, async () => await this.updateForecastReward());
+  }
+
   updateWithdrawItem(index, e) {
     let withdrawItems = this.state.withdrawItems;
     withdrawItems[index] = e.target.value;
-    this.setState({ withdrawItems: withdrawItems });
+    this.setState({ withdrawItems });
   }
 
   async updateAmountToStake(e) {
-    const amountToStake = parseInt(e.target.value);
+    const amountToStake = e.target.value === '' ? 0 : parseInt(e.target.value);
     if (!Number.isInteger(amountToStake)) return;
-    this.setState({ amountToStake: this.scaleUpUnits(amountToStake) }, async () => await this.updateForecastReward());
+    this.setState({ amountToStake: bigInt(Math.min(this.scaleUpUnits(amountToStake), this.state.stakeableAmount)) }, async () => await this.updateForecastReward());
   }
 
   async updateVestingBlocks(e) {
-    const vestingBlocks = parseInt(e.target.value);
+    const vestingBlocks = e.target.value === '' ? 0 : parseInt(e.target.value);
     if (!Number.isInteger(vestingBlocks)) return;
     this.setState({ vestingBlocks: Math.min(vestingBlocks, this.state.vestingBlocksMax) }, async () => await this.updateForecastReward());
   }
 
   async updateUnbondingBlocks(e) {
-    const unbondingBlocks = parseInt(e.target.value);
+    const unbondingBlocks = e.target.value === '' ? 0 : parseInt(e.target.value);
     if (!Number.isInteger(unbondingBlocks)) return;
     this.setState({ unbondingBlocks: Math.min(unbondingBlocks, this.state.unbondingBlocksMax) }, async () => await this.updateForecastReward());
   }
 
   async updateForecastReward() {
     const { schnoodleStaking, amountToStake, vestingBlocks, unbondingBlocks, blockNumber } = this.state;
+
+    // eslint-disable-next-line
+    if (amountToStake == 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
+      this.setState({ vestForecastReward: 0, apy: 0 });
+      return;
+    }
+
     const vestForecastReward = await newStakeForecastReward(blockNumber + vestingBlocks);
     const yearForecastReward = await newStakeForecastReward(await this.blockNumberAfterOneYear());
     const apy = this.calculateApy(amountToStake, yearForecastReward);
-    this.setState({ vestForecastReward: vestForecastReward, apy: apy });
+    this.setState({ vestForecastReward, apy });
 
     async function newStakeForecastReward(rewardBlock) {
       if (rewardBlock === 0) return 0;
@@ -309,7 +328,7 @@ export class Staking extends Component {
             return blocksPending > 0 && (
               <tr key={unbond.expiryBlock}>
                 <td>{amount.toLocaleString()}</td>
-                <td>{blocksPending}</td>
+                <td title={this.blocksDurationText(blocksPending)}>{blocksPending}</td>
               </tr>
             );
           })}
@@ -321,7 +340,7 @@ export class Staking extends Component {
   render() {
     const balance = this.scaleDownUnits(this.state.balance);
     const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
-    const stakeableAmount = balance - stakedBalance;
+    const stakeableAmount = this.scaleDownUnits(this.state.stakeableAmount);
     const amountToStake = this.scaleDownUnits(this.state.amountToStake);
 
     const token = 'SNOOD';
@@ -367,6 +386,14 @@ export class Staking extends Component {
                   <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                 </div>
                 <div class="stat">
+                  <div class="stat-title">Staking Fund Balance</div>
+                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance).toLocaleString()}</div>
+                  <div class="stat-desc">{token}</div>
+                </div>
+              </div>
+
+              <div class="stats topstats">
+                <div class="stat">
                   <div class="stat-title">Operative Fee Rate</div>
                   <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                   <div class="stat-desc">%</div>
@@ -376,13 +403,10 @@ export class Staking extends Component {
                   <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
-              </div>
-
-              <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">Staking Fund Balance</div>
-                  <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance).toLocaleString()}</div>
-                  <div class="stat-desc">{token}</div>
+                  <div class="stat-title">Staking Rate</div>
+                  <div class="stat-value greenfade">{this.state.stakingRate / 10}</div>
+                  <div class="stat-desc">%</div>
                 </div>
               </div>
 
@@ -431,7 +455,7 @@ export class Staking extends Component {
                               <span class="label-text">Amount</span>
                             </label> 
                             <div class="relative">
-                              <input type='number' min='1' max={stakeableAmount} value={amountToStake} onChange={this.updateAmountToStake} class="stakeinput" />
+                              <input type="number" min="1" max={stakeableAmount} value={amountToStake || ''} onChange={this.updateAmountToStake} class="stakeinput" />
                               <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
                             </div>
                           </div>
@@ -440,14 +464,14 @@ export class Staking extends Component {
                           <label class="label">
                             <span class="label-text">Vesting Blocks</span>
                           </label>
-                          <input type="number" min="1" max={this.state.vestingBlocksMax} value={this.state.vestingBlocks} onChange={this.updateVestingBlocks} class="stakeinput" />
+                          <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="stakeinput" />
                           {this.blocksDurationText(this.state.vestingBlocks)}
                         </div>
                         <div class="mb-3 form-control">
                           <label class="label">
                             <span class="label-text">Unbonding Blocks</span>
                           </label>
-                          <input type="number" min="1" max={this.state.unbondingBlocksMax} value={this.state.unbondingBlocks} onChange={this.updateUnbondingBlocks} class="stakeinput" />
+                          <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="stakeinput" />
                           {this.blocksDurationText(this.state.unbondingBlocks)}
                         </div>
                         <div class="shadow-sm bottomstats stats ">

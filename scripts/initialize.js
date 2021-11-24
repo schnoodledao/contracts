@@ -10,7 +10,7 @@ module.exports = async function main(callback) {
     const SchnoodleV7 = artifacts.require("SchnoodleV7");
     const schnoodle = new SchnoodleV7((await SchnoodleV1.deployed()).address);
     
-    await schnoodle.changeStakingRate(10);
+    await schnoodle.changeStakingRate(40);
     await schnoodle.changeSellThreshold(BigInt(1 * 10 ** 9) * BigInt(10 ** 18));
 
     // Populate the staking fund for development test purposes
