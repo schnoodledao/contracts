@@ -2,16 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Chrome, Safari, Edge, Opera */
+Chrome, Safari, Edge, Opera
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  /* -webkit-appearance: none;
+  margin: 0; */
 }
 
 /* Firefox */
 input[type=number] {
-  -moz-appearance: textfield;
+  /* -moz-appearance: textfield; */
 }
 .h-noheader {
   min-height: calc( 100vh - 74px );
@@ -28,7 +28,6 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
   @apply text-6xl font-black purplefade md:text-8xl;
 }
 .tabledata {
-  @apply text-sm lg:text-2xl text-left px-1 py-4 md:px-8;
 }
 .table td {
   @apply text-sm lg:text-2xl px-1 md:px-4;
@@ -102,29 +101,39 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
 .bottomstats .stat {
   @apply bg-base-200;
 }
-.headingfont {
+.headingfont { 
   @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
 .withdrawstake{
-  @apply input pl-1 md:pl-4 pr-11 md:pr-32 lg:pr-40 xl:pr-64 w-full input-bordered text-white;
+  @apply input pl-1 md:pl-4 w-full input-bordered text-white !important;
 }
-.withdrawinput{
-  @apply input-secondary withdrawstake text-sm lg:text-base xl:text-2xl text-left;
+input.withdrawinput{
+  @apply input-secondary withdrawstake text-base xl:text-lg text-left !important;
 }
+
 .stakeinput {
-  @apply input-accent withdrawstake text-xl;
+  @apply input-accent withdrawstake text-base xl:text-lg text-left;
 }
-.fullhalfwidth {
+.withbutton .stakeinput {
+  @apply sm:pr-11 md:pr-16 !important;
+ }
+ .nobutton .stakeinput {
+  @apply pr-2 !important;
+ }
+ .staketable .withdrawinput {
+  @apply pr-32 !important;
+}
+ .fullhalfwidth {
   @apply w-full md:w-1/2;
 }
 .label-text {
   @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
 }
-fieldset:disabled .approxlabel {
+fieldset:disabled p.approxLabel {
   @apply opacity-20;
 }
-.approxlabel {
-  @apply text-white opacity-40;
+p.approxLabel {
+  @apply text-white opacity-40 !important;
 }
 fieldset:disabled .bottomstats {
   pointer-events: none;
@@ -134,7 +143,352 @@ fieldset:disabled .bottomstats {
   box-shadow: none;
 }
 
+/*
+________________________________________________________________________
+TABLE
+¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+*/
 
+[role="table"],
+[role="row-group"],
+[role="row"],
+[role="subheader"]
+	{
+	display: flex;
+	display: -webkit-flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	-webkit-flex-direction: row;
+	-webkit-flex-wrap: wrap;
+	width: 100%;
+	box-sizing: border-box;
+	line-height: 1 !important;
+	}
+
+[role="table"] [role="column-header"],
+[role="table"] [role="cell"]
+	{
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	
+	/* Minimum single cell width (cell padding and border deducted) */
+	/* 5% means that (up to) 20 columns are displayed side by side (100% / 20 = 5%) */
+	flex: 1 1 calc(10% - 20px - 2px);
+	-webkit-flex: calc(10% - 20px - 2px);
+	
+	padding: 20px 0px;
+	@apply text-secondary text-left;
+	}
+	
+[role="table"] [role="row-group"]+[role="row-group"]>[role="row"]
+	{
+	@apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0 
+	}
+	
+[role="table"]>[role="row-group"]:last-child
+	{
+	border-bottom: 0px ;
+	}
+
+[role="table"] label
+	{
+	display: inline-block;
+	cursor: pointer;
+	text-align: center;
+	font-family: arial, sans-serif;
+	min-width: 20px;
+  @apply text-secondary;
+	
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	
+	}
+	
+[role="table"] label:hover
+	{
+	background: #1D5FD1;
+	color: #FFF;
+	}
+	
+/* Table Header */
+
+[role="table"] [role="row"] [role="column-header"]
+	{
+    @apply ml-0 text-base xl:text-lg px-1 md:px-4 text-secondary border-b-2 border-secondary;
+	}
+	
+[role="table"] [role="column-header"].narrow
+	{
+	flex-grow: 0.5;
+	-webkit-flex-grow: 0.5;
+	}
+	
+[role="table"] [role="column-header"].narrower
+	{
+	flex-grow: 0;
+	-webkit-flex-grow: 0;
+	}
+	
+[role="table"] [role="column-header"].wide
+	{
+	flex-grow: 2;
+	-webkit-flex-grow: 2;
+	}
+	
+[role="table"] [role="column-header"].wider
+	{
+	flex-grow: 10;
+	-webkit-flex-grow: 10;
+	}
+	
+	
+/* Table Row */
+[role="table"] [role="row"]
+	{
+	align-items: stretch;
+  
+	}
+	
+[role="table"] [role="row-group"]:last-child [role="row"]:nth-child(odd) [role="cell"]
+	{
+	
+	}
+	
+[role="table"] [role="row-group"]:last-child [role="row"]:nth-child(even) [role="cell"]
+	{
+	
+	}
+	
+/* Table Cell */
+[role="table"] [role="row"] [role="cell"]
+	{
+  @apply text-lg lg:text-sm xl:text-lg text-left px-1 py-2 md:px-4 leading-6 lg:leading-10 xl:leading-10 !important;
+  	}
+[role="table"] [role="row"] [role="cell"]:not(:first-child)
+	{ 
+	@apply border-l-0 border-r-0;
+	}
+	
+  [role="table"] [role="row"] [role="cell"]:last-child
+	{
+	border-right: 0px;
+	}
+	
+/* Table Cell Width Modifiers */	
+[role="table"] [role="cell"].narrow
+	{
+	flex-grow: 0.5;
+	-webkit-flex-grow: 0.5;
+	}
+	
+[role="table"] [role="cell"].narrower
+	{
+	flex-grow: 0;
+	-webkit-flex-grow: 0;
+	}
+	
+[role="table"] [role="cell"].wide
+	{
+	flex-grow: 2;
+	-webkit-flex-grow: 2;
+	}
+	
+[role="table"] [role="cell"].wider
+	{
+	flex-grow: 10;
+	-webkit-flex-grow: 10;
+	}
+	
+
+  @media only screen and (max-width: 1023px)
+	{
+	
+    [role="table"] .column-header-group {
+      display:none;
+    }
+	[role="table"] [role="column-header"],
+	[role="table"] [role="cell"]
+		{
+		/* Minimum single cell width (cell padding and border deducted) */
+		/* 100% means that only one column is displayed in a row (100% / 1 = 100%) */
+		flex: 1 1 100%;
+		-webkit-flex: 1 1 100%;
+		padding: 8px 10px;
+		}
+		[role="table"] [role="row"]{
+      @apply p-6;
+    }
+	[role="table"] [role="cell"]
+		{
+		border-bottom: 0;
+		}
+		
+    [role="table"] [role="row"] [role="cell"]:not(:first-child)
+	{
+	border-left: 0px;
+	}
+
+	[role="table"] [role="row"]>[role="cell"]:last-of-type
+		{
+
+		}
+		
+	[role="table"] [role="row"]>[role="cell"]:first-of-type
+		{
+		
+		}
+		
+
+	[role="table"] [role="cell"],
+	[role="table"] [role="cell"] span
+		{
+		text-align: right;
+		justify-content: space-between;
+		display: initial;
+		}
+		
+	[role="table"] [role="row"] label
+		{
+		float: right;
+		width: 32px;
+		min-width: 32px;
+		margin: -4px 0px -8px 10px;
+		line-height: 32px;
+		height: 32px;
+		}
+	
+				
+	[role="table"] [role="cell"]::before
+		{
+		content: attr(data-header);
+		float: left;
+		text-align: left;
+		font-size: 1.125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    --tw-text-opacity: 1;
+    color: rgba(255, 255, 255, var(--tw-text-opacity));
+		margin-right: 20px;
+		}
+				
+    
+    [role="table"] [role="row-group"] [role="row"]:nth-child(even)
+    {
+      @apply bg-base-200;
+    }
+	[role="table"] [role="row-group"]+[role="row-group"]>[role="row"]:not(:last-child)
+		{
+		
+    @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
+
+		}
+		[role="table"] [role="row"] [role="cell"] {
+      @apply border-l-0 border-r-0;
+    }
+	[role="table"] [role="row-group"]:last-child [role="row"]:last-child [role="cell"].expandable
+		{
+		
+    @apply border-b-0;
+		}
+	
+		
+		
+	}
+
+@media only screen and (max-width: 769px)
+	{
+    
+    /* [role="table"] .column-header-group {
+      display:none;
+    }
+	[role="table"] [role="column-header"],
+	[role="table"] [role="cell"]
+		{
+		flex: 1 1 100%;
+		-webkit-flex: 1 1 100%;
+		padding: 8px 10px;
+		}
+		[role="table"] [role="row"]{
+      @apply p-6;
+    }
+	[role="table"] [role="cell"]
+		{
+		border-bottom: 0;
+		}
+		
+    [role="table"] [role="row"] [role="cell"]:not(:first-child)
+	{
+	border-left: 0px;
+	}
+
+	[role="table"] [role="row"]>[role="cell"]:last-of-type
+		{
+		
+		}
+		
+	[role="table"] [role="row"]>[role="cell"]:first-of-type
+		{
+		
+		}
+		
+
+	[role="table"] [role="cell"],
+	[role="table"] [role="cell"] span
+		{
+		text-align: right;
+		justify-content: space-between;
+		display: initial;
+		}
+		
+	[role="table"] [role="row"] label
+		{
+		float: right;
+		width: 32px;
+		min-width: 32px;
+		margin: -4px 0px -8px 10px;
+		line-height: 32px;
+		height: 32px;
+		}
+	
+				
+	[role="table"] [role="cell"]::before
+		{
+		content: attr(data-header);
+		float: left;
+		text-align: left;
+		font-size: 1.125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    --tw-text-opacity: 1;
+    color: rgba(255, 255, 255, var(--tw-text-opacity));
+		margin-right: 20px;
+		}
+				
+    
+    [role="table"] [role="row-group"] [role="row"]:nth-child(even)
+    {
+      @apply bg-base-200;
+    }
+	[role="table"] [role="row-group"]+[role="row-group"]>[role="row"]:not(:last-child)
+		{
+		
+    @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
+
+		}
+		[role="table"] [role="row"] [role="cell"] {
+      @apply border-l-0 border-r-0;
+    }
+	[role="table"] [role="row-group"]:last-child [role="row"]:last-child [role="cell"].expandable
+		{
+		
+    @apply border-b-0;
+		} */
+		
+		}
+	
 @keyframes blink {
   /**
    * At the start of the animation the dot
