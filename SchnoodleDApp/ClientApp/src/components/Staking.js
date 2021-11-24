@@ -413,18 +413,19 @@ export class Staking extends Component {
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
                 <div class="card-body my-6 md:my-10 rounded-4xl">
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                  {this.state.reflectTrackerInfo.blockNumber > 0 && (
+                   {this.state.reflectTrackerInfo.blockNumber > 0 && (
                     <div class="stats barkstats">
                       <div class="stat text-error">
                         <div class="stat-title font-extrabold">BARK Rewards</div>
                         <div class="stat-value text-accent">
-                          {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
+                         {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
                           <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
                         </div>
-                        <div class="stat-desc font-extrabold">{token} since block {this.state.reflectTrackerInfo.blockNumber}</div>
+                        <div class="stat-desc">{token}<br />
+                  <span class="opacity-60 text-xs">since block {this.state.reflectTrackerInfo.blockNumber}</span></div>
                       </div>
                     </div>
-                  )}
+                   )} 
                   <div class="shadow-sm bottomstats stats ">
                     <div class="stat border-t-0">
                       <div class="stat-title">Total Balance</div>
@@ -465,24 +466,24 @@ export class Staking extends Component {
                             <span class="label-text">Vesting Blocks</span>
                           </label>
                           <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="stakeinput" />
-                          {this.blocksDurationText(this.state.vestingBlocks)}
+                          <p class="approxLabel">{this.blocksDurationText(this.state.vestingBlocks)}</p>
                         </div>
                         <div class="mb-3 form-control">
                           <label class="label">
                             <span class="label-text">Unbonding Blocks</span>
                           </label>
                           <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="stakeinput" />
-                          {this.blocksDurationText(this.state.unbondingBlocks)}
+                          <p class="approxLabel">{this.blocksDurationText(this.state.unbondingBlocks)}</p>
                         </div>
                         <div class="shadow-sm bottomstats stats ">
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                             <div class="stat-title">Vest Forecast Reward</div>
-                            <div class="stat-value purplefade">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
+                            <div class="stat-value text-accent">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
                             <div class="stat-desc">{token}</div>
                           </div>
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                             <div class="stat-title">Estimated APY</div>
-                            <div class="stat-value purplefade">{this.state.apy}</div>
+                            <div class="stat-value text-accent">{this.state.apy}</div>
                             <div class="stat-desc">%</div>
                           </div>
                         </div>

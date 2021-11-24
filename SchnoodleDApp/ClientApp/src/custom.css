@@ -55,11 +55,15 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
   @apply textfade from-red-600 to-red-400;
 }
 .purplefade {
-  @apply textfade from-purple-800 to-purple-500;
+  @apply textfade from-purple-700 to-purple-500;
 }
 .greenfade {
   @apply textfade from-green-600 to-green-400;
 }
+.yellowfade {
+  @apply textfade from-yellow-300 to-yellow-200;
+}
+
 .fakebutton {
   height:37px;
 }
@@ -82,13 +86,16 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
   @apply uppercase;
 }
 .topstats .stat-title, .staketitle {
-  @apply text-secondary font-bold;
+  @apply text-secondary font-bold ;
 }
 .bottomstats .stat-title {
   @apply font-bold;
 }
 .barkstats .stat {
   @apply bg-purple-800 text-accent;
+}
+.stat-title, .stat-desc {
+  @apply opacity-80;
 }
 .topstats .stat {
   @apply bg-base-100;
@@ -113,6 +120,21 @@ fieldset:disabled input, fieldset:disabled label, fieldset:disabled button {
 }
 .label-text {
   @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
+}
+fieldset:disabled .approxlabel {
+  @apply opacity-20;
+}
+
+.approxlabel {
+  @apply text-white opacity-40;
+}
+
+fieldset:disabled .bottomstats {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.35;
+  filter: alpha(opacity=35);
+  box-shadow: none;
 }
 
 
