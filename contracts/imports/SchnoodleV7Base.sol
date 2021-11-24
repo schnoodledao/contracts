@@ -33,6 +33,14 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         __ERC777PresetFixedSupply_init("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
     }
 
+    function configure(bool testnet) internal onlyOwner {
+        _feeRate = 40;
+
+        if (testnet) {
+            _sellThreshold = 10 ** 9 * 10 ** decimals();
+        }
+    }
+
     // Transfer overrides
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -138,26 +146,27 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         // Proceed to pay fee and tax if only a sell at this point
         if (!(isLiquidityToken(to))) return;
 
-        _payFee(to, amount, reflectedAmount);
-        _transferTax(to, _eleemosynary, amount, _donationRate, transferCallback);
+        payFees(to, amount, reflectedAmount, transferCallback);
     }
 
     function isLiquidityToken(address) internal view virtual returns(bool);
 
-    function _transferTax(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
-        // Ignore tax if not enabled
-        if (to != address(0)) {
-            uint256 taxAmount = amount * rate / 1000;
-            uint256 reflectedDonationAmount = _getReflectedAmount(taxAmount);
-            transferCallback(from, to, reflectedDonationAmount);
-            emit Transfer(from, to, taxAmount);
-        }
-    }
-
-    function _payFee(address to, uint256 amount, uint256 reflectedAmount) private {
+    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
         uint256 operativeFeeRate = getOperativeFeeRate();
         super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
         emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
+
+        payFund(to, _eleemosynary, amount, _donationRate, transferCallback);
+    }
+
+    function payFund(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
+        // Skip if not enabled ('to' address not set)
+        if (to != address(0)) {
+            uint256 fundAmount = amount * rate / 1000;
+            uint256 reflectedFundAmount = _getReflectedAmount(fundAmount);
+            transferCallback(from, to, reflectedFundAmount);
+            emit Transfer(from, to, fundAmount);
+        }
     }
 
     function changeFeeRate(uint256 rate) external onlyOwner {

@@ -25,21 +25,21 @@ module.exports = async function main(callback) {
     const SchnoodleStaking = artifacts.require(testContracts.schnoodleStaking);
     const schnoodleStaking = await SchnoodleStaking.new();
     await schnoodleStaking.initialize(schnoodle.address);
-    await schnoodle.upgrade(schnoodleStaking.address);
+    await schnoodle.configure(true, serviceAccount, schnoodleStaking.address);
     const stakingFund = await schnoodle.stakingFund();
 
     const chance = new Chance();
-    const feePercent = chance.integer({ min: 1, max: 5 });
-    const donationPercent = chance.integer({ min: 1, max: 5 });
-    const stakingPercent = chance.integer({ min: 1, max: 5 });
-    await schnoodle.changeFeePercent(feePercent);
-    await schnoodle.changeEleemosynary(eleemosynary, donationPercent);
-    await schnoodle.changeStakingPercent(stakingPercent);
+    const feeRate = chance.integer({ min: 1, max: 5 });
+    const donationRate = chance.integer({ min: 1, max: 5 });
+    const stakingRate = chance.integer({ min: 1, max: 5 });
+    await schnoodle.changeFeeRate(feeRate);
+    await schnoodle.changeEleemosynary(eleemosynary, donationRate);
+    await schnoodle.changeStakingRate(stakingRate);
 
     console.log(`Service Account: ${serviceAccount}`);
     console.log(`Eleemosynary:    ${eleemosynary}`);
     console.log(`Staking Fund:    ${stakingFund}`);
-    console.log(`Fee: ${feePercent}% | Donation: ${donationPercent}% | Staking: ${stakingPercent}%`);
+    console.log(`Fee: ${feeRate}% | Donation: ${donationRate}% | Staking: ${stakingRate}%`);
 
     const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
     const delimiter = ' | ';

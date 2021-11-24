@@ -17,14 +17,18 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
-    function upgrade(address schnoodleStaking) external onlyOwner {
-        require(_version < 7, "Schnoodle: already upgraded");
+    function configure(bool testnet, address liquidityToken, address schnoodleStaking) external onlyOwner {
+        require(_version < 7, "Schnoodle: already configured");
         _version = 7;
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner());
-        grantRole(STAKING_CONTRACT, schnoodleStaking);
+        _setupRole(LIQUIDITY, liquidityToken);
+        _setupRole(STAKING_CONTRACT, schnoodleStaking);
         _schnoodleStaking = schnoodleStaking;
         _stakingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
+
+        _stakingRate = 40;
+        configure(testnet);
     }
 
     // Transfer overrides
@@ -40,12 +44,9 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
         super._beforeTokenTransfer(operator, from, to, amount);
     }
 
-    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
-        // Only process buys and sells (not account-to-account transfers)
-        if (!(isLiquidityToken(from) || isLiquidityToken(to))) return;
-
-        super.processSwap(from, to, amount, reflectedAmount, transferCallback);
-        _transferTax(to, _stakingFund, amount, _stakingRate, transferCallback);
+    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
+        super.payFees(to, amount, reflectedAmount, transferCallback);
+        payFund(to, _stakingFund, amount, _stakingRate, transferCallback);
     }
 
     function isLiquidityToken(address account) internal view virtual override returns(bool)
