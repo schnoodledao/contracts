@@ -57,12 +57,13 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
         Stake memory stake;
         uint256 cumulativeTotal;
+
+        // Build the new stake, and update all tracking states to include the new stake
         (stake, cumulativeTotal, _totalTokens, _totalStakeWeight) = _buildStake(amount, vestingBlocks, unbondingBlocks);
         _accountStakes[msgSender].push(stake);
         _cumulativeTotal = cumulativeTotal;
         _checkpointBlock = stake.blockNumber;
         _balances[msgSender] += amount;
-
 
         emit Staked(msgSender, amount, stake.blockNumber);
     }
@@ -74,18 +75,30 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         Stake storage stake = stakes[index];
         require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
 
-        uint256 rewardBlock = block.number;
-        require(stake.blockNumber + stake.vestingBlocks < rewardBlock, "SchnoodleStaking: cannot withdraw during vesting blocks");
+        uint256 blockNumber = block.number;
+        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
 
-        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, rewardBlock);
+        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
 
+        // Update all tracking states to remove the withdrawn stake
         (_totalTokens, _totalStakeWeight) = _updateTracking(-int256(amount), stake.vestingBlocks, stake.unbondingBlocks);
         _cumulativeTotal = newCumulativeTotal;
-        _checkpointBlock = rewardBlock;
-
-        stake.amount -= amount;
+        _checkpointBlock = blockNumber;
         _balances[msgSender] -= amount;
-        _accountUnbonds[msgSender].push(Unbond(amount, rewardBlock + stake.unbondingBlocks));
+        stake.amount -= amount;
+
+        Unbond[] storage unbonds = _accountUnbonds[msgSender];
+
+        // Take this opportunity to clean up any expired unbonds
+        for (uint256 i = unbonds.length; i > 0; i--) {
+            if (unbonds[i - 1].expiryBlock <= blockNumber) {
+                unbonds[i - 1] = unbonds[unbonds.length - 1];
+                unbonds.pop();
+            }
+        }
+
+        // Start the unbonding procedure for the withdrawn amount
+        unbonds.push(Unbond(amount, blockNumber + stake.unbondingBlocks));
 
         // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
         if (stake.amount == 0) {
@@ -151,7 +164,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         require(amount > 0, "SchnoodleStaking: Stake amount must be greater than zero");
         require(vestingBlocks > 0, "SchnoodleStaking: Vesting blocks must be greater than zero");
         require(unbondingBlocks > 0, "SchnoodleStaking: Unbonding blocks must be greater than zero");
-        
+
         (uint256 totalTokens, uint256 totalStakeWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
         uint256 lockProductWeightedAverage = totalStakeWeight / totalTokens;
 
@@ -205,7 +218,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return _balances[account];
     }
 
-    function unbondingBalanceOf(address account) public returns(uint256) {
+    function unbondingBalanceOf(address account) public view returns(uint256) {
         uint256 blockNumber = block.number;
         uint256 total;
         Unbond[] storage unbonds = _accountUnbonds[account];
@@ -214,17 +227,13 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
             Unbond memory unbond = unbonds[i];
             if (unbond.expiryBlock > blockNumber) {
                 total += unbond.amount;
-            } else {
-                // The unbond has expired, so remove it from the array
-                unbonds[i--] = unbonds[unbonds.length - 1];
-                unbonds.pop();
             }
         }
 
         return total;
     }
 
-    function lockedBalanceOf(address account) public returns (uint256) {
+    function lockedBalanceOf(address account) public view returns (uint256) {
         return unbondingBalanceOf(account) + stakedBalanceOf(account);
     }
 

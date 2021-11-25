@@ -43,7 +43,7 @@ export class Staking extends Component {
       stakeableAmount: 0,
       stakingSummary: [],
       unbondingSummary: [],
-      withdrawItems: []
+      withdrawAmounts: []
     };
 
     this.stakeAll = this.stakeAll.bind(this);
@@ -106,7 +106,7 @@ export class Staking extends Component {
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
       const stakedBalance = bigInt(await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call());
-      const stakeableAmount = bigInt(balance - stakedBalance);
+      const stakeableAmount = balance.subtract(stakedBalance);
       const vestingBlocksMax = this.blocksPerDuration({ years: 1 });
       const unbondingBlocksMax = this.blocksPerDuration({ years: 1 });
 
@@ -118,9 +118,10 @@ export class Staking extends Component {
 
       const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
 
-      let withdrawItems = [];
+      let withdrawAmounts = [];
       for (let i = 0; i < stakingSummary.length; i++) {
-        withdrawItems[i] = this.scaleDownUnits(stakingSummary[i].stake.amount);
+        const withdrawAmount = this.state.withdrawAmounts[i];
+        withdrawAmounts[i] = this.state.withdrawAmounts[i] === undefined ? this.scaleDownUnits(stakingSummary[i].stake.amount) : withdrawAmount;
       }
 
       this.setState({
@@ -137,7 +138,7 @@ export class Staking extends Component {
         stakeableAmount,
         stakingSummary,
         unbondingSummary,
-        withdrawItems
+        withdrawAmounts
       });
     });
   }
@@ -172,8 +173,10 @@ export class Staking extends Component {
 
   async addStake() {
     try {
-      const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks, unbondingBlocks } = this.state;
-      const response = await schnoodleStaking.methods.addStake(amountToStake.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
+      const { schnoodleStaking, selectedAddress, amountToStake, vestingBlocks, unbondingBlocks, stakeableAmount } = this.state;
+
+      const amountToStakeValue = this.preventDust(amountToStake, stakeableAmount);
+      const response = await schnoodleStaking.methods.addStake(amountToStakeValue.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -182,12 +185,18 @@ export class Staking extends Component {
 
   async withdrawStake(index) {
     try {
-      const { schnoodleStaking, selectedAddress, withdrawItems } = this.state;
-      const response = await schnoodleStaking.methods.withdraw(index, this.scaleUpUnits(withdrawItems[index]).toString()).send({ from: selectedAddress });
+      const { schnoodleStaking, selectedAddress, withdrawAmounts, stakingSummary } = this.state;
+
+      const amountToWithdraw = this.preventDust(withdrawAmounts[index], stakingSummary[index].stake.amount);
+      const response = await schnoodleStaking.methods.withdraw(index, amountToWithdraw.toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
+  }
+
+  preventDust(userAmount, maxAmount) {
+    return userAmount === this.scaleDownUnits(maxAmount) ? maxAmount : this.scaleUpUnits(userAmount);
   }
 
   async resetReflectTracker() {
@@ -201,50 +210,52 @@ export class Staking extends Component {
   }
 
   async stakeAll() {
-    this.setState({ amountToStake: this.state.stakeableAmount }, async () => await this.updateForecastReward());
+    this.setState({ amountToStake: this.scaleDownUnits(this.state.stakeableAmount) }, async () => await this.updateForecastReward());
   }
 
   updateWithdrawItem(index, e) {
-    let withdrawItems = this.state.withdrawItems;
-    withdrawItems[index] = e.target.value;
-    this.setState({ withdrawItems });
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    let withdrawAmounts = this.state.withdrawAmounts;
+    withdrawAmounts[index] = Math.min(value, this.scaleDownUnits(this.state.stakingSummary[index].stake.amount));
+    this.setState({ withdrawAmounts });
   }
 
   async updateAmountToStake(e) {
-    const amountToStake = e.target.value === '' ? 0 : parseInt(e.target.value);
-    if (!Number.isInteger(amountToStake)) return;
-    this.setState({ amountToStake: bigInt(Math.min(this.scaleUpUnits(amountToStake), this.state.stakeableAmount)) }, async () => await this.updateForecastReward());
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    this.setState({ amountToStake: Math.min(value, this.scaleDownUnits(this.state.stakeableAmount)) }, async () => await this.updateForecastReward());
   }
 
   async updateVestingBlocks(e) {
-    const vestingBlocks = e.target.value === '' ? 0 : parseInt(e.target.value);
-    if (!Number.isInteger(vestingBlocks)) return;
-    this.setState({ vestingBlocks: Math.min(vestingBlocks, this.state.vestingBlocksMax) }, async () => await this.updateForecastReward());
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    this.setState({ vestingBlocks: Math.min(value, this.state.vestingBlocksMax) }, async () => await this.updateForecastReward());
   }
 
   async updateUnbondingBlocks(e) {
-    const unbondingBlocks = e.target.value === '' ? 0 : parseInt(e.target.value);
-    if (!Number.isInteger(unbondingBlocks)) return;
-    this.setState({ unbondingBlocks: Math.min(unbondingBlocks, this.state.unbondingBlocksMax) }, async () => await this.updateForecastReward());
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    this.setState({ unbondingBlocks: Math.min(value, this.state.unbondingBlocksMax) }, async () => await this.updateForecastReward());
   }
 
   async updateForecastReward() {
     const { schnoodleStaking, amountToStake, vestingBlocks, unbondingBlocks, blockNumber } = this.state;
 
-    // eslint-disable-next-line
-    if (amountToStake == 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
+    if (amountToStake === 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
       this.setState({ vestForecastReward: 0, apy: 0 });
       return;
     }
 
+    const amountToStakeValue = this.scaleUpUnits(amountToStake);
     const vestForecastReward = await newStakeForecastReward(blockNumber + vestingBlocks);
     const yearForecastReward = await newStakeForecastReward(await this.blockNumberAfterOneYear());
-    const apy = this.calculateApy(amountToStake, yearForecastReward);
+    const apy = this.calculateApy(amountToStakeValue, yearForecastReward);
     this.setState({ vestForecastReward, apy });
 
     async function newStakeForecastReward(rewardBlock) {
       if (rewardBlock === 0) return 0;
-      return await schnoodleStaking.methods.reward(amountToStake.toString(), vestingBlocks.toString(), unbondingBlocks, rewardBlock).call();
+      return await schnoodleStaking.methods.reward(amountToStakeValue.toString(), vestingBlocks.toString(), unbondingBlocks, rewardBlock).call();
     }
   }
 
@@ -296,8 +307,8 @@ export class Staking extends Component {
                     <fieldset disabled={blocksPending > 0}>
                     <div class="relative">
                       <div class="form-control">
-                        <input type="number" min="1" max={amount} value={this.state.withdrawItems[i]} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                        <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawItems[i] < 1 || this.state.withdrawItems[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
+                        <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
+                        <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
                       </div>
                       </div>
                     </fieldset>
@@ -343,7 +354,6 @@ export class Staking extends Component {
     const balance = this.scaleDownUnits(this.state.balance);
     const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
     const stakeableAmount = this.scaleDownUnits(this.state.stakeableAmount);
-    const amountToStake = this.scaleDownUnits(this.state.amountToStake);
 
     const token = 'SNOOD';
     const stakeTokens = `Stake ${token} tokens.`;
@@ -457,7 +467,7 @@ export class Staking extends Component {
                               <span class="label-text">Amount</span>
                             </label> 
                             <div class="relative">
-                              <input type="number" min="1" max={stakeableAmount} value={amountToStake || ''} onChange={this.updateAmountToStake} class="stakeinput" />
+                              <input type="number" min="1" max={stakeableAmount} value={this.state.amountToStake || ''} onChange={this.updateAmountToStake} class="stakeinput" />
                               <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
                             </div>
                           </div>
@@ -489,7 +499,7 @@ export class Staking extends Component {
                           </div>
                         </div>
                         <div class="mb-3 form-control">
-                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
+                          <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToStake < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToStake > stakeableAmount} onClick={this.addStake}>Stake</button>
                         </div>
                       </fieldset>
                     </form>
