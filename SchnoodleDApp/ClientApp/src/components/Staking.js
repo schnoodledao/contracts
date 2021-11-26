@@ -115,7 +115,7 @@ export class Staking extends Component {
       // Fetch the staking summary while also calculating the APY for each stake
       const stakingSummary = await Promise.all([].concat(await schnoodleStaking.methods.stakingSummary(selectedAddress).call()).sort((a, b) => a.stake.blockNumber > b.stake.blockNumber ? 1 : -1).map(async (stakeReward, i) => {
         const apy = this.calculateApy(stakeReward.stake.amount, await schnoodleStaking.methods.reward(selectedAddress, i, await this.blockNumberAfterOneYear()).call())
-        return { stake: bigInt(stakeReward.stake), reward: bigInt(stakeReward.reward), apy: apy };
+        return { index: stakeReward.index, stake: bigInt(stakeReward.stake), reward: bigInt(stakeReward.reward), apy: apy };
       }));
 
       const unbondingSummary = [].concat(await schnoodleStaking.methods.unbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
@@ -186,12 +186,13 @@ export class Staking extends Component {
     }
   }
 
-  async withdrawStake(index) {
+  async withdrawStake(i) {
     try {
       const { schnoodleStaking, selectedAddress, withdrawAmounts, stakingSummary } = this.state;
 
-      const amountToWithdraw = this.preventDust(withdrawAmounts[index], stakingSummary[index].stake.amount);
-      const response = await schnoodleStaking.methods.withdraw(index, amountToWithdraw.toString()).send({ from: selectedAddress });
+      const stakeReward = stakingSummary[i];
+      const amountToWithdraw = this.preventDust(withdrawAmounts[i], stakeReward.stake.amount);
+      const response = await schnoodleStaking.methods.withdraw(stakeReward.index, stakeReward.stake.id, amountToWithdraw.toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
