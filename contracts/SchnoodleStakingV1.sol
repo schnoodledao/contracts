@@ -9,6 +9,7 @@ import "abdk-libraries-solidity/ABDKMath64x64.sol";
 /// Delivers Lambo posthaste
 contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     address private _schnoodle;
+    uint256 _stakeId;
     mapping(address => Stake[]) private _accountStakes;
     mapping(address => Unbond[]) private _accountUnbonds;
     mapping(address => uint256) private _balances;
@@ -21,6 +22,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     SigmoidParams private _sigmoidParams;
 
     struct Stake {
+        uint256 id;
         uint256 amount;
         uint256 blockNumber;
         uint256 vestingBlocks;
@@ -29,6 +31,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     }
 
     struct StakeReward {
+        uint256 index;
         Stake stake;
         uint256 reward;
     }
@@ -60,6 +63,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
         // Build the new stake, and update all tracking states to include the new stake
         (stake, cumulativeTotal, _totalTokens, _totalStakeWeight) = _buildStake(amount, vestingBlocks, unbondingBlocks);
+        _stakeId++;
         _accountStakes[msgSender].push(stake);
         _cumulativeTotal = cumulativeTotal;
         _checkpointBlock = stake.blockNumber;
@@ -69,10 +73,11 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     }
 
     /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
-    function withdraw(uint256 index, uint256 amount) external {
+    function withdraw(uint256 index, uint256 id, uint256 amount) external {
         address msgSender = _msgSender();
         Stake[] storage stakes = _accountStakes[msgSender];
         Stake storage stake = stakes[index];
+        require(stake.id == id, "SchnoodleStaking: stake ID mismatch");
         require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
 
         uint256 blockNumber = block.number;
@@ -195,7 +200,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         );
 
         uint256 blockNumber = block.number;
-        return (Stake(amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _newCumulativeTotal(blockNumber), totalTokens, totalStakeWeight);
+        return (Stake(_stakeId, amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _newCumulativeTotal(blockNumber), totalTokens, totalStakeWeight);
     }
 
     function _newCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
@@ -243,7 +248,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         uint256 rewardBlock = block.number;
 
         for (uint256 i = 0; i < stakes.length; i++) {
-            stakeRewards[i] = StakeReward(stakes[i], _reward(stakes[i], rewardBlock));
+            stakeRewards[i] = StakeReward(i, stakes[i], _reward(stakes[i], rewardBlock));
         }
 
         return stakeRewards;
