@@ -3,166 +3,167 @@
 @tailwind utilities;
 
 .h-noheader {
-    min-height: calc(100vh - 74px);
+  min-height: calc(100vh - 74px);
 }
 
 fieldset:disabled input,
 fieldset:disabled label,
 fieldset:disabled button {
-    pointer-events: none;
-    cursor: not-allowed;
-    opacity: 0.35;
-    filter: alpha(opacity=35);
-    -webkit-box-shadow: none;
-    box-shadow: none;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.35;
+  filter: alpha(opacity=35);
+  -webkit-box-shadow: none;
+  box-shadow: none;
 }
 
 .maintitles {
-    @apply text-6xl font-black purplefade md:text-8xl;
+  @apply text-6xl font-black purplefade md:text-8xl;
 }
 
 .hidemd {
-    @apply block md:hidden;
+  @apply block md:hidden;
 }
 
 .showmd {
-    @apply hidden md:block lg:hidden;
+  @apply hidden md:block lg:hidden;
 }
 
 .hidesm {
-    @apply hidden md:block;
+  @apply hidden md:block;
 }
 
 .hidesmmd {
-    @apply hidden lg:block;
+  @apply hidden lg:block;
 }
 
 .textfade {
-    @apply bg-clip-text text-transparent bg-gradient-to-r;
+  @apply bg-clip-text text-transparent bg-gradient-to-r;
 }
 
 .redfade {
-    @apply textfade from-red-600 to-red-400;
+  @apply textfade from-red-600 to-red-400;
 }
 
 .purplefade {
-    @apply textfade from-purple-700 to-purple-500;
+  @apply textfade from-purple-700 to-purple-500;
 }
 
 .greenfade {
-    @apply textfade from-green-600 to-green-400;
+  @apply textfade from-green-600 to-green-400;
 }
 
 .yellowfade {
-    @apply textfade from-yellow-300 to-yellow-200;
+  @apply textfade from-yellow-300 to-yellow-200;
 }
 
 .fakebutton {
-    height: 37px;
+  height: 37px;
 }
 
 .stats {
-    @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-5;
+  @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-5;
 }
 
 .stat {
-    @apply place-items-center place-content-center;
+  @apply place-items-center place-content-center;
 }
 
 .stats.stats .stat+.stat {
-    @apply border-t-2 lg:border-base-200;
+  @apply border-t-2 lg:border-base-200;
 }
 
 .stat-value {
-    @apply text-3xl xl:text-5xl;
+  @apply text-3xl xl:text-5xl;
 }
 
 .stat-title,
 .card-title {
-    @apply uppercase;
+  @apply uppercase;
 }
 
 .staketitle {
-    @apply uppercase;
+  @apply uppercase;
 }
 
 .topstats .stat-title,
 .staketitle {
-    @apply text-secondary font-bold;
+  @apply text-secondary font-bold;
 }
 
 .bottomstats .stat-title {
-    @apply font-bold;
+  @apply font-bold;
 }
 
 .barkstats .stat {
-    @apply bg-purple-800 text-accent;
+  @apply bg-purple-800 text-accent;
 }
 
 .stat-title,
 .stat-desc {
-    @apply opacity-80;
+  @apply opacity-80;
 }
 
 .topstats .stat {
-    @apply bg-base-100;
+  @apply bg-base-100;
 }
 
 .bottomstats .stat {
-    @apply bg-base-200;
+  @apply bg-base-200;
 }
 
 .headingfont {
-    @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
+  @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
 
 .withdrawstake {
-    @apply input pl-1 md:pl-4 w-full input-bordered text-white !important;
+  @apply input pl-1 md:pl-4 w-full input-bordered text-white !important;
 }
 
 input.withdrawinput {
-    @apply input-secondary withdrawstake text-base xl:text-lg text-left !important;
+  @apply input-secondary withdrawstake text-base xl:text-lg text-left !important;
 }
 
 .stakeinput {
-    @apply input-accent withdrawstake text-base xl:text-lg text-left;
+  @apply input-accent withdrawstake text-base xl:text-lg text-left;
 }
 
 .withbutton .stakeinput {
-    @apply sm:pr-11 md:pr-16 !important;
+  @apply sm:pr-11 md:pr-16 !important;
 }
 
 .nobutton .stakeinput {
-    @apply pr-2 !important;
+  @apply pr-2 !important;
 }
 
 .staketable .withdrawinput {
-    @apply pr-32 !important;
+  @apply pr-32 !important;
 }
 
 .fullhalfwidth {
-    @apply w-full md:w-1/2;
+  @apply w-full md:w-1/2;
 }
 
 .label-text {
-    @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
+  @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
 }
 
 fieldset:disabled p.approxLabel {
-    @apply opacity-20;
+  @apply opacity-20;
 }
 
 p.approxLabel {
-    @apply text-white opacity-40 !important;
+  @apply text-white opacity-40 !important;
 }
 
 fieldset:disabled .bottomstats {
-    pointer-events: none;
-    cursor: not-allowed;
-    opacity: 0.35;
-    filter: alpha(opacity=35);
-    box-shadow: none;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.35;
+  filter: alpha(opacity=35);
+  box-shadow: none;
 }
+
 
 /*
 ________________________________________________________________________
@@ -174,273 +175,250 @@ TABLE
 [role="row-group"],
 [role="row"],
 [role="subheader"] {
-    display: flex;
-    display: -webkit-flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    -webkit-flex-direction: row;
-    -webkit-flex-wrap: wrap;
-    width: 100%;
-    box-sizing: border-box;
-    line-height: 1 !important;
+  display: flex;
+  display: -webkit-flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  -webkit-flex-direction: row;
+  -webkit-flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1 !important;
 }
 
 [role="table"] [role="column-header"],
 [role="table"] [role="cell"] {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    /* Minimum single cell width (cell padding and border deducted) */
-    flex: 1 1 calc(10% - 20px - 2px);
-    -webkit-flex: calc(10% - 20px - 2px);
-
-    padding: 20px 0px;
-    @apply text-secondary text-left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* Minimum single cell width (cell padding and border deducted) */
+  flex: 1 1 calc(10% - 20px - 2px);
+  -webkit-flex: calc(10% - 20px - 2px);
+  padding: 20px 0px;
+  @apply text-secondary text-left;
 }
 
 [role="table"] [role="row-group"]+[role="row-group"]>[role="row"] {
-    @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0
+  @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0
 }
 
 [role="table"]>[role="row-group"]:last-child {
-    border-bottom: 0px;
+  border-bottom: 0px;
 }
 
 [role="table"] label {
-    display: inline-block;
-    cursor: pointer;
-    text-align: center;
-    font-family: arial, sans-serif;
-    min-width: 20px;
-    @apply text-secondary;
-
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  font-family: arial, sans-serif;
+  min-width: 20px;
+  @apply text-secondary;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 [role="table"] label:hover {
-    background: #1D5FD1;
-    color: #FFF;
+  background: #1D5FD1;
+  color: #FFF;
 }
+
 
 /* Table Header */
 
 [role="table"] [role="row"] [role="column-header"] {
-    @apply ml-0 text-base xl:text-lg px-1 md:px-4 text-secondary border-b-2 border-secondary;
+  @apply ml-0 text-base xl:text-lg px-1 md:px-4 text-secondary border-b-2 border-secondary;
 }
 
 [role="table"] [role="column-header"].narrow {
-    flex-grow: 0.5;
-    -webkit-flex-grow: 0.5;
+  flex-grow: 0.5;
+  -webkit-flex-grow: 0.5;
 }
 
 [role="table"] [role="column-header"].narrower {
-    flex-grow: 0;
-    -webkit-flex-grow: 0;
+  flex-grow: 0;
+  -webkit-flex-grow: 0;
 }
 
 [role="table"] [role="column-header"].wide {
-    flex-grow: 2;
-    -webkit-flex-grow: 2;
+  flex-grow: 2;
+  -webkit-flex-grow: 2;
 }
 
 [role="table"] [role="column-header"].wider {
-    flex-grow: 10;
-    -webkit-flex-grow: 10;
+  flex-grow: 10;
+  -webkit-flex-grow: 10;
 }
 
 
 /* Table Row */
-[role="table"] [role="row"] {
-    align-items: stretch;
 
+[role="table"] [role="row"] {
+  align-items: stretch;
 }
 
+
 /* Table Cell */
+
 [role="table"] [role="row"] [role="cell"] {
-    @apply text-lg lg:text-sm xl:text-lg text-left px-1 py-2 md:px-4 leading-6 lg:leading-10 xl:leading-10 !important;
+  @apply text-lg lg:text-sm xl:text-lg text-left px-1 py-2 md:px-4 leading-6 lg:leading-10 xl:leading-10 !important;
 }
 
 [role="table"] [role="row"] [role="cell"]:not(:first-child) {
-    @apply border-l-0 border-r-0;
+  @apply border-l-0 border-r-0;
 }
 
 [role="table"] [role="row"] [role="cell"]:last-child {
-    border-right: 0px;
+  border-right: 0px;
 }
 
+
 /* Table Cell Width Modifiers */
+
 [role="table"] [role="cell"].narrow {
-    flex-grow: 0.5;
-    -webkit-flex-grow: 0.5;
+  flex-grow: 0.5;
+  -webkit-flex-grow: 0.5;
 }
 
 [role="table"] [role="cell"].narrower {
-    flex-grow: 0;
-    -webkit-flex-grow: 0;
+  flex-grow: 0;
+  -webkit-flex-grow: 0;
 }
 
 [role="table"] [role="cell"].wide {
-    flex-grow: 2;
-    -webkit-flex-grow: 2;
+  flex-grow: 2;
+  -webkit-flex-grow: 2;
 }
 
 [role="table"] [role="cell"].wider {
-    flex-grow: 10;
-    -webkit-flex-grow: 10;
+  flex-grow: 10;
+  -webkit-flex-grow: 10;
 }
 
-
 @media only screen and (max-width: 1023px) {
-
-    [role="table"] .column-header-group {
-        display: none;
-    }
-
-    [role="table"] [role="column-header"],
-    [role="table"] [role="cell"] {
-        /* Minimum single cell width (cell padding and border deducted) */
-        /* 100% means that only one column is displayed in a row (100% / 1 = 100%) */
-        flex: 1 1 100%;
-        -webkit-flex: 1 1 100%;
-        padding: 8px 10px;
-    }
-
-    [role="table"] [role="row"] {
-        @apply p-6;
-    }
-
-    [role="table"] [role="cell"] {
-        border-bottom: 0;
-    }
-
-    [role="table"] [role="row"] [role="cell"]:not(:first-child) {
-        border-left: 0px;
-    }
-
-    [role="table"] [role="cell"],
-    [role="table"] [role="cell"] span {
-        text-align: right;
-        justify-content: space-between;
-        display: initial;
-    }
-
-    [role="table"] [role="row"] label {
-        float: right;
-        width: 32px;
-        min-width: 32px;
-        margin: -4px 0px -8px 10px;
-        line-height: 32px;
-        height: 32px;
-    }
-
-
-    [role="table"] [role="cell"]::before {
-        content: attr(data-header);
-        float: left;
-        text-align: left;
-        font-size: 1.125rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        --tw-text-opacity: 1;
-        color: rgba(255, 255, 255, var(--tw-text-opacity));
-        margin-right: 20px;
-    }
-
-
-    [role="table"] [role="row-group"] [role="row"]:nth-child(even) {
-        @apply bg-base-200;
-    }
-
-    [role="table"] [role="row-group"]+[role="row-group"]>[role="row"]:not(:last-child) {
-
-        @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
-
-    }
-
-    [role="table"] [role="row"] [role="cell"] {
-        @apply border-l-0 border-r-0;
-    }
-
-    [role="table"] [role="row-group"]:last-child [role="row"]:last-child [role="cell"].expandable {
-
-        @apply border-b-0;
-    }
-
-
-
+  [role="table"] .column-header-group {
+    display: none;
+  }
+  [role="table"] [role="column-header"],
+  [role="table"] [role="cell"] {
+    /* Minimum single cell width (cell padding and border deducted) */
+    /* 100% means that only one column is displayed in a row (100% / 1 = 100%) */
+    flex: 1 1 100%;
+    -webkit-flex: 1 1 100%;
+    padding: 8px 10px;
+  }
+  [role="table"] [role="row"] {
+    @apply p-6;
+  }
+  [role="table"] [role="cell"] {
+    border-bottom: 0;
+  }
+  [role="table"] [role="row"] [role="cell"]:not(:first-child) {
+    border-left: 0px;
+  }
+  [role="table"] [role="cell"],
+  [role="table"] [role="cell"] span {
+    text-align: right;
+    justify-content: space-between;
+    display: initial;
+  }
+  [role="table"] [role="row"] label {
+    float: right;
+    width: 32px;
+    min-width: 32px;
+    margin: -4px 0px -8px 10px;
+    line-height: 32px;
+    height: 32px;
+  }
+  [role="table"] [role="cell"]::before {
+    content: attr(data-header);
+    float: left;
+    text-align: left;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    --tw-text-opacity: 1;
+    color: rgba(255, 255, 255, var(--tw-text-opacity));
+    margin-right: 20px;
+  }
+  [role="table"] [role="row-group"] [role="row"]:nth-child(even) {
+    @apply bg-base-200;
+  }
+  [role="table"] [role="row-group"]+[role="row-group"]>[role="row"]:not(:last-child) {
+    @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
+  }
+  [role="table"] [role="row"] [role="cell"] {
+    @apply border-l-0 border-r-0;
+  }
+  [role="table"] [role="row-group"]:last-child [role="row"]:last-child [role="cell"].expandable {
+    @apply border-b-0;
+  }
 }
 
 @media only screen and (max-width: 769px) {}
 
 @keyframes blink {
-
-    /**
+  /**
    * At the start of the animation the dot
    * has an opacity of .2
    */
-    0% {
-        opacity: .2;
-    }
-
-    /**
+  0% {
+    opacity: .2;
+  }
+  /**
    * At 20% the dot is fully visible and
    * then fades out slowly
    */
-    20% {
-        opacity: 1;
-    }
-
-    /**
+  20% {
+    opacity: 1;
+  }
+  /**
    * Until it reaches an opacity of .2 and
    * the animation can start again
    */
-    100% {
-        opacity: .2;
-    }
+  100% {
+    opacity: .2;
+  }
 }
 
 .loading span {
-    /**
+  /**
    * Use the blink animation, which is defined above
    */
-    animation-name: blink;
-    /**
+  animation-name: blink;
+  /**
    * The animation should take 1.4 seconds
    */
-    animation-duration: 1.4s;
-    /**
+  animation-duration: 1.4s;
+  /**
    * It will repeat itself forever
    */
-    animation-iteration-count: infinite;
-    /**
+  animation-iteration-count: infinite;
+  /**
    * This makes sure that the starting style (opacity: .2)
    * of the animation is applied before the animation starts.
    * Otherwise we would see a short flash or would have
    * to set the default styling of the dots to the same
    * as the animation. Same applies for the ending styles.
    */
-    animation-fill-mode: both;
+  animation-fill-mode: both;
 }
 
 .loading span:nth-child(2) {
-    /**
+  /**
    * Starts the animation of the third dot
    * with a delay of .2s, otherwise all dots
    * would animate at the same time
    */
-    animation-delay: .2s;
+  animation-delay: .2s;
 }
 
 .loading span:nth-child(3) {
-    /**
+  /**
    * Starts the animation of the third dot
    * with a delay of .4s, otherwise all dots
    * would animate at the same time
    */
-    animation-delay: .4s;
+  animation-delay: .4s;
 }
