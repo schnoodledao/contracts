@@ -39,7 +39,8 @@ export class Staking extends Component {
       unbondingBlocksMax: 0,
       vestForecastReward: 0,
       apy: 0,
-      stakedBalance: 0,
+      lockedBalance: 0,
+      unbondingBalance: 0,
       stakeableAmount: 0,
       stakingSummary: [],
       unbondingSummary: [],
@@ -105,8 +106,9 @@ export class Staking extends Component {
 
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
-      const stakedBalance = bigInt(await schnoodleStaking.methods.stakedBalanceOf(selectedAddress).call());
-      const stakeableAmount = balance.subtract(stakedBalance);
+      const lockedBalance = bigInt(await schnoodleStaking.methods.lockedBalanceOf(selectedAddress).call());
+      const unbondingBalance = bigInt(await schnoodleStaking.methods.unbondingBalanceOf(selectedAddress).call());
+      const stakeableAmount = balance.subtract(lockedBalance);
       const vestingBlocksMax = this.blocksPerDuration({ years: 1 });
       const unbondingBlocksMax = this.blocksPerDuration({ years: 1 });
 
@@ -134,7 +136,8 @@ export class Staking extends Component {
         reflectTrackerInfo: { blockNumber, deltaBalance },
         vestingBlocksMax,
         unbondingBlocksMax,
-        stakedBalance,
+        lockedBalance,
+        unbondingBalance,
         stakeableAmount,
         stakingSummary,
         unbondingSummary,
@@ -352,7 +355,8 @@ export class Staking extends Component {
 
   render() {
     const balance = this.scaleDownUnits(this.state.balance);
-    const stakedBalance = this.scaleDownUnits(this.state.stakedBalance);
+    const lockedBalance = this.scaleDownUnits(this.state.lockedBalance);
+    const unbondingBalance = this.scaleDownUnits(this.state.unbondingBalance);
     const stakeableAmount = this.scaleDownUnits(this.state.stakeableAmount);
 
     const token = 'SNOOD';
@@ -425,28 +429,28 @@ export class Staking extends Component {
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
                 <div class="card-body my-6 md:my-10 rounded-4xl">
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                   {this.state.reflectTrackerInfo.blockNumber > 0 && (
-                    <div class="stats barkstats">
-                      <div class="stat text-error">
-                        <div class="stat-title font-extrabold">BARK Rewards</div>
-                        <div class="stat-value text-accent">
-                         {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
-                          <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
+                    {this.state.reflectTrackerInfo.blockNumber > 0 && (
+                      <div class="stats barkstats">
+                        <div class="stat text-error">
+                          <div class="stat-title font-extrabold">BARK Rewards</div>
+                          <div class="stat-value text-accent">
+                            {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
+                            <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
+                          </div>
+                          <div class="stat-desc">{token} since block {this.state.reflectTrackerInfo.blockNumber}</div>
                         </div>
-                        <div class="stat-desc">{token}<br /><span class="opacity-60 text-xs">since block {this.state.reflectTrackerInfo.blockNumber}</span></div>
                       </div>
-                    </div>
-                   )} 
-                  <div class="shadow-sm bottomstats stats ">
+                    )}
+                  <div class="shadow-sm bottomstats stats">
                     <div class="stat border-t-0">
                       <div class="stat-title">Total Balance</div>
                       <div class="stat-value purplefade">{balance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
                     <div class="stat">
-                      <div class="stat-title">Staked Balance</div>
-                      <div class="stat-value purplefade">{stakedBalance.toLocaleString()}</div>
-                      <div class="stat-desc">{token}</div>
+                      <div class="stat-title">Locked Balance</div>
+                      <div class="stat-value purplefade">{lockedBalance.toLocaleString()}</div>
+                      <div class="stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
                     </div>
                     <div class="stat">
                       <div class="stat-title">Stakeable Amount</div>
