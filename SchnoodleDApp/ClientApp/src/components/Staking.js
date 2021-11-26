@@ -216,7 +216,7 @@ export class Staking extends Component {
     this.setState({ amountToStake: this.scaleDownUnits(this.state.stakeableAmount) }, async () => await this.updateForecastReward());
   }
 
-  updateWithdrawItem(index, e) {
+  updateWithdrawAmount(index, e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
     let withdrawAmounts = this.state.withdrawAmounts;
@@ -282,74 +282,74 @@ export class Staking extends Component {
 
   renderStakingSummaryTable(stakingSummary) {
     return (
-      <table className='table table-striped w-full mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
-        <thead>
-          <tr>
-            <th class="hidden md:table-cell">Block Number</th>
-            <th><span class="hidemd">Staked<br />Amount</span><span class="hidesm">Staked Amount</span></th>
-            <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
-            <th><span class="hidemd">Unbonding<br />Blocks</span><span class="hidesm">Unbonding Blocks</span></th>
-            <th><span class="hidemd">Estimated<br />APY</span><span class="hidesm">Estimated APY</span></th>
-            <th>Withdraw</th>
-            <th><span class="hidemd">Claimable<br />Reward</span><span class="hidesm">Claimable Reward</span></th>
-          </tr>
-        </thead>
-        <tbody>
+      <div role="table" aria-label="Staking Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+        <div role="row-group" class="column-header-group">
+          <div role="row">
+            <span role="column-header" class="narrower">Block<br/>Number</span>
+            <span role="column-header">Staked<br/>Amount</span>
+            <span role="column-header" class="narrow" >Blocks<br/>Pending</span>
+            <span role="column-header">Unbonding<br/>Blocks</span>
+            <span role="column-header" class="narrow">Estimated<br/>APY</span>
+            <span role="column-header" class="wider">Withdraw</span>
+            <span role="column-header" class="wide">Claimable<br/>Reward</span>
+          </div>
+        </div> 
+        <div role="row-group" class="text-secondary">
           {stakingSummary.map((stakeReward, i) => {
             const amount = this.scaleDownUnits(stakeReward.stake.amount);
             const blocksPending = Math.max(0, parseInt(stakeReward.stake.blockNumber) + parseInt(stakeReward.stake.vestingBlocks) - this.state.blockNumber);
             return (
-              <tr key={stakeReward.stake.blockNumber}>
-                <td class="hidden md:table-cell">{stakeReward.stake.blockNumber}</td>
-                <td>{amount.toLocaleString()}</td>
-                <td title={this.blocksDurationText(blocksPending)}>{blocksPending}</td>
-                <td title={this.blocksDurationText(stakeReward.stake.unbondingBlocks)}>{stakeReward.stake.unbondingBlocks}</td>
-                <td>{stakeReward.apy} %</td>
-                <td>
+              <div role="row" key={stakeReward.stake.blockNumber}>
+                <span role="cell" data-header="Block Number:" class="border-l-0 narrower">{stakeReward.stake.blockNumber}</span>
+                <span role="cell" data-header="Staked Amount:">{amount.toLocaleString()}</span>
+                <span role="cell" data-header="Blocks Pending:" class="narrow" title={this.blocksDurationText(blocksPending)}>{blocksPending}</span>
+                <span role="cell" data-header="Unbonding Blocks:"title={this.blocksDurationText(stakeReward.stake.unbondingBlocks)}>{stakeReward.stake.unbondingBlocks}</span>
+                <span role="cell" data-header="Estimated APY:" class="narrow" >{stakeReward.apy} %</span>
+                <span role="cell" class="wider">
                   <form>
                     <fieldset disabled={blocksPending > 0}>
-                    <div class="relative">
-                      <div class="form-control">
-                        <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawItem.bind(this, i)} class="withdrawinput"/>
-                        <button type="button" class="text-xs lg:text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-1 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="hidemd">Withdraw</span><span class="hidesm">Withdraw</span></button>
-                      </div>
+                      <div class="relative">
+                        <div class="form-control">
+                          <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput"/>
+                          <button type="button" class="text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdrawStake.bind(this, i)}><span class="">Withdraw</span></button>
+                        </div>
                       </div>
                     </fieldset>
                   </form>
-                </td>
-                <td>{this.scaleDownUnits(stakeReward.reward).toLocaleString()}</td>
-              </tr>
+                </span>
+                <span role="cell" data-header="Claimable Reward:" class="wide">{this.scaleDownUnits(stakeReward.reward).toLocaleString()}</span>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+      </div>
     );
   }
 
   renderUnbondingSummaryTable(unbondingSummary) {
     return (
-      <table className='table table-striped w-full mb-6 md:mb-10 border-collapse border border-secondary' aria-labelledby="tabelLabel">
-        <thead>
-          <tr>
-            <th class="hidden md:table-cell">Amount</th>
-            <th><span class="hidemd">Blocks<br />Pending</span><span class="hidesm">Blocks Pending</span></th>
-            <th><span class="hidemd">Time<br />Remaining</span><span class="hidesm">Time Remaining</span></th>
-          </tr>
-        </thead>
-        <tbody>
+      <div role="table" aria-label="Staking Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+        <div role="row-group" class="column-header-group">
+          <div role="row">
+            <span role="column-header" class="">Amount</span>
+            <span role="column-header" class="" >Blocks Pending</span>
+            <span role="column-header">Time Remaining</span>
+          </div> 
+        </div>
+        <div role="row-group" class="text-secondary">
           {unbondingSummary.map((unbond, i) => {
             const amount = this.scaleDownUnits(unbond.amount);
             const blocksPending = parseInt(unbond.expiryBlock) - this.state.blockNumber;
             return blocksPending > 0 && (
-              <tr key={unbond.expiryBlock}>
-                <td>{amount.toLocaleString()}</td>
-                <td>{blocksPending}</td>
-                <td>{this.blocksDurationText(blocksPending)}</td>
-              </tr>
+              <div role="row" key={unbond.expiryBlock}>
+                <span role="cell" data-header="Amount:" class="">{amount.toLocaleString()}</span>
+                <span role="cell" data-header="Blocks Pending:" class="">{blocksPending}</span>
+                <span role="cell" data-header="Time Remaining:" class="">{this.blocksDurationText(blocksPending)}</span>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+      </div>
     );
   }
 
@@ -470,20 +470,20 @@ export class Staking extends Component {
                             <label class="label">
                               <span class="label-text">Amount</span>
                             </label> 
-                            <div class="relative">
+                            <div class="relative withbutton">
                               <input type="number" min="1" max={stakeableAmount} value={this.state.amountToStake || ''} onChange={this.updateAmountToStake} class="stakeinput" />
                               <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.stakeAll}>All</button>
                             </div>
                           </div>
                         </div>
-                        <div class="mb-3 form-control">
+                        <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">Vesting Blocks</span>
                           </label>
                           <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="stakeinput" />
                           <p class="approxLabel">{this.blocksDurationText(this.state.vestingBlocks)}</p>
                         </div>
-                        <div class="mb-3 form-control">
+                        <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">Unbonding Blocks</span>
                           </label>
