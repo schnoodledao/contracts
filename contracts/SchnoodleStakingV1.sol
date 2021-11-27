@@ -76,6 +76,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     function withdraw(uint256 index, uint256 id, uint256 amount) external {
         address msgSender = _msgSender();
         Stake[] storage stakes = _accountStakes[msgSender];
+        require(index < stakes.length, "SchnoodleStaking: index out of bounds");
         Stake storage stake = stakes[index];
         require(stake.id == id, "SchnoodleStaking: stake ID mismatch");
         require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
