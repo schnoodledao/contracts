@@ -31,7 +31,6 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     }
 
     struct StakeReward {
-        uint256 index;
         Stake stake;
         uint256 reward;
     }
@@ -72,27 +71,10 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         emit Staked(msgSender, amount, stake.blockNumber);
     }
 
-    /// Withdraws the specified amount of tokens from the sender's stake at the specified zero-based index
-    function withdraw(uint256 index, uint256 id, uint256 amount) external {
+    /// Withdraws the specified amount of tokens from the sender's stake with the specified ID
+    function withdraw(uint256 id, uint256 amount) external {
         address msgSender = _msgSender();
-        Stake[] storage stakes = _accountStakes[msgSender];
-        require(index < stakes.length, "SchnoodleStaking: index out of bounds");
-        Stake storage stake = stakes[index];
-        require(stake.id == id, "SchnoodleStaking: stake ID mismatch");
-        require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
-
         uint256 blockNumber = block.number;
-        require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
-
-        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
-
-        // Update all tracking states to remove the withdrawn stake
-        (_totalTokens, _totalStakeWeight) = _updateTracking(-int256(amount), stake.vestingBlocks, stake.unbondingBlocks);
-        _cumulativeTotal = newCumulativeTotal;
-        _checkpointBlock = blockNumber;
-        _balances[msgSender] -= amount;
-        stake.amount -= amount;
-
         Unbond[] storage unbonds = _accountUnbonds[msgSender];
 
         // Take this opportunity to clean up any expired unbonds
@@ -103,18 +85,40 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
             }
         }
 
-        // Start the unbonding procedure for the withdrawn amount
-        unbonds.push(Unbond(amount, blockNumber + stake.unbondingBlocks));
+        Stake[] storage stakes = _accountStakes[msgSender];
 
-        // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
-        if (stake.amount == 0) {
-            stakes[index] = stakes[stakes.length - 1];
-            stakes.pop();
+        for (uint256 i = 0; i < stakes.length; i++) {
+            Stake storage stake = stakes[i];
+            if (stake.id == id) {
+                require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
+                require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
+
+                (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
+
+                // Update all tracking states to remove the withdrawn stake
+                (_totalTokens, _totalStakeWeight) = _updateTracking(-int256(amount), stake.vestingBlocks, stake.unbondingBlocks);
+                _cumulativeTotal = newCumulativeTotal;
+                _checkpointBlock = blockNumber;
+                _balances[msgSender] -= amount;
+                stake.amount -= amount;
+
+                // Start the unbonding procedure for the withdrawn amount
+                unbonds.push(Unbond(amount, blockNumber + stake.unbondingBlocks));
+
+                // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
+                if (stake.amount == 0) {
+                    stakes[i] = stakes[stakes.length - 1];
+                    stakes.pop();
+                }
+
+                stakingReward(msgSender, netReward, grossReward);
+
+                emit Withdrawn(msgSender, id, amount, netReward, grossReward);
+                return;
+            }
         }
 
-        stakingReward(msgSender, netReward, grossReward);
-
-        emit Withdrawn(msgSender, index, amount, netReward, grossReward);
+        revert("SchnoodleStaking: stake not found");
     }
 
     function changeSigmoidParams(uint256 k, uint256 a) external onlyOwner {
@@ -249,7 +253,7 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         uint256 rewardBlock = block.number;
 
         for (uint256 i = 0; i < stakes.length; i++) {
-            stakeRewards[i] = StakeReward(i, stakes[i], _reward(stakes[i], rewardBlock));
+            stakeRewards[i] = StakeReward(stakes[i], _reward(stakes[i], rewardBlock));
         }
 
         return stakeRewards;
@@ -282,5 +286,5 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
 
     event Staked(address indexed account, uint256 amount, uint256 blockNumber);
 
-    event Withdrawn(address indexed account, uint256 index, uint256 amount, uint256 netReward, uint256 grossReward);
+    event Withdrawn(address indexed account, uint256 id, uint256 amount, uint256 netReward, uint256 grossReward);
 }

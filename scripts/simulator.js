@@ -78,8 +78,8 @@ module.exports = async function main(callback) {
     // Simulate staking based on the balances now in the accounts
     _printHeadings('Simulating staking', 'Staker');
 
-    // Set up some stake activities (false add means withdraw stake)
-    let stakes = [
+    // Set up some stake actions to simulate (false add means withdraw stake)
+    let stakeActions = [
       { account: accounts[3], add: true },
       { account: accounts[4], add: true },
       { account: accounts[5], add: true },
@@ -90,19 +90,20 @@ module.exports = async function main(callback) {
       { account: accounts[9], add: true }
     ];
 
-    for (const stake of stakes) {
+    for (const stakeAction of stakeActions) {
       let amount;
 
       // Add or withdraw stake depending on the add stake action being true or false
-      if (stake.add) {
-        amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stake.account))));
-        await schnoodleStaking.addStake(amount, 1, 1, { from: stake.account });
+      if (stakeAction.add) {
+        amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeAction.account))));
+        await schnoodleStaking.addStake(amount, 1, 1, { from: stakeAction.account });
       } else {
-        amount = -BigInt(await schnoodleStaking.stakedBalanceOf(stake.account));
-        await schnoodleStaking.withdraw(0, -amount, { from: stake.account });
+        const stake = (await schnoodleStaking.stakingSummary(stakeAction.account))[0].stake;
+        amount = -BigInt(stake.amount);
+        await schnoodleStaking.withdraw(stake.id, -amount, { from: stakeAction.account });
       }
 
-      await _printBalances(stake.account, amount / decimalsFactor);
+      await _printBalances(stakeAction.account, amount / decimalsFactor);
     };
 
     

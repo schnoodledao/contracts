@@ -238,7 +238,7 @@ describe('Staking', () => {
 
   it('should revert on attempt to withdraw during vesting blocks', async() => {
     await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
-    await truffleAssert.reverts(schnoodleStaking.withdraw(0, 0, stakeAmount, { from: stakeholder }), "SchnoodleStaking: cannot withdraw during vesting blocks");
+    await truffleAssert.reverts(schnoodleStaking.withdraw(0, stakeAmount, { from: stakeholder }), "SchnoodleStaking: cannot withdraw during vesting blocks");
   });
 
   it('should revert on attempt to stake more tokens than are unstaked', async() => {
@@ -263,7 +263,7 @@ describe('Staking', () => {
 
     Array.from({length: vestingBlocks}, async () => await time.advanceBlock());
 
-    const receipt = await schnoodleStaking.withdraw(0, 0, stakeAmount, { from: stakeholder });
+    const receipt = await schnoodleStaking.withdraw(0, stakeAmount, { from: stakeholder });
 
     let withdrawnEvent = receipt.logs.find(l => l.event == 'Withdrawn');
     return [BigInt(withdrawnEvent.args.netReward), BigInt(withdrawnEvent.args.grossReward)];
