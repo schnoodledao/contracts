@@ -15,16 +15,10 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     uint256 private _donationRate;
     uint256 private _sellThreshold;
     TokenMeter private _sellQuota;
-    mapping(address => ReflectTracker) private _reflectTrackers;
 
     struct TokenMeter {
         uint256 blockMetric;
         int256 amount;
-    }
-
-    struct ReflectTracker {
-        TokenMeter checkpointBalance;
-        uint256 deltaBalance;
     }
 
     function initialize(uint256 initialTokens, address serviceAccount) public initializer {
@@ -52,12 +46,10 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     }
 
     function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
-        _captureReflectedBalances(_msgSender(), recipient);
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
         processSwap(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
-        _reflectTrackerCheckpoints(_msgSender(), recipient);
 
         return result;
     }
@@ -71,34 +63,28 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
-        _captureReflectedBalances(sender, recipient);
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
         processSwap(sender, recipient, amount, reflectedAmount, _transferFromReflected);
-        _reflectTrackerCheckpoints(sender, recipient);
 
         return result;
     }
 
     function _mint(address account, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
         super._mint(account, amount, userData, operatorData, requireReceptionAck);
-        _reflectTrackerCheckpoint(account);
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;
-        _reflectTrackerCheckpoint(account);
     }
 
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
-        _captureReflectedBalances(to, from);
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
         processSwap(from, to, amount, reflectedAmount, _sendReflected);
-        _reflectTrackerCheckpoints(to, from);
     }
 
     // Reflection convenience functions
@@ -209,56 +195,6 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function sellQuota() external view returns(TokenMeter memory) {
         return _sellQuota;
-    }
-
-    // Reflect Tracker functions
-
-    function reflectTrackerInfo(address account) external view returns (uint256, uint256) {
-        ReflectTracker memory reflectTracker = _reflectTrackers[account];
-        return (reflectTracker.checkpointBalance.blockMetric, _currentDeltaBalance(account, reflectTracker));
-    }
-
-    function _captureReflectedBalances(address account1, address account2) private {
-        _captureReflectedBalance(account1);
-        _captureReflectedBalance(account2);
-    }
-
-    function _captureReflectedBalance(address account) private {
-        if (account == address(0)) return;
-        ReflectTracker storage reflectTracker = _reflectTrackers[account];
-
-        if (reflectTracker.checkpointBalance.blockMetric == 0) {
-             _resetReflectTracker(account);
-        } else {
-            reflectTracker.deltaBalance = _currentDeltaBalance(account, reflectTracker);
-        }
-    }
-
-    function _currentDeltaBalance(address account, ReflectTracker memory reflectTracker) private view returns(uint256) {
-        return reflectTracker.deltaBalance + balanceOf(account) - uint256(reflectTracker.checkpointBalance.amount);
-    }
-
-    function _reflectTrackerCheckpoints(address account1, address account2) private {
-        _reflectTrackerCheckpoint(account1);
-        _reflectTrackerCheckpoint(account2);
-    }
-
-    function _reflectTrackerCheckpoint(address account) private {
-        if (account == address(0)) return;
-        _reflectTrackers[account].checkpointBalance.amount = int256(balanceOf(account));
-    }
-
-    function resetReflectTracker() public {
-        _resetReflectTracker(_msgSender());
-    }
-
-    function _resetReflectTrackers(address account1, address account2) private {
-        _resetReflectTracker(account1);
-        _resetReflectTracker(account2);
-    }
-
-    function _resetReflectTracker(address account) private {
-        _reflectTrackers[account] = ReflectTracker(TokenMeter(block.number, int256(balanceOf(account))), 0);
     }
 
     event FeeRateChanged(uint256 rate);

@@ -31,7 +31,6 @@ export class Staking extends Component {
       stakingRate: 0,
       sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
-      reflectTrackerInfo: { 'blockNumber': 0, 'deltaBalance': 0 },
       amountToStake: 0,
       vestingBlocks: 1,
       vestingBlocksMax: 0,
@@ -105,7 +104,6 @@ export class Staking extends Component {
       const stakingFundBalance = bigInt(await schnoodle.methods.balanceOf(await schnoodle.methods.stakingFund().call()).call());
 
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
-      const { 0: blockNumber, 1: deltaBalance } = await schnoodle.methods.reflectTrackerInfo(selectedAddress).call();
       const lockedBalance = bigInt(await schnoodleStaking.methods.lockedBalanceOf(selectedAddress).call());
       const unbondingBalance = bigInt(await schnoodleStaking.methods.unbondingBalanceOf(selectedAddress).call());
       const stakeableAmount = balance.subtract(lockedBalance);
@@ -133,7 +131,6 @@ export class Staking extends Component {
         stakingRate,
         sellQuota,
         balance,
-        reflectTrackerInfo: { blockNumber, deltaBalance },
         vestingBlocksMax,
         unbondingBlocksMax,
         lockedBalance,
@@ -430,18 +427,6 @@ export class Staking extends Component {
               <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
                 <div class="card-body my-6 md:my-10 rounded-4xl">
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                    {this.state.reflectTrackerInfo.blockNumber > 0 && (
-                      <div class="stats barkstats">
-                        <div class="stat text-error">
-                          <div class="stat-title font-extrabold">BARK Rewards</div>
-                          <div class="stat-value text-accent">
-                            {this.scaleDownUnits(this.state.reflectTrackerInfo.deltaBalance).toLocaleString()}
-                            <input class="ml-4 max-h-6 xl:max-h-8" type="image" src="../../assets/img/svg/reset-button.svg" alt="Reset" onClick={this.resetReflectTracker} title="Reset" />
-                          </div>
-                          <div class="stat-desc">{token} since block {this.state.reflectTrackerInfo.blockNumber}</div>
-                        </div>
-                      </div>
-                    )}
                   <div class="shadow-sm bottomstats stats">
                     <div class="stat border-t-0">
                       <div class="stat-title">Total Balance</div>
