@@ -4,13 +4,20 @@ import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleStaking from "../contracts/SchnoodleStakingV1.json";
 import getWeb3 from "../getWeb3";
 import debounce from 'lodash.debounce';
+//import Modali, { useModali } from 'modali';
+import { Modal } from 'react-responsive-modal';
+import 'react-responsive-modal/styles.css';
+
 const bigInt = require("big-integer");
 const { Duration } = require("luxon");
 const humanizeDuration = require("humanize-duration");
 
-export class Staking extends Component {
-  static displayName = Staking.name;
+let modalTitle = "";
+let modalText = "";
 
+export class Staking extends Component { 
+  static displayName = Staking.name;
+  
   constructor(props) {
     super(props);
 
@@ -43,7 +50,8 @@ export class Staking extends Component {
       stakeableAmount: 0,
       stakingSummary: [],
       unbondingSummary: [],
-      withdrawAmounts: []
+      withdrawAmounts: [],
+      openModal : false,
     };
 
     this.stakeAll = this.stakeAll.bind(this);
@@ -53,13 +61,15 @@ export class Staking extends Component {
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
 
-    this.updateForecastReward = debounce(this.updateForecastReward, 250);
+    this.updateForecastReward = debounce(this.updateForecastReward, 250);   
   }
 
   async componentDidMount() {
     try {
       const web3 = await getWeb3();
-
+     // const [firstModal, toggleFirstModal] = useModali();
+     // const [secondModal, toggleSecondModal] = useModali();
+     
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
       const schnoodle = new web3.eth.Contract(SchnoodleV7.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleStakingDeployedNetwork = SchnoodleStaking.networks[await web3.eth.net.getId()];
@@ -70,7 +80,7 @@ export class Staking extends Component {
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
-
+    
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
@@ -278,6 +288,107 @@ export class Staking extends Component {
     return reward === '0' ? 0 : Math.floor(reward / amount * 100);
   }
 
+onHelpBlockNumber = e =>{
+    e.preventDefault()
+    modalTitle = "Block Number";
+    modalText = "Enim ut tellus elementum sagittis vitae et. Dolor sed viverra ipsum nunc aliquet bibendum. Morbi tristique senectus et netus et malesuada fames ac turpis. Elit sed vulputate mi sit amet. Amet nulla facilisi morbi tempus iaculis urna id volutpat. Eget arcu dictum varius duis at consectetur. Feugiat nisl pretium fusce id velit ut. Suscipit adipiscing bibendum est ultricies integer quis auctor elit sed. Mattis ullamcorper velit sed ullamcorper morbi tincidunt ornare massa eget. Mi ipsum faucibus vitae aliquet nec ullamcorper sit amet.";
+    this.setState({openModal : true})
+}
+
+onHelpSellQuota = e =>{
+  e.preventDefault()
+  modalTitle = "Sell Quota";
+  modalText = "Lobortis feugiat vivamus at augue. Leo urna molestie at elementum eu facilisis sed odio. Sed viverra tellus in hac habitasse platea dictumst vestibulum. Tristique magna sit amet purus gravida. In aliquam sem fringilla ut morbi tincidunt augue. Faucibus et molestie ac feugiat. Sodales ut eu sem integer vitae. Enim sed faucibus turpis in eu mi bibendum neque. Pellentesque sit amet porttitor eget dolor morbi non arcu risus. Eget duis at tellus at urna condimentum mattis. Vitae tempus quam pellentesque nec nam. Dolor sit amet consectetur adipiscing elit duis tristique sollicitudin nibh.";
+  this.setState({openModal : true})
+}
+
+onHelpStakingFundBalance = e =>{
+  e.preventDefault()
+  modalTitle = "Staking Fund Balance";
+  modalText = "Leo integer malesuada nunc vel risus commodo viverra maecenas accumsan. Diam maecenas ultricies mi eget. Quisque sagittis purus sit amet volutpat consequat mauris nunc. Vitae ultricies leo integer malesuada nunc vel risus. Dictum fusce ut placerat orci nulla pellentesque dignissim enim. Aliquet nec ullamcorper sit amet risus. Donec et odio pellentesque diam. Lacus vel facilisis volutpat est velit egestas. Tellus rutrum tellus pellentesque eu. Id cursus metus aliquam eleifend mi in nulla posuere.";
+  this.setState({openModal : true})
+}
+
+onHelpOperativeFeeRate = e =>{
+  e.preventDefault()
+  modalTitle = "Operative Fee Rate";
+  modalText = "At elementum eu facilisis sed odio. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Sapien eget mi proin sed libero enim. Commodo elit at imperdiet dui accumsan sit amet nulla. Arcu dictum varius duis at consectetur lorem donec massa. Sit amet est placerat in egestas erat. Consectetur adipiscing elit ut aliquam. Et magnis dis parturient montes nascetur ridiculus mus mauris vitae. Imperdiet proin fermentum leo vel orci. Vulputate eu scelerisque felis imperdiet proin fermentum leo. In tellus integer feugiat scelerisque varius morbi. Odio ut sem nulla pharetra diam sit amet nisl. Pellentesque pulvinar pellentesque habitant morbi tristique senectus et netus. Tortor vitae purus faucibus ornare suspendisse sed nisi. Sit amet mauris commodo quis imperdiet massa tincidunt nunc pulvinar.";
+  this.setState({openModal : true})
+}
+
+onHelpEleemosynaryDonationRate = e =>{
+  e.preventDefault()
+  modalTitle = "Eleemosynary Donation Rate";
+  modalText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  this.setState({openModal : true})
+}
+
+onHelpStakingRate = e =>{
+  e.preventDefault()
+  modalTitle = "Staking Rate";
+  modalText = "Lobortis feugiat vivamus at augue. Leo urna molestie at elementum eu facilisis sed odio. Sed viverra tellus in hac habitasse platea dictumst vestibulum. Tristique magna sit amet purus gravida. In aliquam sem fringilla ut morbi tincidunt augue. Faucibus et molestie ac feugiat. Sodales ut eu sem integer vitae. Enim sed faucibus turpis in eu mi bibendum neque. Pellentesque sit amet porttitor eget dolor morbi non arcu risus. Eget duis at tellus at urna condimentum mattis. Vitae tempus quam pellentesque nec nam. Dolor sit amet consectetur adipiscing elit duis tristique sollicitudin nibh.";
+  this.setState({openModal : true})
+}
+
+onHelpTotalBalance = e =>{
+  e.preventDefault()
+  modalTitle = "Total Balance";
+  modalText = "Leo integer malesuada nunc vel risus commodo viverra maecenas accumsan. Diam maecenas ultricies mi eget. Quisque sagittis purus sit amet volutpat consequat mauris nunc. Vitae ultricies leo integer malesuada nunc vel risus. Dictum fusce ut placerat orci nulla pellentesque dignissim enim. Aliquet nec ullamcorper sit amet risus. Donec et odio pellentesque diam. Lacus vel facilisis volutpat est velit egestas. Tellus rutrum tellus pellentesque eu. Id cursus metus aliquam eleifend mi in nulla posuere.";
+  this.setState({openModal : true})
+}
+
+onHelpLockedBalance = e =>{
+  e.preventDefault()
+  modalTitle = "Locked Balance";
+  modalText = "At elementum eu facilisis sed odio. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Sapien eget mi proin sed libero enim. Commodo elit at imperdiet dui accumsan sit amet nulla. Arcu dictum varius duis at consectetur lorem donec massa. Sit amet est placerat in egestas erat. Consectetur adipiscing elit ut aliquam. Et magnis dis parturient montes nascetur ridiculus mus mauris vitae. Imperdiet proin fermentum leo vel orci. Vulputate eu scelerisque felis imperdiet proin fermentum leo. In tellus integer feugiat scelerisque varius morbi. Odio ut sem nulla pharetra diam sit amet nisl. Pellentesque pulvinar pellentesque habitant morbi tristique senectus et netus. Tortor vitae purus faucibus ornare suspendisse sed nisi. Sit amet mauris commodo quis imperdiet massa tincidunt nunc pulvinar.";
+  this.setState({openModal : true})
+}
+
+onHelpStakeableAmount = e =>{
+  e.preventDefault()
+  modalTitle = "Stakeable Amount";
+  modalText = "At elementum eu facilisis sed odio. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Sapien eget mi proin sed libero enim. Commodo elit at imperdiet dui accumsan sit amet nulla. Arcu dictum varius duis at consectetur lorem donec massa. Sit amet est placerat in egestas erat. Consectetur adipiscing elit ut aliquam. Et magnis dis parturient montes nascetur ridiculus mus mauris vitae. Imperdiet proin fermentum leo vel orci. Vulputate eu scelerisque felis imperdiet proin fermentum leo. In tellus integer feugiat scelerisque varius morbi. Odio ut sem nulla pharetra diam sit amet nisl. Pellentesque pulvinar pellentesque habitant morbi tristique senectus et netus. Tortor vitae purus faucibus ornare suspendisse sed nisi. Sit amet mauris commodo quis imperdiet massa tincidunt nunc pulvinar.";
+  this.setState({openModal : true})
+}
+
+onHelpAmount = e =>{
+  e.preventDefault()
+  modalTitle = "Amount";
+  modalText = "Lobortis feugiat vivamus at augue. Leo urna molestie at elementum eu facilisis sed odio. Sed viverra tellus in hac habitasse platea dictumst vestibulum. Tristique magna sit amet purus gravida. In aliquam sem fringilla ut morbi tincidunt augue. Faucibus et molestie ac feugiat. Sodales ut eu sem integer vitae. Enim sed faucibus turpis in eu mi bibendum neque. Pellentesque sit amet porttitor eget dolor morbi non arcu risus. Eget duis at tellus at urna condimentum mattis. Vitae tempus quam pellentesque nec nam. Dolor sit amet consectetur adipiscing elit duis tristique sollicitudin nibh.";
+  this.setState({openModal : true})
+}
+
+onHelpVestingBlocks = e =>{
+  e.preventDefault()
+  modalTitle = "Vesting Blocks";
+  modalText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  this.setState({openModal : true})
+}
+
+onHelpUnbondingBlocks = e =>{
+  e.preventDefault()
+  modalTitle = "Unbonding Blocks";
+  modalText = "Leo integer malesuada nunc vel risus commodo viverra maecenas accumsan. Diam maecenas ultricies mi eget. Quisque sagittis purus sit amet volutpat consequat mauris nunc. Vitae ultricies leo integer malesuada nunc vel risus. Dictum fusce ut placerat orci nulla pellentesque dignissim enim. Aliquet nec ullamcorper sit amet risus. Donec et odio pellentesque diam. Lacus vel facilisis volutpat est velit egestas. Tellus rutrum tellus pellentesque eu. Id cursus metus aliquam eleifend mi in nulla posuere.";
+  this.setState({openModal : true})
+}
+
+onHelpVestForecastReward = e =>{
+  e.preventDefault()
+  modalTitle = "Vest Forecast Reward";
+  modalText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  this.setState({openModal : true})
+}
+
+onHelpEstimatedAPY = e =>{
+  e.preventDefault()
+  modalTitle = "Estimated APY";
+  modalText = "Lobortis feugiat vivamus at augue. Leo urna molestie at elementum eu facilisis sed odio. Sed viverra tellus in hac habitasse platea dictumst vestibulum. Tristique magna sit amet purus gravida. In aliquam sem fringilla ut morbi tincidunt augue. Faucibus et molestie ac feugiat. Sodales ut eu sem integer vitae. Enim sed faucibus turpis in eu mi bibendum neque. Pellentesque sit amet porttitor eget dolor morbi non arcu risus. Eget duis at tellus at urna condimentum mattis. Vitae tempus quam pellentesque nec nam. Dolor sit amet consectetur adipiscing elit duis tristique sollicitudin nibh.";
+  this.setState({openModal : true})
+}
+onCloseModal = ()=>{
+  this.setState({openModal : false})
+}
+
   renderStakingSummaryTable(stakingSummary) {
     return (
       <div role="table" aria-label="Staking Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
@@ -383,24 +494,36 @@ export class Staking extends Component {
         <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
           <div class="text-center px-1 md:px-4 ">
             <div class="text-base-200 w-full ">
-              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>
+              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Staking</h1>    
               <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
                 <span class="block md:hidden text-center">{stakeTokens}<br />{earnTokens}</span>
                 <span class="hidden md:block text-left">{stakeTokens} {earnTokens}</span>
               </p>
               <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">Block Number</div>
+                  <div class="stat-title">Block Number
+                    <svg onClick={this.onHelpBlockNumber} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.state.blockNumber}</div>
                   <div class="stat-desc">&nbsp;</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">Sell Quota</div>
+                  <div class="stat-title">Sell Quota
+                    <svg onClick={this.onHelpSellQuota} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-left inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
                   <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">Staking Fund Balance</div>
+                  <div class="stat-title">Staking Fund Balance
+                    <svg onClick={this.onHelpStakingFundBalance} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-left inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance).toLocaleString()}</div>
                   <div class="stat-desc">{token}</div>
                 </div>
@@ -408,17 +531,29 @@ export class Staking extends Component {
 
               <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">Operative Fee Rate</div>
+                  <div class="stat-title">Operative Fee Rate
+                    <svg onClick={this.onHelpOperativeFeeRate} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-left inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">Eleemosynary Donation Rate</div>
+                  <div class="stat-title">Eleemosynary Donation Rate
+                    <svg onClick={this.onHelpEleemosynaryDonationRate} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-left inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">Staking Rate</div>
+                  <div class="stat-title">Staking Rate
+                  <svg onClick={this.onHelpStakingRate} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-left inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                   <div class="stat-value greenfade">{this.state.stakingRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
@@ -429,17 +564,29 @@ export class Staking extends Component {
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
                   <div class="shadow-sm bottomstats stats">
                     <div class="stat border-t-0">
-                      <div class="stat-title">Total Balance</div>
+                      <div class="stat-title">Total Balance
+                        <svg onClick={this.onHelpTotalBalance} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       <div class="stat-value purplefade">{balance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
                     <div class="stat">
-                      <div class="stat-title">Locked Balance</div>
+                      <div class="stat-title">Locked Balance
+                        <svg onClick={this.onHelpLockedBalance} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       <div class="stat-value purplefade">{lockedBalance.toLocaleString()}</div>
                       <div class="stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
                     </div>
                     <div class="stat">
-                      <div class="stat-title">Stakeable Amount</div>
+                      <div class="stat-title">Stakeable Amount
+                        <svg onClick={this.onHelpStakeableAmount} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       <div class="stat-value purplefade">{stakeableAmount.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
@@ -455,6 +602,9 @@ export class Staking extends Component {
                           <div>
                             <label class="label">
                               <span class="label-text">Amount</span>
+                              <svg onClick={this.onHelpAmount} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
                             </label> 
                             <div class="relative withbutton">
                               <input type="number" min="1" max={stakeableAmount} value={this.state.amountToStake || ''} onChange={this.updateAmountToStake} class="stakeinput" />
@@ -465,6 +615,9 @@ export class Staking extends Component {
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">Vesting Blocks</span>
+                            <svg onClick={this.onHelpVestingBlocks} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                           </label>
                           <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="stakeinput" />
                           <p class="approxLabel">{this.blocksDurationText(this.state.vestingBlocks)}</p>
@@ -472,18 +625,29 @@ export class Staking extends Component {
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">Unbonding Blocks</span>
-                          </label>
+                            <svg onClick={this.onHelpUnbondingBlocks} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                           </label>
                           <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="stakeinput" />
                           <p class="approxLabel">{this.blocksDurationText(this.state.unbondingBlocks)}</p>
                         </div>
                         <div class="shadow-sm bottomstats stats ">
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                            <div class="stat-title">Vest Forecast Reward</div>
+                            <div class="stat-title">Vest Forecast Reward
+                            <svg onClick={this.onHelpVestForecastReward} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            </div>
                             <div class="stat-value text-accent">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
                             <div class="stat-desc">{token}</div>
                           </div>
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                            <div class="stat-title">Estimated APY</div>
+                            <div class="stat-title">Estimated APY
+                            <svg onClick={this.onHelpEstimatedAPY} xmlns="http://www.w3.org/2000/svg" class="border-0 h-4 w-4 text-right inline-block ml-2 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="#f000b8">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            </div>
                             <div class="stat-value text-accent">{this.state.apy}</div>
                             <div class="stat-desc">%</div>
                           </div>
@@ -521,7 +685,22 @@ export class Staking extends Component {
             </div>
           </div>
         </div>
-      </div>
-    );
+        
+        {/* <Modali.Modal {...firstModal}>
+        Hi, I'm the first Modali
+      </Modali.Modal>
+      <Modali.Modal {...secondModal}>
+        And I'm the second Modali
+      </Modali.Modal> */}
+      <div>
+      <Modal open={this.state.openModal} onClose={this.onCloseModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal',}} >
+                    <h1>{modalTitle}</h1>
+                    <p>{modalText}</p>
+                </Modal>
+                </div>
+   </div>
+   );
+   
   }
+  
 }
