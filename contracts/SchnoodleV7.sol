@@ -8,7 +8,6 @@ import "./imports/SchnoodleV7Base.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
 contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
-    uint256 private _version;
     address private _schnoodleStaking;
     address private _stakingFund;
     uint256 private _stakingRate;
@@ -18,8 +17,7 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
     bytes32 public constant STAKING_CONTRACT = keccak256("STAKING_CONTRACT");
 
     function configure(bool testnet, address liquidityToken, address schnoodleStaking) external onlyOwner {
-        require(_version < 7, "Schnoodle: already configured");
-        _version = 7;
+        require(_stakingFund == address(0), "Schnoodle: already configured");
 
         _setupRole(DEFAULT_ADMIN_ROLE, owner());
         _setupRole(LIQUIDITY, liquidityToken);
