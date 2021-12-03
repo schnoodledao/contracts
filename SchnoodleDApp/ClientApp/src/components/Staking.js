@@ -292,7 +292,7 @@ export class Staking extends Component {
   closeHelpModal() {
     this.setState({openHelpModal : false})
   }
-
+  
   renderStakingSummaryTable(stakingSummary) {
     return (
       <div role="table" aria-label="Staking Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
@@ -406,21 +406,21 @@ export class Staking extends Component {
               <div class="stats topstats">
                 <div class="stat">
                   <div class="stat-title">{resources.BLOCK_NUMBER.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.BLOCK_NUMBER)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.blockNumber}</div>
                   <div class="stat-desc">&nbsp;</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">{resources.SELL_QUOTA.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.SELL_QUOTA)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.SELL_QUOTA)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
                   <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">{resources.STAKING_FUND_BALANCE.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKING_FUND_BALANCE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKING_FUND_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.stakingFundBalance).toLocaleString()}</div>
                   <div class="stat-desc">{token}</div>
@@ -430,21 +430,21 @@ export class Staking extends Component {
               <div class="stats topstats">
                 <div class="stat">
                   <div class="stat-title">{resources.OPERATIVE_FEE_RATE.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.OPERATIVE_FEE_RATE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.OPERATIVE_FEE_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">{resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">{resources.STAKING_RATE.TITLE}
-                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKING_RATE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                    <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKING_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.stakingRate / 10}</div>
                   <div class="stat-desc">%</div>
@@ -457,21 +457,21 @@ export class Staking extends Component {
                   <div class="shadow-sm bottomstats stats">
                     <div class="stat border-t-0">
                       <div class="stat-title">{resources.TOTAL_BALANCE.TITLE}
-                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.TOTAL_BALANCE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.TOTAL_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{balance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
                     <div class="stat">
                       <div class="stat-title">{resources.LOCKED_BALANCE.TITLE}
-                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.LOCKED_BALANCE)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.LOCKED_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{lockedBalance.toLocaleString()}</div>
                       <div class="stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
                     </div>
                     <div class="stat">
                       <div class="stat-title">{resources.STAKEABLE_AMOUNT.TITLE}
-                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKEABLE_AMOUNT)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                        <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKEABLE_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{stakeableAmount.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
@@ -488,7 +488,7 @@ export class Staking extends Component {
                           <div>
                             <label class="label">
                               <span class="label-text">{resources.STAKE_AMOUNT.TITLE}
-                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKE_AMOUNT)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.STAKE_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </span>
                             </label>
                             <div class="relative withbutton">
@@ -500,7 +500,7 @@ export class Staking extends Component {
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">{resources.VESTING_BLOCKS.TITLE}
-                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </span>
                           </label>
                           <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="stakeinput" />
@@ -509,7 +509,7 @@ export class Staking extends Component {
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
                             <span class="label-text">{resources.UNBONDING_BLOCKS.TITLE}
-                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </span>
                           </label>
                           <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="stakeinput" />
@@ -518,14 +518,14 @@ export class Staking extends Component {
                         <div class="shadow-sm bottomstats stats ">
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                             <div class="stat-title">{resources.VEST_FORECAST_REWARD.TITLE}
-                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VEST_FORECAST_REWARD)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VEST_FORECAST_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </div>
                             <div class="stat-value text-accent">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
                             <div class="stat-desc">{token}</div>
                           </div>
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                             <div class="stat-title">{resources.ESTIMATED_APY.TITLE}
-                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ESTIMATED_APY)} class="h-5 w-5 inline-block ml-2 cursor-pointer" />
+                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </div>
                             <div class="stat-value text-accent">{this.state.apy}</div>
                             <div class="stat-desc">%</div>

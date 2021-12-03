@@ -73,6 +73,9 @@ fieldset:disabled button {
 .fakebutton {
   height: 37px;
 }
+.minustop {
+  margin-top: -3px;
+}
 
 .stats {
   @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-5;
@@ -374,9 +377,31 @@ TABLE
 }
 .customModal {
   background-color: hsla(var(--b1)/var(--tw-bg-opacity,1)) !important; 
-  max-width: 500px;
+  max-width: calc(50vw - 2rem) !important;
   width: 100%; 
   border-radius: 1rem;
+  padding:2rem !important;
+}
+@media only screen and (max-width: 1023px) {
+  .customModal {
+    max-width: calc(95vw - 2rem) !important;
+  }
+}
+
+.customModal h1 {
+  font-size: 1.5em;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #f000b8;
+}
+.customModal svg {
+  color: #f000b8;
+  fill: #f000b8;
+}
+.react-responsive-modal-closeButton {
+  outline: none;
+  border: 0;
+
 }
 
 @keyframes react-responsive-modal-overlay-in {
