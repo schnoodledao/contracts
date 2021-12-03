@@ -3,7 +3,7 @@
 }
 
 function autovestiplierExplain(insert) {
-  return `Because of the Gamified Dynamic Yield caused by the Autovestiplier, this ${insert} may change significant;y depending on the future activity of current and new stakeholders as well as sellers who fund the staking fund. It is therefore advised that you consider your staking strategy carefully when choosing your vesting blocks and unbonding blocks settings. This is a gamified staking platform unlike any other. The yield may fluctuate right up until you withdraw.`;
+  return `Because of the Gamified Dynamic Yield caused by the Autovestiplier, this ${insert} may change significantly depending on the future activity of current and new stakeholders as well as sellers who fund the staking fund. It is therefore advised that you consider your staking strategy carefully when choosing your vesting blocks and unbonding blocks settings. This is a gamified staking platform unlike any other. The yield may fluctuate right up until you withdraw.`;
 }
 
 export const resources = {
@@ -17,7 +17,7 @@ export const resources = {
   },
   STAKING_FUND_BALANCE: {
     TITLE: 'Staking Fund Balance',
-    INFO: 'The amount of tokens available for distribution as rewards to stakeholders. This is automatically funded by way of a tax on each sell.'
+    INFO: 'The number of tokens available for distribution as rewards to stakeholders. This is automatically funded by way of a tax on each sell.'
   },
   OPERATIVE_FEE_RATE: {
     TITLE: 'Operative Fee Rate',
@@ -41,11 +41,11 @@ export const resources = {
   },
   STAKEABLE_AMOUNT: {
     TITLE: 'Stakeable Amount',
-    INFO: 'The amount of tokens that are available to be staked which is your total balance less your locked balance.'
+    INFO: 'The number of tokens that are available to be staked which is your total balance less your locked balance.'
   },
   STAKE_AMOUNT: {
     TITLE: 'Stake Amount',
-    INFO: 'The amount of tokens you wish to stake.'
+    INFO: 'The number of tokens you wish to stake.'
   },
   VESTING_BLOCKS: {
     TITLE: 'Vesting Blocks',
