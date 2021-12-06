@@ -26,7 +26,7 @@ Execute the following PowerShell script to migrate (and verify) contracts:
 - `rebuild`: Delete all compiled contracts and the network manifest (default is `$false`).
 
 ## Launch Steps
-1. Migrate `Schnoodle`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
+1. Migrate `SchnoodleV1`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
 1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.
 1. [Create a timelock contract](#create-timelock-contract) to lock the full amount of the liquidity token held by the beneficiary wallet.
@@ -41,7 +41,7 @@ Execute the following PowerShell script to migrate (and verify) contracts:
 1. Perform a [contract interaction](#contract-interaction) with `TransparentUpgradeableProxy` to call `changeFeePercent` or `changeEleemosynary`.
 
 ## Upgrade Procedure
-1. Migrate `SchnoodleV2` (`prepareUpgrade`)
+1. Migrate `SchnoodleVX` (`prepareUpgrade`)
 1. Perform a [contract interaction](#contract-interaction) with `ProxyAdmin` to call `upgrade` using `proxy` and `implementation` parameters outputted in step 1.
 
 ## Contract Interaction
