@@ -14,7 +14,7 @@ The Schnoodle yield farming platform, introduced in SchnoodleV7, is unlike any o
 
 ## Automated Superyield System
 
-The Vestiplier uses a highly sophisticated algorithm that calculates the yield farming reward using the weighted average of the product of the vesting blocks and unbonding blocks (the lock product) where the deposit amount is the weight. The delta between the resultant lock product weighted average (LPWA) and any given deposit's lock product value is then used in a logistic formula to form a sigmoid curve which is used to calculate a multiplier between 0 and 1. This algorithm ensures that the sigmoid curve is always centred around a fair weighted lock product value to provide a fair multiplier which is then applied to the gross reward to give a final net reward that the yield farmer receives upon withdrawing their deposit.
+The Vestiplier uses a highly sophisticated algorithm that calculates the yield farming reward using the weighted average of the product of the vesting blocks and unbonding blocks (the lock product) where the deposit amount is the weight. The delta between the resultant lock product weighted average (LPWA) and any given deposit's lock product value is then used in a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function) to form a sigmoid curve which is used to calculate a multiplier between 0 and 1. This algorithm ensures that the sigmoid curve is always centred around a fair weighted lock product value to provide a fair multiplier which is then applied to the gross reward to give a final net reward that the yield farmer receives upon withdrawing their deposit.
 
 The logistic formula is:
 
@@ -36,6 +36,13 @@ The following chart shows a typical example sigmoid curve and the effect on the 
 Although the algorithm sounds complex, the effect of it is quite simple. The more you deposit and the longer you farm, the greater proportion of the farming fund you receive (your gross reward). This is calculated linearly. And the longer you lock your deposit for both before withdrawal (vesting blocks) and after withdrawal (unbonding blocks) the greater the multiplier will be that is applied to your gross reward giving you your net reward. And to ensure that the farming platform is fair to early yield farmers, the calculated multiplier is locked in to a deposit when it is created so that it does not decrease should later farmers choose to lock their deposits for longer and/or use larger deposits resulting in a higher LPWA. Therefore, the APY will not be adversely affected by this.
 
 However, more farmers relative to the farming fund will of course reduce the APY due to the GYI, and vice versa. In other words, more sells causes the farming fund to get bigger which results in all farmers' APYs to increase dynamically. And more deposits causes the farming fund to be more distributed which results in all farmers' APYs to decrease dynamically. This is why it pays to farm for longer as your deposit is aggregated cumulatively on each block by the Autoregulator so that the length of time you've farmed positively affects the proportion of the fund you are rewarded with. This entire set of mechanics and the constant push-pull between sellers and farmers gives rise to the gamified nature of the farming platform where the strongest are rewarded greatly.
+
+{% hint style="info" %}
+The following sources were used to assist in building the Vestiplier algorithm:
+
+* [Some Basics on the Value of S Curves](https://blog.arkieva.com/basics-on-s-curves/)
+* [How To Calculate Weighted Average](https://www.indeed.com/career-advice/career-development/how-to-calculate-weighted-average)
+{% endhint %}
 
 ## ASS Burner
 
