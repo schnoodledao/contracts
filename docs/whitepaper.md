@@ -31,7 +31,7 @@ Copies of this code were then used as the basis of [SAFEMOON](https://www.bscsca
 
 _**So, lemme guess. Neo wanted to kick Morpheus' ass?**_
 
-![Neo dawg vs Morpheus dawg](../.gitbook/assets/neo-vs-morpheus.png)
+![Neo dawg vs Morpheus dawg](.gitbook/assets/neo-vs-morpheus.png)
 
 In analysing this code, Neo noticed that there were numerous inexcusable flaws that simply indicated laziness and haste on the part of the devs. Absolutely no care had been taken to ensure hodlers were given the best deal in terms of gas fees and potential ruggability. There are functions that allow the contract owner to include and exclude addresses from the fee process at will. How is this fair to other hodlers? And the code for SAFEMOON was compiled with Solidity 0.6.12 which was already over 7 months old at the time of launch when Solidity was _already_ at version 0.8.1. This may not sound hugely important, but it takes very little effort to use a more recent version, and this would have afforded some code tweaks that would result in less gas fees for hodlers.
 
