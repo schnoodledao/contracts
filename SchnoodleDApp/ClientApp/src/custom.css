@@ -73,6 +73,7 @@ fieldset:disabled button {
 .fakebutton {
   height: 37px;
 }
+
 .minustop {
   margin-top: -3px;
 }
@@ -98,12 +99,12 @@ fieldset:disabled button {
   @apply uppercase;
 }
 
-.staketitle {
+.summarytitle {
   @apply uppercase;
 }
 
 .topstats .stat-title,
-.staketitle {
+.summarytitle {
   @apply text-secondary font-bold;
 }
 
@@ -128,27 +129,27 @@ fieldset:disabled button {
   @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
 }
 
-.withdrawstake {
+.withdraw {
   @apply input pl-1 md:pl-4 w-full input-bordered text-white !important;
 }
 
 input.withdrawinput {
-  @apply input-secondary withdrawstake text-base xl:text-lg text-left !important;
+  @apply input-secondary withdraw text-base xl:text-lg text-left !important;
 }
 
-.stakeinput {
-  @apply input-accent withdrawstake text-base xl:text-lg text-left;
+.depositinput {
+  @apply input-accent withdraw text-base xl:text-lg text-left;
 }
 
-.withbutton .stakeinput {
+.withbutton .depositinput {
   @apply sm:pr-11 md:pr-16 !important;
 }
 
-.nobutton .stakeinput {
+.nobutton .depositinput {
   @apply pr-2 !important;
 }
 
-.staketable .withdrawinput {
+.summarytable .withdrawinput {
   @apply pr-32 !important;
 }
 

@@ -1,3 +1,4 @@
+// contracts/SchnoodleFarmingV1.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -7,21 +8,21 @@ import "abdk-libraries-solidity/ABDKMath64x64.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
 /// Delivers Lambo posthaste
-contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
+contract SchnoodleFarmingV1 is Initializable, OwnableUpgradeable {
     address private _schnoodle;
-    uint256 _stakeId;
-    mapping(address => Stake[]) private _accountStakes;
+    uint256 _depositId;
+    mapping(address => Deposit[]) private _accountDeposits;
     mapping(address => Unbond[]) private _accountUnbonds;
     mapping(address => uint256) private _balances;
     uint256 private _totalTokens;
     uint256 private _cumulativeTotal;
     uint256 private _checkpointBlock;
-    uint256 private _totalStakeWeight;
+    uint256 private _totalDepositWeight;
 
     // Adjust to change the sigmoid curve of the multiplier
     SigmoidParams private _sigmoidParams;
 
-    struct Stake {
+    struct Deposit {
         uint256 id;
         uint256 amount;
         uint256 blockNumber;
@@ -30,8 +31,8 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         uint256 multiplier;
     }
 
-    struct StakeReward {
-        Stake stake;
+    struct DepositReward {
+        Deposit deposit;
         uint256 reward;
     }
 
@@ -51,27 +52,37 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         _sigmoidParams = SigmoidParams(5, 1);
     }
 
-    /// Stakes the specified amount of tokens for the sender, and adds the details to a stored stake object
-    function addStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
+    /// Deposits the specified amount of tokens for the sender, and adds the details to a stored deposit object
+    function addDeposit(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
         address msgSender = _msgSender();
 
-        require(amount <= balanceOf(msgSender) - lockedBalanceOf(msgSender), "SchnoodleStaking: stake amount exceeds unstaked balance");
+        require(amount <= balanceOf(msgSender) - lockedBalanceOf(msgSender), "SchnoodleFarming: deposit amount exceeds unlocked balance");
 
-        Stake memory stake;
+        Deposit memory deposit;
         uint256 cumulativeTotal;
 
-        // Build the new stake, and update all tracking states to include the new stake
-        (stake, cumulativeTotal, _totalTokens, _totalStakeWeight) = _buildStake(amount, vestingBlocks, unbondingBlocks);
-        _stakeId++;
-        _accountStakes[msgSender].push(stake);
+        // Build the new deposit, and update all tracking states to include the new deposit
+        (deposit, cumulativeTotal, _totalTokens, _totalDepositWeight) = _buildDeposit(amount, vestingBlocks, unbondingBlocks);
+        _depositId++;
+        _accountDeposits[msgSender].push(deposit);
         _cumulativeTotal = cumulativeTotal;
-        _checkpointBlock = stake.blockNumber;
+        _checkpointBlock = deposit.blockNumber;
         _balances[msgSender] += amount;
 
-        emit Staked(msgSender, amount, stake.blockNumber);
+        emit Deposited(msgSender, amount, deposit.blockNumber);
     }
 
-    /// Withdraws the specified amount of tokens from the sender's stake with the specified ID
+    /// Updates the vesting blocks and unbonding blocks of the sender's deposit with the specified ID
+    function updateDeposit(uint256 id, uint256 vestingBlocks, uint256 unbondingBlocks) external {
+        (Deposit storage deposit,,) = _getDeposit(_msgSender(), id);
+        deposit.vestingBlocks = vestingBlocks;
+        deposit.unbondingBlocks = unbondingBlocks;
+        (uint256 multiplier,,) = _getMultiplier(deposit.amount, vestingBlocks, unbondingBlocks);
+        require(multiplier > deposit.multiplier, "SchnoodleFarming: no benefit to update deposit with supplied changes");
+        deposit.multiplier = multiplier;
+    }
+
+    /// Withdraws the specified amount of tokens from the sender's deposit with the specified ID
     function withdraw(uint256 id, uint256 amount) external {
         address msgSender = _msgSender();
         uint256 blockNumber = block.number;
@@ -85,40 +96,31 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
             }
         }
 
-        Stake[] storage stakes = _accountStakes[msgSender];
+        (Deposit storage deposit, Deposit[] storage deposits, uint256 index) = _getDeposit(msgSender, id);
+        require(deposit.amount >= amount, "SchnoodleFarming: cannot withdraw more than deposited");
+        require(deposit.blockNumber + deposit.vestingBlocks < blockNumber, "SchnoodleFarming: cannot withdraw during vesting blocks");
 
-        for (uint256 i = 0; i < stakes.length; i++) {
-            Stake storage stake = stakes[i];
-            if (stake.id == id) {
-                require(stake.amount >= amount, "SchnoodleStaking: cannot withdraw more than staked");
-                require(stake.blockNumber + stake.vestingBlocks < blockNumber, "SchnoodleStaking: cannot withdraw during vesting blocks");
+        (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _getRewardInfo(deposit, amount, blockNumber);
 
-                (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _rewardInfo(stake, amount, blockNumber);
+        // Update all tracking states to remove the withdrawn deposit
+        (_totalTokens, _totalDepositWeight) = _updateTracking(-int256(amount), deposit.vestingBlocks, deposit.unbondingBlocks);
+        _cumulativeTotal = newCumulativeTotal;
+        _checkpointBlock = blockNumber;
+        _balances[msgSender] -= amount;
+        deposit.amount -= amount;
 
-                // Update all tracking states to remove the withdrawn stake
-                (_totalTokens, _totalStakeWeight) = _updateTracking(-int256(amount), stake.vestingBlocks, stake.unbondingBlocks);
-                _cumulativeTotal = newCumulativeTotal;
-                _checkpointBlock = blockNumber;
-                _balances[msgSender] -= amount;
-                stake.amount -= amount;
+        // Start the unbonding procedure for the withdrawn amount
+        unbonds.push(Unbond(amount, blockNumber + deposit.unbondingBlocks));
 
-                // Start the unbonding procedure for the withdrawn amount
-                unbonds.push(Unbond(amount, blockNumber + stake.unbondingBlocks));
-
-                // Remove the stake if it is fully withdrawn by replacing it with the last stake in the array
-                if (stake.amount == 0) {
-                    stakes[i] = stakes[stakes.length - 1];
-                    stakes.pop();
-                }
-
-                stakingReward(msgSender, netReward, grossReward);
-
-                emit Withdrawn(msgSender, id, amount, netReward, grossReward);
-                return;
-            }
+        // Remove the deposit if it is fully withdrawn by replacing it with the last deposit in the array
+        if (deposit.amount == 0) {
+            deposits[index] = deposits[deposits.length - 1];
+            deposits.pop();
         }
 
-        revert("SchnoodleStaking: stake not found");
+        farmingReward(msgSender, netReward, grossReward);
+
+        emit Withdrawn(msgSender, id, amount, netReward, grossReward);
     }
 
     function changeSigmoidParams(uint256 k, uint256 a) external onlyOwner {
@@ -129,39 +131,40 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return _sigmoidParams;
     }
 
-    function reward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external view returns(uint256) {
-        (Stake memory stake, uint256 cumulativeTotal, uint256 totalTokens, uint256 totalStakeWeight) = _buildStake(amount, vestingBlocks, unbondingBlocks);
-        return _reward(stake, stake.blockNumber, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
+    function getReward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external view returns(uint256) {
+        (Deposit memory deposit, uint256 cumulativeTotal, uint256 totalTokens, uint256 totalDepositWeight) = _buildDeposit(amount, vestingBlocks, unbondingBlocks);
+        return _getReward(deposit, rewardBlock, deposit.blockNumber, cumulativeTotal, totalDepositWeight, totalTokens);
     }
 
-    function reward(address account, uint256 index, uint256 rewardBlock) external view returns(uint256) {
-        return _reward(_accountStakes[account][index], rewardBlock);
+    function getReward(address account, uint256 id, uint256 rewardBlock) external view returns(uint256) {
+        (Deposit storage deposit,,) = _getDeposit(account, id);
+        return _getReward(deposit, rewardBlock);
     }
 
-    function _reward(Stake memory stake, uint256 rewardBlock) private view returns(uint256) {
-        return _reward(stake, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
+    function _getReward(Deposit memory deposit, uint256 rewardBlock) private view returns(uint256) {
+        return _getReward(deposit, rewardBlock, _checkpointBlock, _cumulativeTotal, _totalDepositWeight, _totalTokens);
     }
 
-    function _reward(Stake memory stake, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private view returns(uint256) {
-        (uint256 netReward,,) = _rewardInfo(stake, stake.amount, checkpointBlock, rewardBlock, cumulativeTotal, totalStakeWeight, totalTokens);
+    function _getReward(Deposit memory deposit, uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalDepositWeight, uint256 totalTokens) private view returns(uint256) {
+        (uint256 netReward,,) = _getRewardInfo(deposit, deposit.amount, rewardBlock, checkpointBlock, cumulativeTotal, totalDepositWeight, totalTokens);
         return netReward;
     }
 
-    function _rewardInfo(Stake memory stake, uint256 amount, uint256 rewardBlock) private view returns(uint256, uint256, uint256) {
-        return _rewardInfo(stake, amount, _checkpointBlock, rewardBlock, _cumulativeTotal, _totalStakeWeight, _totalTokens);
+    function _getRewardInfo(Deposit memory deposit, uint256 amount, uint256 rewardBlock) private view returns(uint256, uint256, uint256) {
+        return _getRewardInfo(deposit, amount, rewardBlock, _checkpointBlock, _cumulativeTotal, _totalDepositWeight, _totalTokens);
     }
 
-    function _rewardInfo(Stake memory stake, uint256 amount, uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalStakeWeight, uint256 totalTokens) private view returns(uint256, uint256, uint256) {
-        // Calculate the stake amount multiplied across the number of blocks since the start of the stake
-        uint256 cumulativeAmount = amount * (rewardBlock - stake.blockNumber);
+    function _getRewardInfo(Deposit memory deposit, uint256 amount, uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalDepositWeight, uint256 totalTokens) private view returns(uint256, uint256, uint256) {
+        // Calculate the deposit amount multiplied across the number of blocks since the start of the deposit
+        uint256 cumulativeAmount = amount * (rewardBlock - deposit.blockNumber);
 
-        // Get the new cumulative total of all stakes as the current stored value is from the previous staking activity
-        uint256 newCumulativeTotal = _newCumulativeTotal(checkpointBlock, rewardBlock, cumulativeTotal, totalTokens);
+        // Get the new cumulative total of all deposits as the current stored value is from the previous farming activity
+        uint256 newCumulativeTotal = _newCumulativeTotal(rewardBlock, checkpointBlock, cumulativeTotal, totalTokens);
 
-        if (cumulativeAmount > 0 && totalStakeWeight > 0) {
-            // Calculate the reward as a relative proportion of the cumulative total of all holders' stakes, adjusted by the multiplier
-            uint256 grossReward = balanceOf(stakingFund()) * cumulativeAmount / newCumulativeTotal;
-            uint256 netReward = stake.multiplier * grossReward / 1000;
+        if (cumulativeAmount > 0 && totalDepositWeight > 0) {
+            // Calculate the reward as a relative proportion of the cumulative total of all holders' deposits, adjusted by the multiplier
+            uint256 grossReward = balanceOf(getFarmingFund()) * cumulativeAmount / newCumulativeTotal;
+            uint256 netReward = deposit.multiplier * grossReward / 1000;
 
             // The returned new cumulative total should not include the rewarded amount
             return (netReward, grossReward, newCumulativeTotal - cumulativeAmount);
@@ -170,16 +173,35 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return (0, 0, newCumulativeTotal);
     }
 
-    function _buildStake(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns (Stake memory, uint256, uint256, uint256) {
-        require(amount > 0, "SchnoodleStaking: Stake amount must be greater than zero");
-        require(vestingBlocks > 0, "SchnoodleStaking: Vesting blocks must be greater than zero");
-        require(unbondingBlocks > 0, "SchnoodleStaking: Unbonding blocks must be greater than zero");
+    function _buildDeposit(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns (Deposit memory, uint256, uint256, uint256) {
+        (uint256 multiplier, uint256 totalTokens, uint256 totalDepositWeight) = _getMultiplier(amount, vestingBlocks, unbondingBlocks);
+        uint256 blockNumber = block.number;
+        return (Deposit(_depositId, amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _newCumulativeTotal(blockNumber), totalTokens, totalDepositWeight);
+    }
 
-        (uint256 totalTokens, uint256 totalStakeWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
-        uint256 lockProductWeightedAverage = totalStakeWeight / totalTokens;
+    function _getDeposit(address account, uint256 id) private view returns(Deposit storage, Deposit[] storage, uint256) {
+        Deposit[] storage deposits = _accountDeposits[account];
 
-        // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + e⁻ˣ) where x is the stake's lock product delta from the weighted average
-        int128 x = ABDKMath64x64.mul(
+        for (uint256 i = 0; i < deposits.length; i++) {
+            Deposit storage deposit = deposits[i];
+            if (deposit.id == id) {
+                return (deposit, deposits, i);
+            }
+        }
+
+        revert("SchnoodleFarming: deposit not found");
+    }
+
+    function _getMultiplier(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256, uint256) {
+        require(amount > 0, "SchnoodleFarming: deposit amount must be greater than zero");
+        require(vestingBlocks > 0, "SchnoodleFarming: vesting blocks must be greater than zero");
+        require(unbondingBlocks > 0, "SchnoodleFarming: unbonding blocks must be greater than zero");
+
+        (uint256 totalTokens, uint256 totalDepositWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
+        uint256 lockProductWeightedAverage = totalDepositWeight / totalTokens;
+
+        // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + eᶻ)ᵃ where z = -k₀(x - x₀)
+        int128 z = ABDKMath64x64.mul(
             ABDKMath64x64.div(
                 ABDKMath64x64.fromInt(-int256(_sigmoidParams.k)),
                 ABDKMath64x64.fromUInt(lockProductWeightedAverage)
@@ -193,38 +215,37 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
                 ABDKMath64x64.fromUInt(1000),
                 ABDKMath64x64.div(
                     one,
-                    ABDKMath64x64.add(
-                        one,
-                        ABDKMath64x64.pow(
-                            ABDKMath64x64.exp(x),
-                            _sigmoidParams.a
-                        )
+                    ABDKMath64x64.pow(
+                        ABDKMath64x64.add(
+                            one,
+                            ABDKMath64x64.exp(z)
+                        ),
+                        _sigmoidParams.a
                     )
                 )
             )
         );
 
-        uint256 blockNumber = block.number;
-        return (Stake(_stakeId, amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _newCumulativeTotal(blockNumber), totalTokens, totalStakeWeight);
+        return (multiplier, totalTokens, totalDepositWeight);
     }
 
     function _newCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
-        return _newCumulativeTotal(_checkpointBlock, rewardBlock, _cumulativeTotal, _totalTokens);
+        return _newCumulativeTotal(rewardBlock, _checkpointBlock, _cumulativeTotal, _totalTokens);
     }
 
-    function _newCumulativeTotal(uint256 checkpointBlock, uint256 rewardBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
-        // Add the total of all stakes multiplied across all blocks since the previous checkpoint calculation to the cumulative total
+    function _newCumulativeTotal(uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
+        // Add the total of all deposits multiplied across all blocks since the previous checkpoint calculation to the cumulative total
         return cumulativeTotal + totalTokens * (rewardBlock - checkpointBlock);
     }
 
     function _updateTracking(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256) {
         return (
             uint256(int256(_totalTokens) + amountDelta), // Update total tokens
-            uint256(int256(_totalStakeWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks)) // Update total stake weight
+            uint256(int256(_totalDepositWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks)) // Update total deposit weight
         );
     }
 
-    function stakedBalanceOf(address account) public view returns(uint256) {
+    function depositedBalanceOf(address account) public view returns(uint256) {
         return _balances[account];
     }
 
@@ -244,29 +265,29 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
     }
 
     function lockedBalanceOf(address account) public view returns (uint256) {
-        return unbondingBalanceOf(account) + stakedBalanceOf(account);
+        return unbondingBalanceOf(account) + depositedBalanceOf(account);
     }
 
-    function stakingSummary(address account) public view returns(StakeReward[] memory) {
-        Stake[] storage stakes = _accountStakes[account];
-        StakeReward[] memory stakeRewards = new StakeReward[](stakes.length);
+    function getFarmingSummary(address account) public view returns(DepositReward[] memory) {
+        Deposit[] storage deposits = _accountDeposits[account];
+        DepositReward[] memory depositRewards = new DepositReward[](deposits.length);
         uint256 rewardBlock = block.number;
 
-        for (uint256 i = 0; i < stakes.length; i++) {
-            stakeRewards[i] = StakeReward(stakes[i], _reward(stakes[i], rewardBlock));
+        for (uint256 i = 0; i < deposits.length; i++) {
+            depositRewards[i] = DepositReward(deposits[i], _getReward(deposits[i], rewardBlock));
         }
 
-        return stakeRewards;
+        return depositRewards;
     }
 
-    function unbondingSummary(address account) public view returns(Unbond[] memory) {
+    function getUnbondingSummary(address account) public view returns(Unbond[] memory) {
         return _accountUnbonds[account];
     }
 
     // Calls to the Schnoodle proxy contract
 
-    function stakingFund() private view returns (address) {
-        (bool success, bytes memory result) = _schnoodle.staticcall(abi.encodeWithSignature("stakingFund()"));
+    function getFarmingFund() private view returns (address) {
+        (bool success, bytes memory result) = _schnoodle.staticcall(abi.encodeWithSignature("getFarmingFund()"));
         assert(success);
         return abi.decode(result, (address));
     }
@@ -277,14 +298,14 @@ contract SchnoodleStakingV1 is Initializable, OwnableUpgradeable {
         return abi.decode(result, (uint256));
     }
 
-    function stakingReward(address account, uint256 netReward, uint256 grossReward) private {
-        (bool success,) = _schnoodle.call(abi.encodeWithSignature("stakingReward(address,uint256,uint256)", account, netReward, grossReward));
+    function farmingReward(address account, uint256 netReward, uint256 grossReward) private {
+        (bool success,) = _schnoodle.call(abi.encodeWithSignature("farmingReward(address,uint256,uint256)", account, netReward, grossReward));
         assert(success);
     }
 
     // Events
 
-    event Staked(address indexed account, uint256 amount, uint256 blockNumber);
+    event Deposited(address indexed account, uint256 amount, uint256 blockNumber);
 
     event Withdrawn(address indexed account, uint256 id, uint256 amount, uint256 netReward, uint256 grossReward);
 }

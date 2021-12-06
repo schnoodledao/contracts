@@ -9,12 +9,13 @@ module.exports = async function main(callback) {
     const SchnoodleV1 = artifacts.require("SchnoodleV1");
     const SchnoodleV7 = artifacts.require("SchnoodleV7");
     const schnoodle = new SchnoodleV7((await SchnoodleV1.deployed()).address);
+    const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
     
-    await schnoodle.changeStakingRate(40);
-    await schnoodle.changeSellThreshold(BigInt(1 * 10 ** 9) * BigInt(10 ** 18));
+    await schnoodle.changeSowRate(40);
+    await schnoodle.changeSellThresholdDetails(BigInt(1 * 10 ** 9) * decimalsFactor, 6);
 
-    // Populate the staking fund for development test purposes
-    await schnoodle.transfer(await schnoodle.stakingFund(), BigInt(400 * 10 ** 9) * BigInt(10 ** 18));
+    // Populate the farming fund for development test purposes
+    await schnoodle.transfer(await schnoodle.getFarmingFund(), BigInt(400 * 10 ** 9) * decimalsFactor);
 
     // Populate all accounts with some tokens from the service account
     for (const account of accounts) {

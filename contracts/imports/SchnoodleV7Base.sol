@@ -11,10 +11,11 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     uint256 private constant MAX = ~uint256(0);
     uint256 private _totalSupply;
     uint256 private _feeRate;
-    address private _eleemosynary;
+    address private _eleemosynaryAccount;
     uint256 private _donationRate;
     uint256 private _sellThreshold;
     TokenMeter private _sellQuota;
+    uint256 private _rateEscalator;
 
     struct TokenMeter {
         uint256 blockMetric;
@@ -29,6 +30,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function configure(bool testnet) internal onlyOwner {
         _feeRate = 40;
+        _rateEscalator = 6;
 
         if (testnet) {
             _sellThreshold = 10 ** 9 * 10 ** decimals();
@@ -142,7 +144,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
         emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
 
-        payFund(to, _eleemosynary, amount, _donationRate, transferCallback);
+        payFund(to, _eleemosynaryAccount, amount, _donationRate, transferCallback);
     }
 
     function payFund(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
@@ -160,7 +162,7 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         emit FeeRateChanged(rate);
     }
 
-    function feeRate() external view returns(uint256) {
+    function getFeeRate() external view returns(uint256) {
         return _feeRate;
     }
 
@@ -168,40 +170,41 @@ abstract contract SchnoodleV7Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         // Increase the fee linearly when the sell quota is negative (more daily sells than buys including the predefined threshold)
         if (_sellThreshold > 0 && _sellQuota.amount < 0)
         {
-            return _feeRate + _feeRate * 3 * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellThreshold) / _sellThreshold;
+            return _feeRate + _feeRate * _rateEscalator * MathUpgradeable.min(uint256(-_sellQuota.amount), _sellThreshold) / _sellThreshold;
         }
 
         return _feeRate;
     }
 
-    function changeEleemosynary(address account, uint256 rate) external onlyOwner {
-        _eleemosynary = account;
-        _donationRate = rate;
-        emit EleemosynaryChanged(account, rate);
+    function changeEleemosynaryDetails(address eleemosynaryAccount, uint256 donationRate) external onlyOwner {
+        _eleemosynaryAccount = eleemosynaryAccount;
+        _donationRate = donationRate;
+        emit EleemosynaryDetailsChanged(eleemosynaryAccount, donationRate);
     }
 
-    function eleemosynary() external view returns(address, uint256) {
-        return (_eleemosynary, _donationRate);
+    function getEleemosynaryDetails() external view returns(address, uint256) {
+        return (_eleemosynaryAccount, _donationRate);
     }
 
-    function changeSellThreshold(uint256 threshold) external onlyOwner {
-        _sellThreshold = threshold;
-        emit SellThresholdChanged(threshold);
+    function changeSellThresholdDetails(uint256 sellThreshold, uint256 rateEscalator) external onlyOwner {
+        _sellThreshold = sellThreshold;
+        _rateEscalator = rateEscalator;
+        emit SellThresholdDetailsChanged(sellThreshold, rateEscalator);
     }
 
-    function sellThreshold() external view returns(uint256) {
-        return _sellThreshold;
+    function getSellThresholdDetails() external view returns(uint256, uint256) {
+        return (_sellThreshold, _rateEscalator);
     }
 
-    function sellQuota() external view returns(TokenMeter memory) {
+    function getSellQuota() external view returns(TokenMeter memory) {
         return _sellQuota;
     }
 
     event FeeRateChanged(uint256 rate);
 
-    event EleemosynaryChanged(address indexed account, uint256 rate);
+    event EleemosynaryDetailsChanged(address indexed eleemosynaryAccount, uint256 donationRate);
 
-    event SellThresholdChanged(uint256 threshold);
+    event SellThresholdDetailsChanged(uint256 sellThreshold, uint256 rateEscalator);
 
     event SellQuotaChanged(uint256 blockTimestamp, int256 amount);
 }
