@@ -8,7 +8,7 @@ The Schnoodle yield farming platform, introduced in SchnoodleV7, is unlike any o
 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
 * **Vestiplier:** This is a function of the deposit amounts, vesting blocks and unbonding blocks of all yield farmers which is used to calculate a multiplier based on a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function).
-* **Gamified Yield Incentivator (GYI):** This is the sister functionality of the Gamified HODL Incentivator (GHI) that is part of the Price Support Mechanism (PSM). It is a mechanism whereby the farming fund that is used to reward yield farmers is effectively supplied from a 4% fee on all sells.
+* **Gamified Yield Incentivator (GYI):** This is the sister functionality of the Gamified HODL Incentivator (GHI) that is part of the Price Support Mechanism (PSM). It is a mechanism whereby the farming fund that is used to reward yield farmers is effectively supplied from a 4% fee (the sow rate) on all sells.
 
 ![NFP Components](../.gitbook/assets/nfp-components.svg)
 
