@@ -26,9 +26,9 @@ The effect of the SSQ is that all sell swaps identified by the SSD incur transfe
 
 ## Gamified HODL Incentivator
 
-During periods of extreme sell activity (when the sell quota falls below zero), the Gamified HODL Incentivator (GHI) algorithm activates. At this point, the transfer fee escalates linearly with the sell quota to 4x the BFR at 2x the sell threshold at which point it is capped. Therefore, as the sell quota becomes more negative, the transfer fee increases. Conversely, as the sell quota becomes less negative, the transfer fee decreases. So, in theory, buys within a capture period after a sell-off could return the transfer fee to the BFR again. The transfer fee that applies at any point is called the operative fee rate (OFR). The chart below shows the GHI in action.
+During periods of extreme sell activity (when the sell quota falls below zero), the Gamified HODL Incentivator (GHI) algorithm activates. At this point, the transfer fee escalates linearly with the sell quota by a rate escalator factor (currently adds 6x the BFR) at 2x the sell threshold at which point it is capped. Therefore, as the sell quota becomes more negative, the transfer fee increases. Conversely, as the sell quota becomes less negative, the transfer fee decreases. So, in theory, buys within a capture period after a sell-off could return the transfer fee to the BFR again. The transfer fee that applies at any point is called the operative fee rate (OFR). The chart below shows the GHI in action.
 
-![](../.gitbook/assets/psm-chart.svg)
+![Effect of GHI and sell threshold on operative fee rate](../.gitbook/assets/psm-chart.svg)
 
 If the GHI is activated and the OFR increases, hodlers wanting to sell have three options:
 
