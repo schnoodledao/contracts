@@ -6,4 +6,4 @@
 ## 📚 Features
 
 * [💰 Price Support Mechanism](features/psm.md)
-* [🏆 Neoteric Farming Platform](features/nsp.md)
+* [🏆 Neoteric Farming Platform](features/nfp.md)

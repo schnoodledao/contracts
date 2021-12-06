@@ -1,3 +1,7 @@
+---
+coverY: 0
+---
+
 # 🏆 Neoteric Farming Platform
 
 The Schnoodle yield farming platform, introduced in SchnoodleV7, is unlike any other yield farming platform in existence which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:

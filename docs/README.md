@@ -1,10 +1,15 @@
 ---
 description: Introduction to Schnoodle
+coverY: 0
 ---
 
 # 🐶 Schnoodle
 
-On this page, you can find a qualitative introduction to Schnoodle, but for the fundamental facts and technical explanation of what Schnoodle is made up of, please read our detailed [whitepaper](whitepaper.md).
+On this page, you can find a qualitative introduction to Schnoodle, but for the fundamental facts and technical explanation of what Schnoodle is made up of, please read our detailed whitepaper.
+
+{% content-ref url="whitepaper.md" %}
+[whitepaper.md](whitepaper.md)
+{% endcontent-ref %}
 
 ## Why is Schnoodle so Special?
 

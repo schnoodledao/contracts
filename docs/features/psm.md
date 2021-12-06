@@ -1,3 +1,7 @@
+---
+coverY: 0
+---
+
 # 💰 Price Support Mechanism
 
 The Price Support Mechanism (PSM) feature was introduced in SchnoodleV6 consisting of three subcomponents that work together to provide algorithmic resistance to major drops in price caused by sudden unexpected and external market conditions, or even ungraceful exits by whales.
