@@ -1,7 +1,7 @@
 // test/Schnoodle.test.js
 
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
-const [ serviceAccount, eleemosynary ] = accounts;
+const [ serviceAccount, eleemosynaryAccount ] = accounts;
 const { BN, singletons, time } = require('@openzeppelin/test-helpers');
 
 const { testContracts } = require(`../migrations-config.develop.js`);
@@ -14,7 +14,7 @@ const truffleAssert = require('truffle-assertions');
 
 const chance = new Chance();
 let schnoodle;
-let schnoodleStaking;
+let schnoodleFarming;
 let initialTokens;
 
 const data = web3.utils.sha3(chance.string());
@@ -24,14 +24,14 @@ beforeEach(async function () {
 
   await singletons.ERC1820Registry(serviceAccount);
   const Schnoodle = contract.fromArtifact(testContracts.schnoodle);
-  const SchnoodleStaking = contract.fromArtifact(testContracts.schnoodleStaking);
+  const SchnoodleFarming = contract.fromArtifact(testContracts.schnoodleFarming);
 
   schnoodle = await Schnoodle.new();
   await schnoodle.methods['initialize(uint256,address)'](initialTokens, serviceAccount, { from: serviceAccount });
 
-  schnoodleStaking = await SchnoodleStaking.new();
-  await schnoodleStaking.initialize(schnoodle.address);
-  await schnoodle.configure(true, serviceAccount, schnoodleStaking.address, { from: serviceAccount });
+  schnoodleFarming = await SchnoodleFarming.new();
+  await schnoodleFarming.initialize(schnoodle.address);
+  await schnoodle.configure(true, serviceAccount, schnoodleFarming.address, { from: serviceAccount });
 });
 
 describe('Balance', () => {
@@ -48,20 +48,20 @@ describe('Balance', () => {
   });
 });
 
-describe("Burning", () => {
-  it("should burn tokens decreasing the account's balance and total supply by the same amounts", async () => {
+describe('Burning', () => {
+  it('should burn tokens decreasing the account\'s balance and total supply by the same amounts', async () => {
     await _testBurning(BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))));
   });
 
-  it("should burn all tokens reducing account's balance and total supply to zero", async () => {
+  it('should burn all tokens reducing account\'s balance and total supply to zero', async () => {
     await _testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)));
-    assert.equal(await schnoodle.balanceOf(serviceAccount), 0, "Total supply wasn't reduced to zero by burning");
+    assert.equal(await schnoodle.balanceOf(serviceAccount), 0, 'Total supply wasn\'t reduced to zero by burning');
   });
 
-  it("should revert on attempt to burn more tokens than are available", async () => {
+  it('should revert on attempt to burn more tokens than are available', async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
     await schnoodle.burn(1, data, { from: serviceAccount });
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), "ERC777: burn amount exceeds balance");
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), 'ERC777: burn amount exceeds balance');
   });
 
   async function _testBurning(amount) {
@@ -71,10 +71,10 @@ describe("Burning", () => {
     await schnoodle.burn(amount, data, { from: serviceAccount });
 
     const newTotalSupply = BigInt(await schnoodle.totalSupply());
-    assert.equal(newTotalSupply, totalSupply - amount, "Total supply wasn't affected correctly by burning");
+    assert.equal(newTotalSupply, totalSupply - amount, 'Total supply wasn\'t affected correctly by burning');
 
     const newBalance = BigInt(await schnoodle.balanceOf(serviceAccount));
-    assert.equal(newBalance, balance - amount, "Service account wasn't affected correctly by burning");
+    assert.equal(newBalance, balance - amount, 'Service account wasn\'t affected correctly by burning');
   }
 });
 
@@ -85,16 +85,16 @@ describe('Transfer', () => {
   let recipient;
   let feeRate;
   let donationRate;
-  let stakingRate;
+  let sowRate;
 
   beforeEach(async function () {
     feeRate = chance.integer({ min: 10, max: 200 });
     donationRate = chance.integer({ min: 10, max: 200 });
-    stakingRate = chance.integer({ min: 10, max: 200 });
+    sowRate = chance.integer({ min: 10, max: 200 });
 
     await schnoodle.changeFeeRate(feeRate, { from: serviceAccount });
-    await schnoodle.changeEleemosynary(eleemosynary, donationRate, { from: serviceAccount });
-    await schnoodle.changeStakingRate(stakingRate, { from: serviceAccount });
+    await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate, { from: serviceAccount });
+    await schnoodle.changeSowRate(sowRate, { from: serviceAccount });
     await _populateAccounts();
 
     amounts = {};
@@ -103,7 +103,7 @@ describe('Transfer', () => {
     }
 
     // Randomly pick different sender and recipient accounts for performing the transfer test
-    senderCandidates = accounts.filter(a => a != eleemosynary);
+    senderCandidates = accounts.filter(a => a != eleemosynaryAccount);
     sender = chance.pickone(senderCandidates);
     recipient = chance.pickone(senderCandidates.filter(a => a != sender));
 
@@ -161,16 +161,16 @@ describe('Transfer', () => {
     for (const account of accounts) {
       const oldAmount = amounts[account];
 
-      // Determine the rate change from the old amount depending on whether the account is the sender (down), recipient (up), eleemosynary (up) or other (zero)
+      // Determine the rate change from the old amount depending on whether the account is the sender (down), recipient (up), eleemosynary account (up) or other (zero)
       const deltaRate = account == sender
         ? -1000
         : (account == recipient
-          ? 1000 - feeRate - donationRate - stakingRate
-          : (account == eleemosynary
+          ? 1000 - feeRate - donationRate - sowRate
+          : (account == eleemosynaryAccount
             ? donationRate
             : 0));
 
-      // The old amount is adjusted by a fraction of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary or other)
+      // The old amount is adjusted by a fraction of the transfer amount depending on the account role in the transfer (sender, recipient, eleemosynary account or other)
       const baseBalance = oldAmount + transferAmount * BigInt(deltaRate) / 1000n;
 
       // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
@@ -178,119 +178,104 @@ describe('Transfer', () => {
 
       totalBalance += newBalance;
 
-      const accountRole = account == sender ? 'sender' : (account == recipient ? 'recipient' : (account == eleemosynary ? 'eleemosynary' : ''));
+      const accountRole = account == sender ? 'sender' : (account == recipient ? 'recipient' : (account == eleemosynaryAccount ? 'eleemosynary' : ''));
       const accountIdentity = `${account}${accountRole == '' ? '' : (` (${accountRole})`)}`;
       assert.isTrue(newBalance >= baseBalance, `Account ${accountIdentity} balance incorrect after transfer`);
-
-      // Check that fee distribution took place on all accounts but those involved in the transfer
-      if (account != sender && account != recipient) {
-        const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(account);
-        assert.isTrue(BigInt(deltaBalance) > 0n, `Account ${accountIdentity} delta balance is zero`);
-      }
     }
 
     assert.isTrue(totalBalance - BigInt(await schnoodle.totalSupply()) < 1, 'Total of all balances doesn\'t match total supply');
   }
 });
 
-describe('Staking', () => {
-  let stakeholder;
-  let stakeAmount;
+describe('Yield Farming', () => {
+  let farmer;
+  let depositAmount;
   let vestingBlocks;
   let unbondingBlocks;
-  let stakingFund;
-  let stakeholderStartBalance;
-  let stakingFundStartBalance;
+  let farmingFund;
+  let farmerStartBalance;
+  let farmingFundStartBalance;
 
   beforeEach(async function () {
-    await schnoodle.changeStakingRate(chance.integer({ min: 10, max: 200 }), { from: serviceAccount });
+    await schnoodle.changeSowRate(chance.integer({ min: 10, max: 200 }), { from: serviceAccount });
 
     await _populateAccounts();
-    stakingFund = await schnoodle.stakingFund();
-    await schnoodle.transfer(stakingFund, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))), { from: serviceAccount });
-    stakeholder = chance.pickone(accounts);
-    stakeAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeholder))));
+    farmingFund = await schnoodle.getFarmingFund();
+    await schnoodle.transfer(farmingFund, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))), { from: serviceAccount });
+    farmer = chance.pickone(accounts);
+    depositAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(farmer))));
     vestingBlocks = chance.integer({ min: 1, max: 20 });
     unbondingBlocks = chance.integer({ min: 1, max: 20 });
-    stakeholderStartBalance = BigInt(await schnoodle.balanceOf(stakeholder));
-    stakingFundStartBalance = BigInt(await schnoodle.balanceOf(stakingFund));
+    farmerStartBalance = BigInt(await schnoodle.balanceOf(farmer));
+    farmingFundStartBalance = BigInt(await schnoodle.balanceOf(farmingFund));
   });
 
-  it('should increase the stakeholder\'s balance by a nonzero reward when a stake with finite vesting blocks and unbonding blocks is withdrawn', async() => {
-    [netReward, grossReward] = await addStakeAndWithdraw(vestingBlocks, unbondingBlocks);
+  it('should increase the yield farmer\'s balance by a nonzero reward when a deposit with finite vesting blocks and unbonding blocks is withdrawn', async() => {
+    [netReward, grossReward] = await addDepositAndWithdraw(vestingBlocks, unbondingBlocks);
 
-    assert.isTrue(netReward > 0n && grossReward > 0n, 'Staking reward value is not positive');
-    assert.equal(BigInt(await schnoodle.balanceOf(stakeholder)), stakeholderStartBalance + netReward, 'Stakeholder balance wasn\'t increased by the net reward amount');
-    assert.equal(BigInt(await schnoodle.balanceOf(stakingFund)), stakingFundStartBalance - grossReward, 'Staking fund wasn\'t reduced by the gross reward amount');
+    assert.isTrue(netReward > 0n && grossReward > 0n, 'Farming reward value is not positive');
+    assert.equal(BigInt(await schnoodle.balanceOf(farmer)), farmerStartBalance + netReward, 'Yield farmer balance wasn\'t increased by the net reward amount');
+    assert.equal(BigInt(await schnoodle.balanceOf(farmingFund)), farmingFundStartBalance - grossReward, 'Farming fund wasn\'t reduced by the gross reward amount');
   });
 
-  it('should revert on attempt to stake with zero stake amount', async() => {
-    await truffleAssert.reverts(schnoodleStaking.addStake(0, vestingBlocks, unbondingBlocks, { from: stakeholder }), "SchnoodleStaking: Stake amount must be greater than zero");
+  it('should increase the reward when the lock on a deposit is increased', async() => {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    const rewardBlock = await web3.eth.getBlockNumber() + vestingBlocks;
+    const initialReward = BigInt(await schnoodleFarming.getReward(farmer, 0, rewardBlock));
+    await schnoodleFarming.updateDeposit(0, vestingBlocks + 1, unbondingBlocks + 1, { from: farmer });
+    const updatedReward = BigInt(await schnoodleFarming.getReward(farmer, 0, rewardBlock));
+    assert.isTrue(updatedReward > initialReward, 'Increasing lock on deposit did not increase the reward');
   });
 
-  it('should revert on attempt to stake with zero vesting blocks', async() => {
-    await truffleAssert.reverts(schnoodleStaking.addStake(stakeAmount, 0, unbondingBlocks, { from: stakeholder }), "SchnoodleStaking: Vesting blocks must be greater than zero");
+  it('should revert when the lock on a deposit is updated with no increase', async() => {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    await truffleAssert.reverts(schnoodleFarming.updateDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: no benefit to update deposit with supplied changes');
   });
 
-  it('should revert on attempt to stake with zero unbonding blocks', async() => {
-    await truffleAssert.reverts(schnoodleStaking.addStake(stakeAmount, vestingBlocks, 0, { from: stakeholder }), "SchnoodleStaking: Unbonding blocks must be greater than zero");
+  it('should revert on attempt to deposit with zero deposit amount', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount must be greater than zero');
+  });
+
+  it('should revert on attempt to deposit with zero vesting blocks', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, 0, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: vesting blocks must be greater than zero');
+  });
+
+  it('should revert on attempt to deposit with zero unbonding blocks', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, vestingBlocks, 0, { from: farmer }), 'SchnoodleFarming: unbonding blocks must be greater than zero');
   });
 
   it('should revert on attempt to withdraw during vesting blocks', async() => {
-    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
-    await truffleAssert.reverts(schnoodleStaking.withdraw(0, stakeAmount, { from: stakeholder }), "SchnoodleStaking: cannot withdraw during vesting blocks");
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    await truffleAssert.reverts(schnoodleFarming.withdraw(0, depositAmount, { from: farmer }), 'SchnoodleFarming: cannot withdraw during vesting blocks');
   });
 
-  it('should revert on attempt to stake more tokens than are unstaked', async() => {
-    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
-    const additionalStake = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + 1n, stakeholderStartBalance));
-    await truffleAssert.reverts(schnoodleStaking.addStake(additionalStake, vestingBlocks, unbondingBlocks, { from: stakeholder }), "SchnoodleStaking: stake amount exceeds unstaked balance");
+  it('should revert on attempt to deposit more tokens than are unlocked', async() => {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    const additionalDeposit = BigInt(bigInt.randBetween(farmerStartBalance - depositAmount + 1n, farmerStartBalance));
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(additionalDeposit, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount exceeds unlocked balance');
   });
 
-  it('should revert on attempt to transfer more tokens than are unstaked', async() => {
-    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
-    const transferAmount = BigInt(bigInt.randBetween(stakeholderStartBalance - stakeAmount + 1n, stakeholderStartBalance));
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: stakeholder }), "Schnoodle: transfer amount exceeds unstaked balance");
+  it('should revert on attempt to transfer more tokens than are unlocked', async() => {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    const transferAmount = BigInt(bigInt.randBetween(farmerStartBalance - depositAmount + 1n, farmerStartBalance));
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: farmer }), 'Schnoodle: transfer amount exceeds unlocked balance');
   });
 
-  it('should revert on attempt to transfer more tokens than are available including staked', async() => {
-    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(stakeholderStartBalance + 1n), { from: stakeholder }), "ERC777: transfer amount exceeds balance");
+  it('should revert on attempt to transfer more tokens than are available including locked', async() => {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(farmerStartBalance + 1n), { from: farmer }), 'ERC777: transfer amount exceeds balance');
   });
 
-  async function addStakeAndWithdraw(vestingBlocks, unbondingBlocks) {
-    await schnoodleStaking.addStake(stakeAmount, vestingBlocks, unbondingBlocks, { from: stakeholder });
+  async function addDepositAndWithdraw(vestingBlocks, unbondingBlocks) {
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
 
     Array.from({length: vestingBlocks}, async () => await time.advanceBlock());
 
-    const receipt = await schnoodleStaking.withdraw(0, stakeAmount, { from: stakeholder });
+    const receipt = await schnoodleFarming.withdraw(0, depositAmount, { from: farmer });
 
     let withdrawnEvent = receipt.logs.find(l => l.event == 'Withdrawn');
     return [BigInt(withdrawnEvent.args.netReward), BigInt(withdrawnEvent.args.grossReward)];
   }
-});
-
-describe('Reflect Tracker', () => {
-  let sender;
-
-  beforeEach(async function () {
-    await _populateAccounts();
-
-    sender = chance.pickone(accounts);
-    recipient = chance.pickone(accounts.filter(a => a != sender));
-  });
-
-  it('should have a delta balance equal to zero given no fee rate', async() => {
-    const {1: deltaBalance} = await schnoodle.reflectTrackerInfo(sender);
-    assert.equal(BigInt(deltaBalance), 0n, 'Delta balance is not equal to zero');
-  });
-
-  it('should have a higher block number after a reset', async() => {
-    const {0: blockNumberBeforeReset} = await schnoodle.reflectTrackerInfo(sender);
-    await schnoodle.resetReflectTracker({ from: sender });
-    const {0: blockNumberAfterReset} = await schnoodle.reflectTrackerInfo(sender);
-    assert.isAbove(parseInt(blockNumberAfterReset), parseInt(blockNumberBeforeReset), 'Block number was not reset');
-  });
 });
 
 async function _populateAccounts() {

@@ -10,7 +10,7 @@ module.exports = async function main(callback) {
   try {
     const accounts = await web3.eth.getAccounts();
     const serviceAccount = accounts[0];
-    const eleemosynary = accounts[1];
+    const eleemosynaryAccount = accounts[1];
 
     await singletons.ERC1820Registry(serviceAccount);
 
@@ -21,25 +21,25 @@ module.exports = async function main(callback) {
     const schnoodle = await Schnoodle.new();
     await schnoodle.initialize(100000, serviceAccount);
 
-    // Set up SchnoodleStaking contract
-    const SchnoodleStaking = artifacts.require(testContracts.schnoodleStaking);
-    const schnoodleStaking = await SchnoodleStaking.new();
-    await schnoodleStaking.initialize(schnoodle.address);
-    await schnoodle.configure(true, serviceAccount, schnoodleStaking.address);
-    const stakingFund = await schnoodle.stakingFund();
+    // Set up SchnoodleFarming contract
+    const SchnoodleFarming = artifacts.require(testContracts.schnoodleFarming);
+    const schnoodleFarming = await SchnoodleFarming.new();
+    await schnoodleFarming.initialize(schnoodle.address);
+    await schnoodle.configure(true, serviceAccount, schnoodleFarming.address);
+    const farmingFund = await schnoodle.getFarmingFund();
 
     const chance = new Chance();
     const feeRate = chance.integer({ min: 1, max: 5 });
     const donationRate = chance.integer({ min: 1, max: 5 });
-    const stakingRate = chance.integer({ min: 1, max: 5 });
+    const sowRate = chance.integer({ min: 1, max: 5 });
     await schnoodle.changeFeeRate(feeRate);
-    await schnoodle.changeEleemosynary(eleemosynary, donationRate);
-    await schnoodle.changeStakingRate(stakingRate);
+    await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate);
+    await schnoodle.changeSowRate(sowRate);
 
-    console.log(`Service Account: ${serviceAccount}`);
-    console.log(`Eleemosynary:    ${eleemosynary}`);
-    console.log(`Staking Fund:    ${stakingFund}`);
-    console.log(`Fee: ${feeRate}% | Donation: ${donationRate}% | Staking: ${stakingRate}%`);
+    console.log(`Service Account:      ${serviceAccount}`);
+    console.log(`Eleemosynary Account: ${eleemosynaryAccount}`);
+    console.log(`Farming Fund:         ${farmingFund}`);
+    console.log(`Fee: ${feeRate}% | Donation: ${donationRate}% | Sow: ${sowRate}%`);
 
     const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
     const delimiter = ' | ';
@@ -58,7 +58,8 @@ module.exports = async function main(callback) {
       { account: accounts[6], amount: 123 },
       { account: accounts[7], amount: 4567 },
       { account: accounts[8], amount: 321 },
-      { account: accounts[9], amount: 7654 }
+      { account: accounts[9], amount: 7654 },
+      { account: farmingFund, amount: 1000 }
     ];
 
     for (const trade of trades) {
@@ -75,11 +76,11 @@ module.exports = async function main(callback) {
     };
 
 
-    // Simulate staking based on the balances now in the accounts
-    _printHeadings('Simulating staking', 'Staker');
+    // Simulate yield farming based on the balances now in the accounts
+    _printHeadings('Simulating yield farming', 'Farmer');
 
-    // Set up some stake actions to simulate (false add means withdraw stake)
-    let stakeActions = [
+    // Set up some deposit actions to simulate (false add means withdraw)
+    let depositActions = [
       { account: accounts[3], add: true },
       { account: accounts[4], add: true },
       { account: accounts[5], add: true },
@@ -90,20 +91,20 @@ module.exports = async function main(callback) {
       { account: accounts[9], add: true }
     ];
 
-    for (const stakeAction of stakeActions) {
+    for (const depositAction of depositActions) {
       let amount;
 
-      // Add or withdraw stake depending on the add stake action being true or false
-      if (stakeAction.add) {
-        amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(stakeAction.account))));
-        await schnoodleStaking.addStake(amount, 1, 1, { from: stakeAction.account });
+      // Add or withdraw deposit depending on the add deposit action being true or false
+      if (depositAction.add) {
+        amount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(depositAction.account))));
+        await schnoodleFarming.addDeposit(amount, 1, 1, { from: depositAction.account });
       } else {
-        const stake = (await schnoodleStaking.stakingSummary(stakeAction.account))[0].stake;
-        amount = -BigInt(stake.amount);
-        await schnoodleStaking.withdraw(stake.id, -amount, { from: stakeAction.account });
+        const deposit = (await schnoodleFarming.getFarmingSummary(depositAction.account))[0].deposit;
+        amount = -BigInt(deposit.amount);
+        await schnoodleFarming.withdraw(deposit.id, -amount, { from: depositAction.account });
       }
 
-      await _printBalances(stakeAction.account, amount / decimalsFactor);
+      await _printBalances(depositAction.account, amount / decimalsFactor);
     };
 
     
@@ -112,7 +113,7 @@ module.exports = async function main(callback) {
 
       // Print out the column headings
       headers = `\n${accountHeading.padEnd(11)}${delimiter}Amount     ${delimiter}`;
-      for (const account of accounts.concat(stakingFund)) {
+      for (const account of accounts.concat(farmingFund)) {
         headers += `${account.slice(0, 8)}...${delimiter}`;
       }
 
@@ -125,7 +126,7 @@ module.exports = async function main(callback) {
       let row = `${rowAccount.slice(0, 8)}...${delimiter}${amount.toString().padStart(11)}${delimiter}`;
 
       // Print out all the account balances
-      for (const account of accounts.concat(stakingFund)) {
+      for (const account of accounts.concat(farmingFund)) {
         const balance = BigInt(await schnoodle.balanceOf(account));
         row += (balance / decimalsFactor).toString().padStart(11) + delimiter;
         total += balance;
