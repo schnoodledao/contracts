@@ -467,7 +467,7 @@ export class Farming extends Component {
                     </div>
                   </div>
                   <div class="divider mt-10">
-                    <h3 class="deposittitle text-2xl md:text-3xl leading-tight">Add Deposit</h3>
+                    <h3 class="sectiontitle text-2xl md:text-3xl leading-tight">Add Deposit</h3>
                   </div>
 
                   <div class="card-actions text-center mx-auto w-full">
@@ -531,7 +531,7 @@ export class Farming extends Component {
 
               {this.state.farmingSummary.length > 0 && (
                 <div class="summarytable">
-                  <h3 class="mb-5 headingfont summarytitle mt-10">Farming Summary</h3>
+                  <h3 class="mb-5 headingfont sectiontitle mt-10">Farming Summary</h3>
                   <div class="overflow-x-auto text-secondary my-5 ">
                     {this.renderFarmingSummaryTable(this.state.farmingSummary)}
                   </div>
@@ -540,7 +540,7 @@ export class Farming extends Component {
 
               {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
                 <div class="summarytable">
-                  <h3 class="mb-5 headingfont summarytitle mt-10">Unbonding</h3>
+                  <h3 class="mb-5 headingfont sectiontitle mt-10">Unbonding Summary</h3>
                   <div class="overflow-x-auto text-secondary my-5 ">
                     {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                   </div>
