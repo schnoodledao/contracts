@@ -281,7 +281,7 @@ export class Farming extends Component {
   closeHelpModal() {
     this.setState({openHelpModal : false})
   }
-  
+
   renderFarmingSummaryTable(farmingSummary) {
     return (
       <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
@@ -295,7 +295,7 @@ export class Farming extends Component {
             <span role="column-header" class="wider">Withdraw</span>
             <span role="column-header" class="wide">Claimable<br/>Reward</span>
           </div>
-        </div> 
+        </div>
         <div role="row-group" class="text-secondary">
           {farmingSummary.map((depositReward, i) => {
             const amount = this.scaleDownUnits(depositReward.deposit.amount);
@@ -336,7 +336,7 @@ export class Farming extends Component {
             <span role="column-header" class="">Amount</span>
             <span role="column-header" class="">Blocks Pending</span>
             <span role="column-header">Time Remaining</span>
-          </div> 
+          </div>
         </div>
         <div role="row-group" class="text-secondary">
           {unbondingSummary.map((unbond, i) => {
@@ -362,12 +362,12 @@ export class Farming extends Component {
     const availableAmount = this.scaleDownUnits(this.state.availableAmount);
 
     const token = 'SNOOD';
-    const farmTokens = `Farm ${token} tokens.`;
-    const earnTokens = `Earn ${token} tokens.`;
+    const subtitle1 = 'Advanced yield farming.';
+    const subtitle2 = 'But on the Moon.';
 
     if (!this.state.web3) {
       return (
-        <div class="overflow-hidden antialiased font-roboto mx-4">  
+        <div class="overflow-hidden antialiased font-roboto mx-4">
           <div class="h-noheader md:flex">
             <div class="flex items-center justify-center w-full">
               <div class="px-4">
@@ -387,10 +387,10 @@ export class Farming extends Component {
         <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
           <div class="text-center px-1 md:px-4">
             <div class="text-base-200 w-full">
-              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Yield Farming</h1>    
+              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Moon Farming</h1>    
               <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
-                <span class="block md:hidden text-center">{farmTokens}<br />{earnTokens}</span>
-                <span class="hidden md:block text-left">{farmTokens} {earnTokens}</span>
+                <span class="block md:hidden text-center">{subtitle1}<br />{subtitle2}</span>
+                <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
               </p>
               <div class="stats topstats">
                 <div class="stat">
