@@ -4,7 +4,7 @@ coverY: 0
 
 # 🏆 Neoteric Farming Platform
 
-The Schnoodle yield farming platform, introduced in SchnoodleV7, is unlike any other yield farming platform in existence which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
+Schnoodle introduces its pioneering moon farming platform. This is a revolutionary new yield farming concept, introduced in SchnoodleV7, and is more advanced than any other yield farming platform in existence, which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
 * **Vestiplier:** This is a function of the deposit amounts, vesting blocks and unbonding blocks of all yield farmers which is used to calculate a multiplier based on a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function).
@@ -33,11 +33,11 @@ The following chart shows a typical example sigmoid curve and the effect on the 
 
 ![Vestiplier chart with varying sigmoid parameters](../.gitbook/assets/vestiplier-chart.svg)
 
-Although the algorithm sounds complex, the effect of it is quite simple. The more you deposit and the longer you farm, the greater proportion of the farming fund you receive (your gross reward). This is calculated linearly. And the longer you lock your deposit for both before withdrawal (vesting blocks) and after withdrawal (unbonding blocks) the greater the multiplier will be that is applied to your gross reward giving you your net reward. And to ensure that the farming platform is fair to early yield farmers, the calculated multiplier is locked in to a deposit when it is created so that it does not decrease should later farmers choose to lock their deposits for longer and/or use larger deposits resulting in a higher LPWA. Therefore, the APY will not be adversely affected by this.
+Although the algorithm sounds complex, the effect of it is quite simple. The more you deposit and the longer you farm, the greater proportion of the farming fund you receive (your gross reward). This is calculated linearly. And the longer you lock your deposit for both before withdrawal (vesting blocks) and after withdrawal (unbonding blocks) the greater the multiplier will be that is applied to your gross reward giving you your net reward. And to ensure that the farming platform is fair to early yield farmers, the calculated multiplier is locked into a deposit when it is created so that it does not decrease should later farmers choose to lock their deposits for longer and/or use larger deposits resulting in a higher LPWA. Therefore, the APY will not be adversely affected by this.
 
 However, more farmers relative to the farming fund will of course reduce the APY due to the GYI, and vice versa. In other words, more sells causes the farming fund to get bigger which results in all farmers' APYs to increase dynamically. And more deposits causes the farming fund to be more distributed which results in all farmers' APYs to decrease dynamically. This is why it pays to farm for longer as your deposit is aggregated cumulatively on each block by the Autoregulator so that the length of time you've farmed positively affects the proportion of the fund you are rewarded with.
 
-This entire set of mechanics and the constant push-pull between sellers and farmers gives rise to the gamified nature of the farming platform where the strongest are rewarded greatly.
+This entire set of mechanics and the constant push-pull between sellers and farmers gives rise to the gamified nature of the moon farming platform where the strongest are rewarded greatly.
 
 {% hint style="info" %}
 The following sources were used to assist in building the Vestiplier algorithm:
@@ -53,5 +53,5 @@ Those who are observant will notice that there is always a part of every reward 
 However, this was seen as an opportunity to add an automatic deflationary component into the code. This unused part of the reward is instead burned. Therefore, every withdrawal results in a portion of the circulating supply being burned which are effectively tokens that originated from sells. This feature is called the ASS Burner (bum intended).
 
 {% hint style="info" %}
-An important point to note with the NSP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
+An important point to note with the NFP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
 {% endhint %}
