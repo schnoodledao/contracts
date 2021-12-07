@@ -271,7 +271,7 @@ export class Farming extends Component {
   }
 
   calculateApy(amount, reward) {
-    return reward === '0' ? 0 : Math.floor(reward / amount * 100);
+    return reward === '0' ? 0 : Number((reward / amount * 100).toPrecision(2));
   }
 
   openHelpModal(texts) {
