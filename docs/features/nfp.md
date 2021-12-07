@@ -4,7 +4,7 @@ coverY: 0
 
 # 🏆 Neoteric Farming Platform
 
-The Schnoodle yield farming platform, introduced in SchnoodleV7, is unlike any other yield farming platform in existence which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
+Schnoodle introduces its pioneering moon farming platform. This is a revolutionary new yield farming concept, introduced in SchnoodleV7, and is more advanced than any other yield farming platform in existence, which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
 * **Vestiplier:** This is a function of the deposit amounts, vesting blocks and unbonding blocks of all yield farmers which is used to calculate a multiplier based on a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function).
@@ -37,7 +37,7 @@ Although the algorithm sounds complex, the effect of it is quite simple. The mor
 
 However, more farmers relative to the farming fund will of course reduce the APY due to the GYI, and vice versa. In other words, more sells causes the farming fund to get bigger which results in all farmers' APYs to increase dynamically. And more deposits causes the farming fund to be more distributed which results in all farmers' APYs to decrease dynamically. This is why it pays to farm for longer as your deposit is aggregated cumulatively on each block by the Autoregulator so that the length of time you've farmed positively affects the proportion of the fund you are rewarded with.
 
-This entire set of mechanics and the constant push-pull between sellers and farmers gives rise to the gamified nature of the farming platform where the strongest are rewarded greatly.
+This entire set of mechanics and the constant push-pull between sellers and farmers gives rise to the gamified nature of the moon farming platform where the strongest are rewarded greatly.
 
 {% hint style="info" %}
 The following sources were used to assist in building the Vestiplier algorithm:
