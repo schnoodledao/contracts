@@ -1,9 +1,9 @@
-﻿function multiplierExplain(insert) {
-  return `The higher this is relative to other yield farmers as a weighted average combined with ${insert} blocks, the higher the multiplier (between 0 and 1) that is applied to your gross reward based on the Vestiplier sigmoid curve formula 1 ÷ (1 + e⁻ˣ). The resultant net reward is the reward you will receive.`;
+﻿function multiplierInfo(insert) {
+  return `The higher this is relative to other yield farmers as a weighted average combined with ${insert} blocks, the higher the multiplier (between 0 and 1) that is applied to your gross reward. The resultant net reward is the reward you will receive. This is based on the Vestiplier sigmoid curve formula 1 ÷ (1 + eᶻ)ᵃ where z = -k₀(x - x₀).`;
 }
 
-function autovestiplierExplain(insert) {
-  return `Because of the Gamified Dynamic Yield caused by the Autovestiplier, this ${insert} may change significantly depending on the future activity of current and new yield farmers as well as sellers who fund the farming fund. It is therefore advised that you consider your yield farming strategy carefully when choosing your vesting blocks and unbonding blocks settings. This is a gamified yield farming platform unlike any other. The yield may fluctuate right up until you withdraw.`;
+function assInfo(insert) {
+  return `Because of the algorithms of the Automated Superyield System subcomponents, this ${insert} may change significantly depending on the future activity of current and new yield farmers as well as sellers who fund the farming fund. It is therefore advised that you consider your yield farming strategy carefully when choosing your vesting blocks and unbonding blocks settings. This is a gamified yield farming platform unlike any other. The yield may fluctuate right up until you withdraw.`;
 }
 
 export const resources = {
@@ -13,7 +13,7 @@ export const resources = {
   },
   SELL_QUOTA: {
     TITLE: 'Sell Quota',
-    INFO: 'The net total of buys and sells within the current 24-hour capture period plus a margin of 1b. If this goes below zero, the operative fee rate will start to escalate.'
+    INFO: 'The net total of buys and sells within the current 24-hour capture period plus a margin of 1 billion. If this goes below zero, the operative fee rate will start to escalate.'
   },
   FARMING_FUND_BALANCE: {
     TITLE: 'Farming Fund Balance',
@@ -49,18 +49,18 @@ export const resources = {
   },
   VESTING_BLOCKS: {
     TITLE: 'Vesting Blocks',
-    INFO: 'The number of blocks your deposit will be locked for before you can withdraw your deposit and claim farming rewards. ' + multiplierExplain('unbonding')
+    INFO: 'The number of blocks your deposit will be locked for before you can withdraw your deposit and claim farming rewards. ' + multiplierInfo('unbonding')
   },
   UNBONDING_BLOCKS: {
     TITLE: 'Unbonding Blocks',
-    INFO: 'The number of blocks your deposit will be locked for after you withdraw your deposit. ' + multiplierExplain('vesting')
+    INFO: 'The number of blocks your deposit will be locked for after you withdraw your deposit. ' + multiplierInfo('vesting')
   },
   VEST_FORECAST_REWARD: {
     TITLE: 'Vest Forecast Reward',
-    INFO: 'The forecast reward you would receive if you withdrew your deposit upon vesting based on the entered values. ' + autovestiplierExplain('forecast')
+    INFO: 'The forecast reward you would receive if you withdrew your deposit upon vesting based on the entered values. ' + assInfo('forecast')
   },
   ESTIMATED_APY: {
     TITLE: 'Estimated APY',
-    INFO: 'The annual percentage yield that you can expect in rewards based on the entered values. ' + autovestiplierExplain('estimated APY')
+    INFO: 'The annual percentage yield that you can expect in rewards based on the entered values. ' + assInfo('estimated APY')
   }
 }

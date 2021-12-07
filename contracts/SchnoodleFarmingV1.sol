@@ -137,7 +137,7 @@ contract SchnoodleFarmingV1 is Initializable, OwnableUpgradeable {
     }
 
     function getReward(address account, uint256 id, uint256 rewardBlock) external view returns(uint256) {
-        (Deposit storage deposit,,) = _getDeposit(account, id);
+        (Deposit memory deposit,,) = _getDeposit(account, id);
         return _getReward(deposit, rewardBlock);
     }
 

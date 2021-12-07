@@ -39,7 +39,7 @@ export class NavMenu extends Component {
                         <NavLink tag={Link} className="" to="/">Home</NavLink>
                       </NavItem>
                       <NavItem className="btn btn-ghost rounded-btn">
-                        <NavLink tag={Link} className="" to="/farming">Yield Farming</NavLink>
+                        <NavLink tag={Link} className="" to="/farming">Moon Farming</NavLink>
                       </NavItem>
                     </ul>
                   </Collapse>

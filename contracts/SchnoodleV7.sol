@@ -14,6 +14,7 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
 
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant FARMING_CONTRACT = keccak256("FARMING_CONTRACT");
+    bytes32 public constant LOCKED = keccak256("LOCKED");
 
     function configure(bool testnet, address liquidityToken, address schnoodleFarming) external onlyOwner {
         require(_farmingFund == address(0), "Schnoodle: already configured");
@@ -36,6 +37,7 @@ contract SchnoodleV7 is SchnoodleV7Base, AccessControlUpgradeable {
             uint256 standardAmount = _getStandardAmount(amount);
             uint256 balance = balanceOf(from);
             require(standardAmount > balance || standardAmount <= balance - lockedBalanceOf(from), "Schnoodle: transfer amount exceeds unlocked balance");
+            require(!hasRole(LOCKED, from));
         }
 
         super._beforeTokenTransfer(operator, from, to, amount);
