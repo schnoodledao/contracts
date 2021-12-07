@@ -25,11 +25,11 @@ export const resources = {
   },
   ELEEMOSYNARY_DONATION_RATE: {
     TITLE: 'Eleemosynary Donation Rate',
-    INFO: 'The tax that is applied to each sell that is automatically donated to the eleemosynary fund.'
+    INFO: 'The fee that is applied to each sell that is automatically donated to the eleemosynary fund.'
   },
   FARMING_FUND_SOW_RATE: {
     TITLE: 'Farming Fund Sow Rate',
-    INFO: 'The fee that is charged to each sell that is used to supply the farming fund.'
+    INFO: 'The fee that is applied to each sell that is used to supply the farming fund.'
   },
   TOTAL_BALANCE: {
     TITLE: 'Total Balance',
@@ -37,7 +37,7 @@ export const resources = {
   },
   LOCKED_BALANCE: {
     TITLE: 'Locked Balance',
-    INFO: 'The number of tokens that are locked due to farming and unbonding. If any are unbonding, this will be indicated within the stat.'
+    INFO: 'The number of tokens that are locked due to farming and unbonding. If any are unbonding, this will be indicated separately within this stat.'
   },
   AVAILABLE_AMOUNT: {
     TITLE: 'Available Amount',
