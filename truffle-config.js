@@ -1,9 +1,12 @@
- const { mnemonic, infuraProjectId, etherscanApiKey } = require('./secrets.json');
- const HDWalletProvider = require('@truffle/hdwallet-provider');
+const path = require("path");
+const { mnemonic, infuraProjectId, etherscanApiKey } = require('./secrets.json');
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
+  contracts_build_directory: path.join(__dirname, "SchnoodleDApp/ClientApp/src/contracts"),
+
   networks: {
-    development: {
+    develop: {
       host: "127.0.0.1",
       port: 7545,
       network_id: "*",
@@ -55,7 +58,7 @@ module.exports = {
 
   compilers: {
     solc: {
-      version: "^0.8.0",
+      version: "0.8.9",
       settings: {
         optimizer: {
           enabled: true,

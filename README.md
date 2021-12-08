@@ -3,7 +3,8 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 
 # Prerequisites
 - [Node.js](https://nodejs.org/)
-- Local blockchain (use [`truffle develop`](https://www.trufflesuite.com/docs/truffle/reference/truffle-commands#develop) or [Ganache](https://www.trufflesuite.com/ganache))
+- [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
+- Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
 # Setup
 ## Gnosis Safe
@@ -16,24 +17,16 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 - Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
 
 # Migrate
-Execute the following PowerShell script to migrate contracts:
+Execute the following PowerShell script to migrate (and verify) contracts:
 ```
 .\Migrate.ps1 [<network>] [<reset>] [<rebuild>]
 ```
-- `network`: The network to run the migration on (default is `development`).
+- `network`: The network to run the migration on (default is `develop`).
 - `reset`: Run all migrations from the beginning (default is `$false`).
 - `rebuild`: Delete all compiled contracts and the network manifest (default is `$false`).
 
-Run the following command to verify contracts:
-```
-npx truffle run verify <contractName>[@<address>] [--network <network>]
-```
-- `contractName`: The name of the contract to verify.
-- `address`: The address of the contract (required for proxy implementation contracts).
-- `network`: The network to verify the contract on (default is `development`).
-
 ## Launch Steps
-1. Migrate `Schnoodle`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
+1. Migrate `SchnoodleV1`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
 1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.
 1. [Create a timelock contract](#create-timelock-contract) to lock the full amount of the liquidity token held by the beneficiary wallet.
@@ -48,7 +41,7 @@ npx truffle run verify <contractName>[@<address>] [--network <network>]
 1. Perform a [contract interaction](#contract-interaction) with `TransparentUpgradeableProxy` to call `changeFeePercent` or `changeEleemosynary`.
 
 ## Upgrade Procedure
-1. Migrate `SchnoodleV2` (`prepareUpgrade`)
+1. Migrate `SchnoodleVX` (`prepareUpgrade`)
 1. Perform a [contract interaction](#contract-interaction) with `ProxyAdmin` to call `upgrade` using `proxy` and `implementation` parameters outputted in step 1.
 
 ## Contract Interaction
@@ -58,7 +51,7 @@ Contract interaction is via either 1) multisig (SafeSnap optional) if `Schnoodle
 1. Go to the contract address to be interacted with and call the desired function.
 1. Copy the HEX DATA from MetaMask and reject the transaction.
 1. Follow steps 27 and 28 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272).
-1. After timelock elapsed, follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) per either of the following scenarios:
+1. Follow steps 29 and 30 from [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) per either of the following scenarios:
     * **Multisig only:** After timelock elapsed.
     * **DAO:** Interact with `SchnoodleGovernance` via the [SafeSnap](#safesnap) process instead of directly.
 
