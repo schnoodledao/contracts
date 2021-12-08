@@ -11,8 +11,8 @@
       "kind": "transparent"
     },
     {
-      "address": "0xae7Ef467b98441F9c6fb5A83eeEeC70A9644aa8a",
-      "txHash": "0x306684422d18125c724ff07929dbc7488daedcbe681a21355394c1b8ab7239b4",
+      "address": "0xc5fb34E3f69B18aBfbD17b2bBAbE8c9608D5779a",
+      "txHash": "0x24f47b0b9400da57334d2d88d68b9321e0438b19fa12eeab315ab8cfc3bbfc28",
       "kind": "transparent"
     }
   ],
@@ -981,7 +981,7 @@
           {
             "contract": "SchnoodleV6",
             "label": "_sellQuota",
-            "type": "t_struct(TokenMeter)11972_storage",
+            "type": "t_struct(TokenMeter)12099_storage",
             "src": "..\\project:\\contracts\\SchnoodleV6.sol:17"
           }
         ],
@@ -992,7 +992,7 @@
           "t_address": {
             "label": "address"
           },
-          "t_struct(TokenMeter)11972_storage": {
+          "t_struct(TokenMeter)12099_storage": {
             "label": "struct SchnoodleV6.TokenMeter",
             "members": [
               {
@@ -1028,6 +1028,446 @@
           },
           "t_bool": {
             "label": "bool"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))"
+          },
+          "t_array(t_uint256)41_storage": {
+            "label": "uint256[41]"
+          }
+        }
+      }
+    },
+    "9084c1991fc8c5b4e11fb97078e3662e1215bb4e1b71f9e2c8235b8cff357cda": {
+      "address": "0xBB6FeF2105606d6910E65ee30dF8d4c6d151AeE3",
+      "txHash": "0x6dd6cb38098d02c8e4c755721628aedfa427e6aff6a00f385ad7427e5f1c4b7e",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:26"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:30"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:21"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:77"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_schnoodle",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:12"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_depositId",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:13"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_accountDeposits",
+            "type": "t_mapping(t_address,t_array(t_struct(Deposit)8304_storage)dyn_storage)",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:14"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_accountUnbonds",
+            "type": "t_mapping(t_address,t_array(t_struct(Unbond)8315_storage)dyn_storage)",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:15"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_balances",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:16"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_totalTokens",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:17"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_cumulativeTotal",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:18"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_checkpointBlock",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:19"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_totalDepositWeight",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:20"
+          },
+          {
+            "contract": "SchnoodleFarmingV1",
+            "label": "_sigmoidParams",
+            "type": "t_struct(SigmoidParams)8320_storage",
+            "src": "..\\project:\\contracts\\SchnoodleFarmingV1.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_array(t_struct(Deposit)8304_storage)dyn_storage)": {
+            "label": "mapping(address => struct SchnoodleFarmingV1.Deposit[])"
+          },
+          "t_array(t_struct(Deposit)8304_storage)dyn_storage": {
+            "label": "struct SchnoodleFarmingV1.Deposit[]"
+          },
+          "t_struct(Deposit)8304_storage": {
+            "label": "struct SchnoodleFarmingV1.Deposit",
+            "members": [
+              {
+                "label": "id",
+                "type": "t_uint256"
+              },
+              {
+                "label": "amount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "blockNumber",
+                "type": "t_uint256"
+              },
+              {
+                "label": "vestingBlocks",
+                "type": "t_uint256"
+              },
+              {
+                "label": "unbondingBlocks",
+                "type": "t_uint256"
+              },
+              {
+                "label": "multiplier",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_array(t_struct(Unbond)8315_storage)dyn_storage)": {
+            "label": "mapping(address => struct SchnoodleFarmingV1.Unbond[])"
+          },
+          "t_array(t_struct(Unbond)8315_storage)dyn_storage": {
+            "label": "struct SchnoodleFarmingV1.Unbond[]"
+          },
+          "t_struct(Unbond)8315_storage": {
+            "label": "struct SchnoodleFarmingV1.Unbond",
+            "members": [
+              {
+                "label": "amount",
+                "type": "t_uint256"
+              },
+              {
+                "label": "expiryBlock",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_struct(SigmoidParams)8320_storage": {
+            "label": "struct SchnoodleFarmingV1.SigmoidParams",
+            "members": [
+              {
+                "label": "k",
+                "type": "t_uint256"
+              },
+              {
+                "label": "a",
+                "type": "t_uint256"
+              }
+            ]
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "32cf3f4910d026d13cc28e313453ed84109f24382dc2f6985b2791da3f8b837c": {
+      "address": "0xF5Ac2132eD10fdA36143D0a3cF27940BFb3cD6d1",
+      "txHash": "0xab1a1e404a460b31aa1870120ea64de081f8e3021da8064897d33a7264980ceb",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:21"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:26"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:30"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:34"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:36"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_name",
+            "type": "t_string_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:38"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_symbol",
+            "type": "t_string_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:39"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperatorsArray",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:45"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperators",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:48"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_operators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:51"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_revokedDefaultOperators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:52"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_allowances",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:55"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)41_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:548"
+          },
+          {
+            "contract": "ERC777PresetFixedSupplyUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\token\\ERC777\\presets\\ERC777PresetFixedSupplyUpgradeable.sol:51"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:21"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:77"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:12"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_feeRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:13"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_eleemosynaryAccount",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:14"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_donationRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:15"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_sellThreshold",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:16"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_sellQuota",
+            "type": "t_struct(TokenMeter)13235_storage",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:17"
+          },
+          {
+            "contract": "SchnoodleV7Base",
+            "label": "_rateEscalator",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV7Base.sol:18"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\utils\\introspection\\ERC165Upgradeable.sol:35"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)81_storage)",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:77"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@openzeppelin\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:259"
+          },
+          {
+            "contract": "SchnoodleV7",
+            "label": "_schnoodleFarming",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV7.sol:11"
+          },
+          {
+            "contract": "SchnoodleV7",
+            "label": "_farmingFund",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV7.sol:12"
+          },
+          {
+            "contract": "SchnoodleV7",
+            "label": "_sowRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleV7.sol:13"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)81_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)81_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_struct(TokenMeter)13235_storage": {
+            "label": "struct SchnoodleV7Base.TokenMeter",
+            "members": [
+              {
+                "label": "blockMetric",
+                "type": "t_uint256"
+              },
+              {
+                "label": "amount",
+                "type": "t_int256"
+              }
+            ]
+          },
+          "t_int256": {
+            "label": "int256"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
           },
           "t_mapping(t_address,t_mapping(t_address,t_bool))": {
             "label": "mapping(address => mapping(address => bool))"
