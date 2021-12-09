@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Collapse, Container, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
+import { resources } from '../resources';
 
 export class NavMenu extends Component {
   static displayName = NavMenu.name;
@@ -39,7 +40,7 @@ export class NavMenu extends Component {
                         <NavLink tag={Link} className="" to="/">Home</NavLink>
                       </NavItem>
                       <NavItem className="btn btn-ghost rounded-btn">
-                        <NavLink tag={Link} className="" to="/farming">Moon Farming</NavLink>
+                        <NavLink tag={Link} className="" to="/farming">{resources.MOON_FARMING}</NavLink>
                       </NavItem>
                     </ul>
                   </Collapse>

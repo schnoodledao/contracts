@@ -36,9 +36,9 @@ export class Farming extends Component {
       sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
       amountToDeposit: 0,
-      vestingBlocks: 1,
+      vestingBlocks: 0,
       vestingBlocksMax: 0,
-      unbondingBlocks: 1,
+      unbondingBlocks: 0,
       unbondingBlocksMax: 0,
       vestForecastReward: 0,
       apy: 0,
@@ -50,7 +50,8 @@ export class Farming extends Component {
       withdrawAmounts: [],
       openHelpModal: false,
       helpTitle: '',
-      helpContent: ''
+      helpInfo: '',
+      helpDetails: ''
     };
 
     this.depositAll = this.depositAll.bind(this);
@@ -99,7 +100,14 @@ export class Farming extends Component {
     let averageBlockTime;
     if (blockNumber > 0) {
       const blocksDenominator = Math.min(500, blockNumber);
-      averageBlockTime = ((await web3.eth.getBlock(blockNumber)).timestamp - (await web3.eth.getBlock(blockNumber - blocksDenominator)).timestamp) / blocksDenominator;
+      const currentBlock = await web3.eth.getBlock(blockNumber);
+      const compareBlock = await web3.eth.getBlock(blockNumber - blocksDenominator);
+
+      if (currentBlock === undefined || compareBlock === undefined) {
+        alert('Block information unable to be obtained at this time. This may only be a temporary issue.');
+      } else {
+        averageBlockTime = (currentBlock.timestamp - compareBlock.timestamp) / blocksDenominator;
+      }
     }
 
     this.setState({ decimals, blockNumber, averageBlockTime }, async () => {
@@ -118,8 +126,10 @@ export class Farming extends Component {
 
       // Fetch the farming summary while also calculating the APY for each deposit
       const farmingSummary = await Promise.all([].concat(await schnoodleFarming.methods.getFarmingSummary(selectedAddress).call()).sort((a, b) => a.deposit.blockNumber > b.deposit.blockNumber ? 1 : -1).map(async (depositReward) => {
-        const apy = this.calculateApy(depositReward.deposit.amount, await schnoodleFarming.methods.getReward(selectedAddress, depositReward.deposit.id, await this.blockNumberAfterOneYear()).call())
-        return { deposit: bigInt(depositReward.deposit), reward: bigInt(depositReward.reward), apy: apy };
+        const deposit = depositReward.deposit;
+        const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
+        const apy = this.calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(selectedAddress, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
+        return { deposit: deposit, reward: bigInt(depositReward.reward), apy: apy };
       }));
 
       const unbondingSummary = [].concat(await schnoodleFarming.methods.getUnbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
@@ -221,7 +231,7 @@ export class Farming extends Component {
   async updateAmountToDeposit(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-  this.setState({ amountToDeposit: Math.min(value, this.scaleDownUnits(this.state.availableAmount)) }, async () => await this.updateForecastReward());
+    this.setState({ amountToDeposit: Math.min(value, this.scaleDownUnits(this.state.availableAmount)) }, async () => await this.updateForecastReward());
   }
 
   async updateVestingBlocks(e) {
@@ -246,8 +256,7 @@ export class Farming extends Component {
 
     const amountToDepositValue = this.scaleUpUnits(amountToDeposit);
     const vestForecastReward = await newDepositForecastReward(blockNumber + vestingBlocks);
-    const yearForecastReward = await newDepositForecastReward(await this.blockNumberAfterOneYear());
-    const apy = this.calculateApy(amountToDepositValue, yearForecastReward);
+    const apy = this.calculateApy(amountToDepositValue, vestForecastReward, vestingBlocks);
     this.setState({ vestForecastReward, apy });
 
     async function newDepositForecastReward(rewardBlock) {
@@ -265,61 +274,90 @@ export class Farming extends Component {
     return 'Approximately ' + humanizeDuration(Duration.fromObject({ seconds: blocks * this.state.averageBlockTime }), { largest: 2, round: true });
   }
 
-  blockNumberAfterOneYear() {
-    const { blockNumber } = this.state;
-    return blockNumber + this.blocksPerDuration({ years: 1 });
+  calculateApy(amount, reward, blocks) {
+    return reward === '0' ? 0 : Number((reward / amount / (blocks / this.blocksPerDuration({ years: 1 })) * 100).toPrecision(2));
   }
 
-  calculateApy(amount, reward) {
-    return reward === '0' ? 0 : Number((reward / amount * 100).toPrecision(2));
-  }
-
-  openHelpModal(texts) {
-    this.setState({ helpTitle: texts.TITLE, helpContent: texts.INFO, openHelpModal: true })
+  openHelpModal(content) {
+    this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true })
   }
 
   closeHelpModal() {
-    this.setState({openHelpModal : false})
+    this.setState({ openHelpModal: false })
   }
 
   renderFarmingSummaryTable(farmingSummary) {
+    const space = ' ';
+    const blockNumberTitleParts = resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE.split(space);
+    const depositAmountTitleParts = resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE.split(space);
+    const pendingBlocksTitleParts = resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE.split(space);
+    const unbondingBlocksTitleParts = resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE.split(space);
+    const estimatedApyTitleParts = resources.FARMING_SUMMARY.ESTIMATED_APY.TITLE.split(space);
+    const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
+
     return (
       <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="row-group" class="column-header-group">
           <div role="row">
-            <span role="column-header" class="narrower">Block<br/>Number</span>
-            <span role="column-header">Deposited<br/>Amount</span>
-            <span role="column-header" class="narrow" >Blocks<br/>Pending</span>
-            <span role="column-header">Unbonding<br/>Blocks</span>
-            <span role="column-header" class="narrow">Estimated<br/>APY</span>
-            <span role="column-header" class="wider">Withdraw</span>
-            <span role="column-header" class="wide">Claimable<br/>Reward</span>
+            <span role="column-header" class="narrower">
+              {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header">
+              {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="narrow">
+              {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header">
+              {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="narrow">
+              {estimatedApyTitleParts[0]}<br />{estimatedApyTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="narrow">
+              {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="wide">
+              {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="wider">
+              {resources.FARMING_SUMMARY.WITHDRAW.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.WITHDRAW)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
           </div>
         </div>
         <div role="row-group" class="text-secondary">
           {farmingSummary.map((depositReward, i) => {
             const amount = this.scaleDownUnits(depositReward.deposit.amount);
-            const blocksPending = Math.max(0, parseInt(depositReward.deposit.blockNumber) + parseInt(depositReward.deposit.vestingBlocks) - this.state.blockNumber);
+            const pendingBlocks = Math.max(0, parseInt(depositReward.deposit.blockNumber) + parseInt(depositReward.deposit.vestingBlocks) - this.state.blockNumber);
             return (
               <div role="row" key={depositReward.deposit.blockNumber}>
                 <span role="cell" data-header="Block Number:" class="border-l-0 narrower">{depositReward.deposit.blockNumber}</span>
                 <span role="cell" data-header="Deposited Amount:">{amount.toLocaleString()}</span>
-                <span role="cell" data-header="Blocks Pending:" class="narrow" title={this.blocksDurationText(blocksPending)}>{blocksPending}</span>
+                <span role="cell" data-header="Pending Blocks:" class="narrow" title={this.blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
                 <span role="cell" data-header="Unbonding Blocks:" title={this.blocksDurationText(depositReward.deposit.unbondingBlocks)}>{depositReward.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header="Estimated APY:" class="narrow" >{depositReward.apy} %</span>
+                <span role="cell" data-header="Estimated APY:" class="narrow" >{depositReward.apy}%</span>
+                <span role="cell" data-header="Multiplier:" class="narrow" >{depositReward.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header="Current Reward:" class="wide">{this.scaleDownUnits(depositReward.reward).toLocaleString()}</span>
                 <span role="cell" class="wider">
                   <form>
-                    <fieldset disabled={blocksPending > 0}>
+                    <fieldset disabled={pendingBlocks > 0}>
                       <div class="relative">
                         <div class="form-control">
-                          <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput"/>
+                          <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput" />
                           <button type="button" class="text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>
                   </form>
                 </span>
-                <span role="cell" data-header="Claimable Reward:" class="wide">{this.scaleDownUnits(depositReward.reward).toLocaleString()}</span>
               </div>
             );
           })}
@@ -333,20 +371,29 @@ export class Farming extends Component {
       <div role="table" aria-label="Unbonding Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="row-group" class="column-header-group">
           <div role="row">
-            <span role="column-header" class="">Amount</span>
-            <span role="column-header" class="">Blocks Pending</span>
-            <span role="column-header">Time Remaining</span>
+            <span role="column-header" class="">
+              {resources.UNBONDING_SUMMARY.AMOUNT.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header" class="">
+              {resources.UNBONDING_SUMMARY.PENDING_BLOCKS.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="column-header">
+              {resources.UNBONDING_SUMMARY.TIME_REMAINING.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.TIME_REMAINING)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
           </div>
         </div>
         <div role="row-group" class="text-secondary">
           {unbondingSummary.map((unbond, i) => {
             const amount = this.scaleDownUnits(unbond.amount);
-            const blocksPending = parseInt(unbond.expiryBlock) - this.state.blockNumber;
-            return blocksPending > 0 && (
+            const pendingBlocks = parseInt(unbond.expiryBlock) - this.state.blockNumber;
+            return pendingBlocks > 0 && (
               <div role="row" key={unbond.expiryBlock}>
-                <span role="cell" data-header="Amount:" class="">{amount.toLocaleString()}</span>
-                <span role="cell" data-header="Blocks Pending:" class="">{blocksPending}</span>
-                <span role="cell" data-header="Time Remaining:" class="">{this.blocksDurationText(blocksPending)}</span>
+                <span role="cell" data-header="Amount:">{amount.toLocaleString()}</span>
+                <span role="cell" data-header="Pending Blocks:">{pendingBlocks}</span>
+                <span role="cell" data-header="Time Remaining:">{this.blocksDurationText(pendingBlocks)}</span>
               </div>
             );
           })}
@@ -374,7 +421,7 @@ export class Farming extends Component {
                 <img class="object-cover w-1/2 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
                 <div class="maintitles">SCHNOODLE X</div>
                 <div class="w-16 h-1 my-3 bg-secondary md:my-6" />
-                <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">Loading<span>.</span><span>.</span><span>.</span></p>
+                <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
                 <div class="px-4 mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>
@@ -387,28 +434,31 @@ export class Farming extends Component {
         <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
           <div class="text-center px-1 md:px-4">
             <div class="text-base-200 w-full">
-              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">Moon Farming</h1>    
+              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">{resources.MOON_FARMING}</h1>
               <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
                 <span class="block md:hidden text-center">{subtitle1}<br />{subtitle2}</span>
                 <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
               </p>
               <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">{resources.BLOCK_NUMBER.TITLE}
+                  <div class="stat-title">
+                    {resources.BLOCK_NUMBER.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.blockNumber}</div>
                   <div class="stat-desc">&nbsp;</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">{resources.SELL_QUOTA.TITLE}
+                  <div class="stat-title">
+                    {resources.SELL_QUOTA.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.SELL_QUOTA)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
                   <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">{resources.FARMING_FUND_BALANCE.TITLE}
+                  <div class="stat-title">
+                    {resources.FARMING_FUND_BALANCE.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.scaleDownUnits(this.state.farmingFundBalance).toLocaleString()}</div>
@@ -418,21 +468,24 @@ export class Farming extends Component {
 
               <div class="stats topstats">
                 <div class="stat">
-                  <div class="stat-title">{resources.OPERATIVE_FEE_RATE.TITLE}
+                  <div class="stat-title">
+                    {resources.OPERATIVE_FEE_RATE.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.OPERATIVE_FEE_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">{resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
+                  <div class="stat-title">
+                    {resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
                   <div class="stat-desc">%</div>
                 </div>
                 <div class="stat">
-                  <div class="stat-title">{resources.FARMING_FUND_SOW_RATE.TITLE}
+                  <div class="stat-title">
+                    {resources.FARMING_FUND_SOW_RATE.TITLE}
                     <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_SOW_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                   </div>
                   <div class="stat-value greenfade">{this.state.sowRate / 10}</div>
@@ -445,21 +498,24 @@ export class Farming extends Component {
                   <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
                   <div class="shadow-sm bottomstats stats">
                     <div class="stat border-t-0">
-                      <div class="stat-title">{resources.TOTAL_BALANCE.TITLE}
+                      <div class="stat-title">
+                        {resources.TOTAL_BALANCE.TITLE}
                         <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.TOTAL_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{balance.toLocaleString()}</div>
                       <div class="stat-desc">{token}</div>
                     </div>
                     <div class="stat">
-                      <div class="stat-title">{resources.LOCKED_BALANCE.TITLE}
+                      <div class="stat-title">
+                        {resources.LOCKED_BALANCE.TITLE}
                         <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.LOCKED_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{lockedBalance.toLocaleString()}</div>
                       <div class="stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
                     </div>
                     <div class="stat">
-                      <div class="stat-title">{resources.AVAILABLE_AMOUNT.TITLE}
+                      <div class="stat-title">
+                        {resources.AVAILABLE_AMOUNT.TITLE}
                         <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.AVAILABLE_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </div>
                       <div class="stat-value purplefade">{availableAmount.toLocaleString()}</div>
@@ -467,7 +523,7 @@ export class Farming extends Component {
                     </div>
                   </div>
                   <div class="divider mt-10">
-                    <h3 class="sectiontitle text-2xl md:text-3xl leading-tight">Add Deposit</h3>
+                    <h3 class="sectiontitle text-2xl md:text-3xl leading-tight">{resources.ADD_DEPOSIT}</h3>
                   </div>
 
                   <div class="card-actions text-center mx-auto w-full">
@@ -476,19 +532,21 @@ export class Farming extends Component {
                         <div class="form-control">
                           <div>
                             <label class="label">
-                              <span class="label-text">{resources.DEPOSIT_AMOUNT.TITLE}
+                              <span class="label-text">
+                                {resources.DEPOSIT_AMOUNT.TITLE}
                                 <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </span>
                             </label>
                             <div class="relative withbutton">
-                              <input type="number" min="1" max={availableAmount} value={this.state.amountToDeposit || ''} onChange={this.updateAmountToDeposit} class="depositinput" />
-                              <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.depositAll}>All</button>
+                              <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.amountToDeposit || ''} onChange={this.updateAmountToDeposit} class="depositinput" />
+                              <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.depositAll}>Max</button>
                             </div>
                           </div>
                         </div>
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
-                            <span class="label-text">{resources.VESTING_BLOCKS.TITLE}
+                            <span class="label-text">
+                              {resources.VESTING_BLOCKS.TITLE}
                               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </span>
                           </label>
@@ -497,23 +555,26 @@ export class Farming extends Component {
                         </div>
                         <div class="mb-3 form-control nobutton">
                           <label class="label">
-                            <span class="label-text">{resources.UNBONDING_BLOCKS.TITLE}
+                            <span class="label-text">
+                              {resources.UNBONDING_BLOCKS.TITLE}
                               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </span>
                           </label>
                           <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
                           <p class="approxLabel">{this.blocksDurationText(this.state.unbondingBlocks)}</p>
                         </div>
-                        <div class="shadow-sm bottomstats stats ">
+                        <div class="shadow-sm bottomstats stats">
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                            <div class="stat-title">{resources.VEST_FORECAST_REWARD.TITLE}
+                            <div class="stat-title">
+                              {resources.VEST_FORECAST_REWARD.TITLE}
                               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VEST_FORECAST_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </div>
                             <div class="stat-value text-accent">{this.scaleDownUnits(this.state.vestForecastReward).toLocaleString()}</div>
                             <div class="stat-desc">{token}</div>
                           </div>
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                            <div class="stat-title">{resources.ESTIMATED_APY.TITLE}
+                            <div class="stat-title">
+                              {resources.VEST_ESTIMATED_APY.TITLE}
                               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </div>
                             <div class="stat-value text-accent">{this.state.apy}</div>
@@ -531,7 +592,7 @@ export class Farming extends Component {
 
               {this.state.farmingSummary.length > 0 && (
                 <div class="summarytable">
-                  <h3 class="mb-5 headingfont sectiontitle mt-10">Farming Summary</h3>
+                  <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.FARMING_SUMMARY.TITLE}</h3>
                   <div class="overflow-x-auto text-secondary my-5 ">
                     {this.renderFarmingSummaryTable(this.state.farmingSummary)}
                   </div>
@@ -540,7 +601,7 @@ export class Farming extends Component {
 
               {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
                 <div class="summarytable">
-                  <h3 class="mb-5 headingfont sectiontitle mt-10">Unbonding Summary</h3>
+                  <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
                   <div class="overflow-x-auto text-secondary my-5 ">
                     {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                   </div>
@@ -557,7 +618,9 @@ export class Farming extends Component {
         <div>
           <Modal open={this.state.openHelpModal} onClose={this.closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
             <h1>{this.state.helpTitle}</h1>
-            <p>{this.state.helpContent}</p>
+            <p>{this.state.helpInfo}</p>
+            <br />
+            <p>{this.state.helpDetails}</p>
           </Modal>
         </div>
       </div>
