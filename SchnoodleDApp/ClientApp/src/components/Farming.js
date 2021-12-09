@@ -271,6 +271,7 @@ export class Farming extends Component {
   }
 
   blocksDurationText(blocks) {
+    if (blocks === 0) return;
     return 'Approximately ' + humanizeDuration(Duration.fromObject({ seconds: blocks * this.state.averageBlockTime }), { largest: 2, round: true });
   }
 
@@ -575,7 +576,7 @@ export class Farming extends Component {
                           <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                             <div class="stat-title">
                               {resources.VEST_ESTIMATED_APY.TITLE}
-                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VEST_ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                             </div>
                             <div class="stat-value text-accent">{this.state.apy}</div>
                             <div class="stat-desc">%</div>
