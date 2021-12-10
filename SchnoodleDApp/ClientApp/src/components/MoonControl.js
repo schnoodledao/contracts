@@ -70,16 +70,19 @@ export class MoonControl extends Component {
       const depositedEvents = await schnoodleFarming.getPastEvents('Deposited', { fromBlock: 0, toBlock: 'latest' });
       const accounts = [...new Set(await depositedEvents.map((depositedEvent) => depositedEvent.returnValues.account))];
       const farmingSummary = (await Promise.all(accounts.map(async (account) => {
-        try {
-          return await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward) => {
+        return (await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward) => {
+          try {
             const deposit = depositReward.deposit;
             const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
             const estimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
             return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), estimatedApy: estimatedApy };
-          }));
-        } catch (err) {
-          return [];
-        }
+          } catch (err) {
+            if (err.message.includes('deposit not found')) {
+              return null;
+            }
+            throw err;
+          }
+        }))).filter(depositInfo => depositInfo != null);
       }))).flat();
 
       this.setState({ farmingSummary });
@@ -162,19 +165,19 @@ export class MoonControl extends Component {
           </div>
         </div>
         <div role="row-group" class="text-secondary">
-          {farmingSummary.map((depositReward) => {
-            const amount = scaleDownUnits(depositReward.deposit.amount);
-            const pendingBlocks = Math.max(0, parseInt(depositReward.deposit.blockNumber) + parseInt(depositReward.deposit.vestingBlocks) - this.state.blockNumber);
+          {farmingSummary.map((depositInfo) => {
+            const amount = scaleDownUnits(depositInfo.deposit.amount);
+            const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
             return (
-              <div role="row" key={depositReward.deposit.blockNumber}>
-                <span role="cell" data-header="Account:" class="border-l-0 narrower">{depositReward.account}</span>
-                <span role="cell" data-header="Block Number:" class="border-l-0 narrower">{depositReward.deposit.blockNumber}</span>
+              <div role="row" key={depositInfo.deposit.blockNumber}>
+                <span role="cell" data-header="Account:" class="border-l-0 narrower">{depositInfo.account}</span>
+                <span role="cell" data-header="Block Number:" class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header="Deposited Amount:">{amount.toLocaleString()}</span>
                 <span role="cell" data-header="Pending Blocks:" class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header="Unbonding Blocks:" title={blocksDurationText(depositReward.deposit.unbondingBlocks)}>{depositReward.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header="Estimated APY:" class="narrow" >{depositReward.estimatedApy}%</span>
-                <span role="cell" data-header="Multiplier:" class="narrow" >{depositReward.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header="Current Reward:" class="wide">{scaleDownUnits(depositReward.reward).toLocaleString()}</span>
+                <span role="cell" data-header="Unbonding Blocks:" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header="Estimated APY:" class="narrow" >{depositInfo.estimatedApy}%</span>
+                <span role="cell" data-header="Multiplier:" class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header="Current Reward:" class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
             );
           })}
