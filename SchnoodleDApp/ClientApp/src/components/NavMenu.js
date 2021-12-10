@@ -29,21 +29,24 @@ export class NavMenu extends Component {
           <div className="m-auto w-full">
             <div class="flex-1 px-2 mx-2">
               <span class="text-lg font-bold">
-                <NavbarBrand tag={Link} to="/" className="leading-tight uppercase">Schnoodle X</NavbarBrand>
+                <NavbarBrand tag={Link} to="/" className="leading-tight uppercase">{resources.APP_NAME}</NavbarBrand>
               </span>
-              </div>
-              <div class="flex-none hidden px-2 mx-2 lg:flex">
-                <div class="flex items-stretch">
-                  <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
-                    <ul className="navbar-nav flex-grow">
-                      <NavItem className="btn btn-ghost  rounded-btn">
-                        <NavLink tag={Link} className="" to="/">Home</NavLink>
-                      </NavItem>
-                      <NavItem className="btn btn-ghost rounded-btn">
-                        <NavLink tag={Link} className="" to="/farming">{resources.MOON_FARMING}</NavLink>
-                      </NavItem>
-                    </ul>
-                  </Collapse>
+            </div>
+            <div class="flex-none hidden px-2 mx-2 lg:flex">
+              <div class="flex items-stretch">
+                <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
+                  <ul className="navbar-nav flex-grow">
+                    <NavItem className="btn btn-ghost rounded-btn">
+                      <NavLink tag={Link} className="" to="/">Home</NavLink>
+                    </NavItem>
+                    <NavItem className="btn btn-ghost rounded-btn">
+                      <NavLink tag={Link} className="" to="/farming">{resources.MOON_FARMING}</NavLink>
+                    </NavItem>
+                    <NavItem className="btn btn-ghost rounded-btn">
+                      <NavLink tag={Link} className="" to="/mooncontrol">{resources.MOON_CONTROL}</NavLink>
+                    </NavItem>
+                  </ul>
+                </Collapse>
                 <div class="flex-none">
                   <NavbarToggler onClick={this.toggleNavbar} />
                 </div>
