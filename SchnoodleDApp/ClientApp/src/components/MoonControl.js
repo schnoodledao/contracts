@@ -68,13 +68,14 @@ export class MoonControl extends Component {
 
     this.setState({ blockNumber }, async () => {
       const depositedEvents = await schnoodleFarming.getPastEvents('Deposited', { fromBlock: 0, toBlock: 'latest' });
-      const farmingSummary = (await Promise.all(await depositedEvents.map(async (depositedEvent) => {
+      const accounts = [...new Set(await depositedEvents.map((depositedEvent) => depositedEvent.returnValues.account))];
+      const farmingSummary = (await Promise.all(accounts.map(async (account) => {
         try {
-          return await Promise.all((await schnoodleFarming.methods.getFarmingSummary(depositedEvent.returnValues.account).call()).map(async (depositReward) => {
+          return await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward) => {
             const deposit = depositReward.deposit;
             const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-            const estimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(depositedEvent.returnValues.account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
-            return { account: depositedEvent.returnValues.account, deposit: deposit, reward: bigInt(depositReward.reward), estimatedApy: estimatedApy };
+            const estimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
+            return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), estimatedApy: estimatedApy };
           }));
         } catch (err) {
           return [];
