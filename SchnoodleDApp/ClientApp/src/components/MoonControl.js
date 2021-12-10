@@ -214,7 +214,7 @@ export class MoonControl extends Component {
                 <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
               </p>
 
-              <video class="center" autoPlay muted loop src="../../assets/vid/mp4/rotating-moon.mp4" type="video/mp4" />
+              <video class="m-auto max-h-80" autoPlay muted loop src="../../assets/vid/mp4/rotating-moon.mp4" type="video/mp4" />
 
               {this.state.farmingSummary.length > 0 && (
                 <div class="summarytable">
