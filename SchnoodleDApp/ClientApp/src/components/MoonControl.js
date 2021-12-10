@@ -205,7 +205,7 @@ export class MoonControl extends Component {
       );
     }
     return (
-      <div class="mooncontrol w-100" >
+      <div class="mooncontrol w-100">
         <div class="m-auto px-4 max-w-screen-2xl">
           <div class="h-noheader overflow-hidden mx-2 md:m-auto font-roboto">
             <div class="text-center px-1 md:px-4">
