@@ -204,41 +204,43 @@ export class MoonControl extends Component {
       );
     }
     return (
-      <div class="m-auto px-4 max-w-screen-2xl" style={{ backgroundColor: '#000016' }}>
-        <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto" style={{ backgroundColor: '#000016' }}>
-          <div class="text-center px-1 md:px-4">
-            <div class="text-base-200 w-full">
-              <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">{resources.MOON_CONTROL}</h1>
-              <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
-                <span class="block md:hidden text-center">{subtitle1}<br />{subtitle2}</span>
-                <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
-              </p>
+      <div class="mooncontrol w-100" >
+        <div class="m-auto px-4 max-w-screen-2xl">
+          <div class="h-noheader overflow-hidden mx-2 md:m-auto font-roboto">
+            <div class="text-center px-1 md:px-4">
+              <div class="text-base-200 w-full">
+                <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">{resources.MOON_CONTROL}</h1>
+                <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
+                  <span class="block md:hidden text-center">{subtitle1}<br />{subtitle2}</span>
+                  <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
+                </p>
 
-              <video class="m-auto max-h-80" autoPlay muted loop src="../../assets/vid/mp4/rotating-moon.mp4" type="video/mp4" />
+                <video class="m-auto max-h-80" autoPlay muted loop src="../../assets/vid/mp4/rotating-moon.mp4" type="video/mp4" />
 
-              {this.state.farmingSummary.length > 0 && (
-                <div class="summarytable">
-                  <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
-                  <div class="overflow-x-auto text-secondary my-5 ">
-                    {this.renderFarmingSummaryTable(this.state.farmingSummary)}
+                {this.state.farmingSummary.length > 0 && (
+                  <div class="summarytable">
+                    <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
+                    <div class="overflow-x-auto text-secondary my-5 ">
+                      {this.renderFarmingSummaryTable(this.state.farmingSummary)}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div class="my-5">
-                <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+                <div class="my-5">
+                  <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <div>
-          <Modal open={this.state.openHelpModal} onClose={this.closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
-            <h1>{this.state.helpTitle}</h1>
-            <p>{this.state.helpInfo}</p>
-            <br />
-            <p>{this.state.helpDetails}</p>
-          </Modal>
+          
+          <div>
+            <Modal open={this.state.openHelpModal} onClose={this.closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
+              <h1>{this.state.helpTitle}</h1>
+              <p>{this.state.helpInfo}</p>
+              <br />
+              <p>{this.state.helpDetails}</p>
+            </Modal>
+          </div>
         </div>
       </div>
     );
