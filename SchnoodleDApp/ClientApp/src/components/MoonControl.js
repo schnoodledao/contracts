@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
-import { Modal } from 'react-responsive-modal';
-import 'react-responsive-modal/styles.css';
 import { resources } from '../resources';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
 import getWeb3 from "../getWeb3";
 import { initializeHelpers, scaleDownUnits, calculateApy, blocksDurationText } from '../helpers';
+
+// Third-party libraries
+import { Modal } from 'react-responsive-modal';
+import 'react-responsive-modal/styles.css';
 const bigInt = require("big-integer");
 
 export class MoonControl extends Component {
@@ -170,14 +172,14 @@ export class MoonControl extends Component {
             const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header="Account:" class="border-l-0 narrower">{depositInfo.account}</span>
-                <span role="cell" data-header="Block Number:" class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
-                <span role="cell" data-header="Deposited Amount:">{amount.toLocaleString()}</span>
-                <span role="cell" data-header="Pending Blocks:" class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header="Unbonding Blocks:" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header="Estimated APY:" class="narrow" >{depositInfo.estimatedApy}%</span>
-                <span role="cell" data-header="Multiplier:" class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header="Current Reward:" class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0 narrower">{depositInfo.account}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.ESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.estimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
             );
           })}
