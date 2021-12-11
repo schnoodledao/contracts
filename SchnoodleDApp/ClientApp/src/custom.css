@@ -194,7 +194,7 @@ TABLE
 */
 
 [role="table"],
-[role="row-group"],
+[role="rowgroup"],
 [role="row"],
 [role="subheader"] {
   display: flex;
@@ -208,7 +208,7 @@ TABLE
   line-height: 1 !important;
 }
 
-[role="table"] [role="column-header"],
+[role="table"] [role="columnheader"],
 [role="table"] [role="cell"] {
   overflow: hidden;
   white-space: nowrap;
@@ -220,11 +220,11 @@ TABLE
   @apply text-secondary text-left;
 }
 
-[role="table"] [role="row-group"]+[role="row-group"]>[role="row"] {
+[role="table"] [role="rowgroup"]+[role="rowgroup"]>[role="row"] {
   @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0
 }
 
-[role="table"]>[role="row-group"]:last-child {
+[role="table"]>[role="rowgroup"]:last-child {
   border-bottom: 0px;
 }
 
@@ -249,26 +249,26 @@ TABLE
 
 /* Table Header */
 
-[role="table"] [role="row"] [role="column-header"] {
+[role="table"] [role="row"] [role="columnheader"] {
   @apply ml-0 text-base xl:text-lg px-1 md:px-4 text-secondary border-b-2 border-secondary;
 }
 
-[role="table"] [role="column-header"].narrow {
+[role="table"] [role="columnheader"].narrow {
   flex-grow: 0.5;
   -webkit-flex-grow: 0.5;
 }
 
-[role="table"] [role="column-header"].narrower {
+[role="table"] [role="columnheader"].narrower {
   flex-grow: 0;
   -webkit-flex-grow: 0;
 }
 
-[role="table"] [role="column-header"].wide {
+[role="table"] [role="columnheader"].wide {
   flex-grow: 2;
   -webkit-flex-grow: 2;
 }
 
-[role="table"] [role="column-header"].wider {
+[role="table"] [role="columnheader"].wider {
   flex-grow: 10;
   -webkit-flex-grow: 10;
 }
@@ -319,10 +319,10 @@ TABLE
 }
 
 @media only screen and (max-width: 1023px) {
-  [role="table"] .column-header-group {
+  [role="table"] .columnheader-group {
     display: none;
   }
-  [role="table"] [role="column-header"],
+  [role="table"] [role="columnheader"],
   [role="table"] [role="cell"] {
     /* Minimum single cell width (cell padding and border deducted) */
     /* 100% means that only one column is displayed in a row (100% / 1 = 100%) */
@@ -364,16 +364,16 @@ TABLE
     color: rgba(255, 255, 255, var(--tw-text-opacity));
     margin-right: 20px;
   }
-  [role="table"] [role="row-group"] [role="row"]:nth-child(even) {
+  [role="table"] [role="rowgroup"] [role="row"]:nth-child(even) {
     @apply bg-base-200;
   }
-  [role="table"] [role="row-group"]+[role="row-group"]>[role="row"]:not(:last-child) {
+  [role="table"] [role="rowgroup"]+[role="rowgroup"]>[role="row"]:not(:last-child) {
     @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
   }
   [role="table"] [role="row"] [role="cell"] {
     @apply border-l-0 border-r-0;
   }
-  [role="table"] [role="row-group"]:last-child [role="row"]:last-child [role="cell"].expandable {
+  [role="table"] [role="rowgroup"]:last-child [role="row"]:last-child [role="cell"].expandable {
     @apply border-b-0;
   }
 }

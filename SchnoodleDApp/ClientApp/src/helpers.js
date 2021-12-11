@@ -1,4 +1,4 @@
-﻿import getWeb3 from "./getWeb3";
+import getWeb3 from "./getWeb3";
 const { Duration } = require("luxon");
 const humanizeDuration = require("humanize-duration");
 const bigInt = require("big-integer");

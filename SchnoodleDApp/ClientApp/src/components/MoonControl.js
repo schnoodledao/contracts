@@ -128,43 +128,43 @@ export class MoonControl extends Component {
 
     return (
       <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
-        <div role="row-group" class="column-header-group">
+        <div role="rowgroup" class="columnheader-group">
           <div role="row">
-            <span role="column-header" class="narrower">
+            <span role="columnheader" class="narrower">
               {resources.FARMING_OVERVIEW.ACCOUNT.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_OVERVIEW.ACCOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header" class="narrower">
+            <span role="columnheader" class="narrower">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header">
+            <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header" class="narrow">
+            <span role="columnheader" class="narrow">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header">
+            <span role="columnheader">
               {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header" class="narrow">
+            <span role="columnheader" class="narrow">
               {estimatedApyTitleParts[0]}<br />{estimatedApyTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header" class="narrow">
+            <span role="columnheader" class="narrow">
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="column-header" class="wide">
+            <span role="columnheader" class="wide">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
           </div>
         </div>
-        <div role="row-group" class="text-secondary">
+        <div role="rowgroup" class="text-secondary">
           {farmingSummary.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
