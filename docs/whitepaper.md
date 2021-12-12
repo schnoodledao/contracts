@@ -248,7 +248,9 @@ If the vote is in favour and the reality.eth question confirms this, reality.eth
 
 _**This sounds brilliant! But aren't you worried about hodlers making a dog's dinner of everything?**_
 
-Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen (an upgrade with a serious flaw that no one noticed, or some sort of hodler 51% attack), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade. The admins of the Snapshot space may also delete proposals at any time.
+Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen (e.g., an upgrade with a serious flaw that no one noticed, or some sort of hodler 51% attack), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade. The admins of the Snapshot space may also delete proposals at any time.
+
+Conversely, if we noticed something bad could happen due to a bug or a sour agreement with a community member or partner, for example, the multisig owners can deploy an emergency upgrade to prevent this and protect the community.
 
 _**Phew! OK, but then it's still not really fully decentralised then, is it?**_
 
