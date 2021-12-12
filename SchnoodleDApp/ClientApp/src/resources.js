@@ -5,7 +5,7 @@ function vestiplierInfo(insert) {
 }
 
 function assInfo(insert) {
-  return `Because of the algorithms of the Automated Superyield System subcomponents, this ${insert} may change significantly depending on the future activity of current and new yield farmers as well as sellers who fund the farming fund. It is therefore advised to consider any yield farming strategy carefully when choosing the vesting blocks and unbonding blocks settings. This is a gamified yield farming platform unlike any other. The yield may fluctuate right up until withdrawal.`;
+  return `Because of the algorithms of the Automated Superyield System subcomponents, this estimation may change significantly depending on the future activity of current and new yield farmers as well as sellers who fund the farming fund. It is therefore advised to consider any yield farming strategy carefully when choosing the vesting blocks and unbonding blocks settings. This is a gamified yield farming platform unlike any other. The yield may fluctuate right up until withdrawal.`;
 }
 
 export const resources = {
@@ -69,15 +69,15 @@ export const resources = {
     INFO: 'The number of blocks your deposit will be locked for after you withdraw your deposit.',
     DETAILS: vestiplierInfo('vesting')
   },
-  VEST_FORECAST_REWARD: {
-    TITLE: 'Vest Forecast Reward',
-    INFO: 'The forecast reward you would receive if you withdrew your deposit upon vesting based on the entered values.',
-    DETAILS: assInfo('forecast')
+  VESTIMATED_REWARD: {
+    TITLE: 'Vestimated Reward',
+    INFO: 'The estimated reward you would receive if you withdrew your deposit upon vesting based on the entered values.',
+    DETAILS: assInfo()
   },
-  VEST_ESTIMATED_APY: {
-    TITLE: 'Vest Estimated APY',
+  VESTIMATED_APY: {
+    TITLE: 'Vestimated APY',
     INFO: 'The estimated annual percentage yield that you can expect in rewards up to the point of vesting based on the entered values.',
-    DETAILS: assInfo('estimation')
+    DETAILS: assInfo()
   },
   FARMING_SUMMARY: {
     TITLE: 'Farming Summary',
@@ -97,8 +97,8 @@ export const resources = {
       TITLE: 'Unbonding Blocks',
       INFO: 'The number of blocks the deposit will be locked for after it is withdrawn.'
     },
-    ESTIMATED_APY: {
-      TITLE: 'Estimated APY',
+    VESTIMATED_APY: {
+      TITLE: 'Vestimated APY',
       INFO: 'The annual percentage yield that can be expected in rewards up to the point of vesting or the current block, whichever is the latest.'
     },
     MULTIPLIER: {
