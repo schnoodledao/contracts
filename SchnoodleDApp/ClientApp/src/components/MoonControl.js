@@ -28,14 +28,17 @@ export class MoonControl extends Component {
       getInfoIntervalId: 0,
       decimals: null,
       blockNumber: 0,
-      farmingSummary: [],
+      farmingOverview: [],
+      farmData: null,
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
-      helpDetails: ''
+      helpDetails: '',
+      globeEl: null
     };
 
     this.closeHelpModal = this.closeHelpModal.bind(this);
+    this.state.globeEl = React.createRef();
   }
 
   async componentDidMount() {
@@ -55,6 +58,12 @@ export class MoonControl extends Component {
     
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
+
+      // Set up Moon globe
+      const globeElControls = this.state.globeEl.current.controls();
+      globeElControls.autoRotate = true;
+      globeElControls.autoRotateSpeed = 0.5;
+
     } catch (err) {
       alert('Load error. Please check you are connected to the correct network in MetaMask.');
       console.error(err);
@@ -73,7 +82,7 @@ export class MoonControl extends Component {
     this.setState({ blockNumber }, async () => {
       const depositedEvents = await schnoodleFarming.getPastEvents('Deposited', { fromBlock: 0, toBlock: 'latest' });
       const accounts = [...new Set(await depositedEvents.map((depositedEvent) => depositedEvent.returnValues.account))];
-      const farmingSummary = (await Promise.all(accounts.map(async (account) => {
+      const farmingOverview = (await Promise.all(accounts.map(async (account) => {
         return (await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward) => {
           try {
             const deposit = depositReward.deposit;
@@ -89,7 +98,9 @@ export class MoonControl extends Component {
         }))).filter(depositInfo => depositInfo != null);
       }))).flat();
 
-      this.setState({ farmingSummary });
+      const farmData = await d3.csv("../../assets/csv/world_population.csv", ({ lat, lng, pop }) => ({ lat: +lat, lng: +lng, pop: +pop }));
+
+      this.setState({ farmingOverview, farmData });
     });
   }
 
@@ -120,51 +131,29 @@ export class MoonControl extends Component {
   closeHelpModal() {
     this.setState({ openHelpModal: false })
   }
-  renderMoonFarms(farmingSummary) {
-    const globeEl = useRef();
-    const [farmData, setFarmData] = useState([]);
 
-    useEffect(() => {
-    // load data
-    fetch("../../assets/csv/world_population.csv")
-      .then((res) => res.text())
-      .then((csv) =>
-        d3.csvParse(csv, ({ lat, lng, pop }) => ({
-          lat: +lat,
-          lng: +lng,
-          pop: +pop
-        }))
-      )
-      .then(setFarmData);
-    }, []);
-
-    useEffect(() => {
-    // Auto-rotate
-    globeEl.current.controls().autoRotate = true;
-    globeEl.current.controls().autoRotateSpeed = 0.5;
-    }, []);
-
+  renderMoonFarms() {
     const weightColor = d3.scaleSequentialSqrt(d3.interpolatePuBuGn).domain([0, 1e7]);
 
     return (
-        <Globe
-          ref={globeEl}
-          globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
-          bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
-          backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-          hexBinPointsData={farmData}
-          hexBinPointWeight="pop"
-          hexAltitude={(d) => d.sumWeight * 4e-8}
-          hexBinResolution={4}
-          hexTopColor={(d) => weightColor(d.sumWeight)}
-          hexSideColor={(d) => weightColor(d.sumWeight)}
-          hexBinMerge={true}
-          enablePointerInteraction={false}      
-        />
+      <Globe
+        ref={this.state.globeEl}
+        globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
+        bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
+        backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+        hexBinPointsData={this.state.farmData}
+        hexBinPointWeight="pop"
+        hexAltitude={(d) => d.sumWeight * 4e-8}
+        hexBinResolution={4}
+        hexTopColor={(d) => weightColor(d.sumWeight)}
+        hexSideColor={(d) => weightColor(d.sumWeight)}
+        hexBinMerge={true}
+        enablePointerInteraction={false}      
+      />
     );
   }
 
-  renderFarmingSummaryTable(farmingSummary) {
+  renderFarmingOverviewTable(farmingOverview) {
     const space = ' ';
     const blockNumberTitleParts = resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE.split(space);
     const depositAmountTitleParts = resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE.split(space);
@@ -212,7 +201,7 @@ export class MoonControl extends Component {
           </div>
         </div>
         <div role="rowgroup" class="text-secondary">
-          {farmingSummary.map((depositInfo) => {
+          {farmingOverview.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
             return (
@@ -266,13 +255,13 @@ export class MoonControl extends Component {
                   <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
                 </p>
 
-                <video class="m-auto max-h-80" autoPlay muted loop src="../../assets/vid/mp4/rotating-moon.mp4" type="video/mp4" />
-                {this.renderMoonFarms(this.state.farmingSummary)}
-                {this.state.farmingSummary.length > 0 && (
+                {this.renderMoonFarms()}
+
+                {this.state.farmingOverview.length > 0 && (
                   <div class="summarytable">
                     <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
                     <div class="overflow-x-auto text-secondary my-5 ">
-                      {this.renderFarmingSummaryTable(this.state.farmingSummary)}
+                      {this.renderFarmingOverviewTable(this.state.farmingOverview)}
                     </div>
                   </div>
                 )}
