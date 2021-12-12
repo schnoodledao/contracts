@@ -50,6 +50,10 @@ fieldset:disabled button {
   @apply hidden md:block lg:hidden;
 }
 
+.dontshowmd {
+  @apply block md:hidden lg:block;
+}
+
 .hidesm {
   @apply hidden md:block !important;
 }
@@ -82,8 +86,8 @@ fieldset:disabled button {
   height: 37px;
 }
 
-.btn-accent {
-  @apply hover:bg-yellow-200;
+.btn-accent:hover {
+  background-color: #fde68a !important
 }
 
 .maxwithdraw {
@@ -159,8 +163,16 @@ input.withdrawinput {
   @apply input-accent withdraw text-base xl:text-lg text-left;
 }
 
+.depositbtns {
+  @apply btn text-base-300 text-lg uppercase ml-1 opacity-80 bordered;
+}
+
 .dwmbutton {
-  @apply btn btn-secondary bordered border-secondary text-base-300 text-lg uppercase ml-1 opacity-80;
+  @apply depositbtns btn-secondary bordered border-secondary;
+}
+
+.maxbuttons {
+  @apply depositbtns btn-accent border-accent;
 }
 
 .withbutton .depositinput {
@@ -169,10 +181,6 @@ input.withdrawinput {
 
 .nobutton .depositinput {
   @apply pr-2 !important;
-}
-
-.summarytable .withdrawinput {
-  @apply pr-32 !important;
 }
 
 .fullhalfwidth {
