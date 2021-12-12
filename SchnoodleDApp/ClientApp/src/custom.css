@@ -39,7 +39,11 @@ fieldset:disabled button {
 }
 
 .hidemd {
-  @apply block md:hidden;
+  @apply block md:hidden !important;
+}
+
+.hidelg {
+  @apply block lg:hidden !important;
 }
 
 .showmd {
@@ -47,11 +51,11 @@ fieldset:disabled button {
 }
 
 .hidesm {
-  @apply hidden md:block;
+  @apply hidden md:block !important;
 }
 
 .hidesmmd {
-  @apply hidden lg:block;
+  @apply hidden lg:block !important;
 }
 
 .textfade {
@@ -76,6 +80,16 @@ fieldset:disabled button {
 
 .fakebutton {
   height: 37px;
+}
+
+.btn-accent {
+  @apply hover:bg-yellow-200;
+}
+
+.maxwithdraw {
+  @apply btn btn-link text-accent opacity-80 text-lg uppercase hover:bg-transparent hover:opacity-100;
+  background-color: transparent !important;
+  text-decoration: none !important;
 }
 
 .minustop {
@@ -143,6 +157,10 @@ input.withdrawinput {
 
 .depositinput {
   @apply input-accent withdraw text-base xl:text-lg text-left;
+}
+
+.dwmbutton {
+  @apply btn btn-secondary bordered border-secondary text-base-300 text-lg uppercase ml-1 opacity-80;
 }
 
 .withbutton .depositinput {

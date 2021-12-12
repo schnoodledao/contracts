@@ -353,9 +353,10 @@ export class Farming extends Component {
                   <form>
                     <fieldset disabled={pendingBlocks > 0}>
                       <div class="relative">
-                        <div class="form-control">
+                        <div class="flex">
                           <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput" />
-                          <button type="button" class="text-base xl:text-xl absolute top-0 right-0 rounded-l-none btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
+                          <button type="button" class="maxwithdraw">Max</button>
+                          <button type="button" class="text-base xl:text-xl btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>
@@ -555,7 +556,15 @@ export class Farming extends Component {
                                 <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </span>
                             </label>
-                            <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="depositinput" />
+                            <div class="mb-3 flex">
+                              <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="depositinput w-full" />
+                              <button type="button" class="dwmbutton hidesmmd">Day</button>
+                              <button type="button" class="dwmbutton hidesmmd">Week</button>
+                              <button type="button" class="dwmbutton hidesmmd">Month</button>
+                              <button type="button" class="dwmbutton hidelg">D</button>
+                              <button type="button" class="dwmbutton hidelg">W</button>
+                              <button type="button" class="dwmbutton hidelg">M</button>
+                            </div>
                             <p class="approxLabel">{blocksDurationText(this.state.vestingBlocks)}</p>
                           </div>
                           <div class="mb-3 form-control nobutton">
@@ -565,7 +574,15 @@ export class Farming extends Component {
                                 <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </span>
                             </label>
-                            <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
+                            <div class="mb-3 flex">
+                              <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
+                              <button type="button" class="dwmbutton hidesmmd">Day</button>
+                              <button type="button" class="dwmbutton hidesmmd">Week</button>
+                              <button type="button" class="dwmbutton hidesmmd">Month</button>
+                              <button type="button" class="dwmbutton hidelg">D</button>
+                              <button type="button" class="dwmbutton hidelg">W</button>
+                              <button type="button" class="dwmbutton hidelg">M</button>
+                            </div>
                             <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
                           </div>
                           <div class="shadow-sm bottomstats stats">

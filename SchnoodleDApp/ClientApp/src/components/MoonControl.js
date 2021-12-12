@@ -132,11 +132,11 @@ export class MoonControl extends Component {
       <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
-            <span role="columnheader" class="narrower">
+            <span role="columnheader">
               {resources.FARMING_OVERVIEW.ACCOUNT.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_OVERVIEW.ACCOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrower">
+            <span role="columnheader">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -144,7 +144,7 @@ export class MoonControl extends Component {
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -160,7 +160,7 @@ export class MoonControl extends Component {
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="wide">
+            <span role="columnheader">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -172,14 +172,14 @@ export class MoonControl extends Component {
             const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0 narrower">{depositInfo.account}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0">{depositInfo.account}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.ESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.estimatedApy}%</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"}>{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
             );
           })}
