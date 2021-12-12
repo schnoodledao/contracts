@@ -76,8 +76,8 @@ export class MoonControl extends Component {
           try {
             const deposit = depositReward.deposit;
             const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-            const estimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
-            return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), estimatedApy: estimatedApy };
+            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
+            return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
           } catch (err) {
             if (err.message.includes('deposit not found')) {
               return null;
@@ -125,7 +125,7 @@ export class MoonControl extends Component {
     const depositAmountTitleParts = resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE.split(space);
     const pendingBlocksTitleParts = resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE.split(space);
     const unbondingBlocksTitleParts = resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE.split(space);
-    const estimatedApyTitleParts = resources.FARMING_SUMMARY.ESTIMATED_APY.TITLE.split(space);
+    const vestimatedApyTitleParts = resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE.split(space);
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
@@ -153,8 +153,8 @@ export class MoonControl extends Component {
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrow">
-              {estimatedApyTitleParts[0]}<br />{estimatedApyTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.ESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              {vestimatedApyTitleParts[0]}<br />{vestimatedApyTitleParts[1]}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrow">
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
@@ -177,7 +177,7 @@ export class MoonControl extends Component {
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.ESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.estimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.vestimatedApy}%</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"}>{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
