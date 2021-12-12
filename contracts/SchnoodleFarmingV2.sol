@@ -1,13 +1,13 @@
-// contracts/SchnoodleFarmingV1.sol
+// contracts/SchnoodleFarmingV2.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "abdk-libraries-solidity/ABDKMath64x64.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
-/// Delivers Lambo posthaste
 contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
     address private _schnoodle;
     uint256 _depositId;
@@ -159,7 +159,7 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
 
     function _getRewardInfo(Deposit memory deposit, uint256 amount, uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalDepositWeight, uint256 totalTokens) private view returns(uint256, uint256, uint256) {
         // Calculate the deposit amount multiplied across the number of blocks since the start of the deposit
-        uint256 cumulativeAmount = amount * (rewardBlock - deposit.blockNumber);
+        uint256 cumulativeAmount = amount * (MathUpgradeable.max(rewardBlock, deposit.blockNumber) - deposit.blockNumber);
 
         // Get the new cumulative total of all deposits as the current stored value is from the previous farming activity
         uint256 newCumulativeTotal = _newCumulativeTotal(rewardBlock, checkpointBlock, cumulativeTotal, totalTokens);
@@ -237,8 +237,6 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
     }
 
     function _newCumulativeTotal(uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
-        require(rewardBlock >= checkpointBlock, "SchnoodleFarming: reward block is less than checkpoint block");
-
         // Add the total of all deposits multiplied across all blocks since the previous checkpoint calculation to the cumulative total
         return cumulativeTotal + totalTokens * (rewardBlock - checkpointBlock);
     }
