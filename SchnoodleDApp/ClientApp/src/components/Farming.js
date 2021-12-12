@@ -61,7 +61,7 @@ export class Farming extends Component {
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
 
-    this.updateForecastReward = debounce(this.updateForecastReward, 250);   
+    this.updateForecastReward = debounce(this.updateForecastReward, 500);   
   }
 
   async componentDidMount() {
@@ -211,10 +211,10 @@ export class Farming extends Component {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
 
-    const { schnoodleFarming, vestingBlocks, unbondingBlocks, blockNumber } = this.state;
+    const { schnoodleFarming, vestingBlocksMax, unbondingBlocksMax, blockNumber } = this.state;
 
-    const vestingBlocksList = range(1, vestingBlocks, vestingBlocks / 10);
-    const unbondingBlocksList = range(1, unbondingBlocks, unbondingBlocks / 10);
+    const vestingBlocksList = range(10, vestingBlocksMax, vestingBlocksMax / 10);
+    const unbondingBlocksList = range(10, unbondingBlocksMax, unbondingBlocksMax / 10);
 
     const x = [];
     const y = [];
@@ -225,7 +225,7 @@ export class Farming extends Component {
       for (const unbondingBlocksItem of unbondingBlocksList) {
         x.push(vestingBlocksItem);
         y.push(unbondingBlocksItem);
-        const vestForecastReward = await schnoodleFarming.methods.getReward(scaleUpUnits(amountToDeposit).toString(), vestingBlocksItem, unbondingBlocksItem, blockNumber + vestingBlocksItem).call();
+        const vestForecastReward = await schnoodleFarming.methods.getReward(scaleUpUnits(amountToDeposit).toString(), Math.floor(vestingBlocksItem), Math.floor(unbondingBlocksItem), blockNumber + Math.floor(vestingBlocksItem)).call();
         z.push(vestForecastReward);
       }
     }

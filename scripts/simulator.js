@@ -137,8 +137,8 @@ module.exports = async function main(callback) {
 
       console.log(row);
     }
-    } catch (error) {
-      console.error(error);
-      callback(1);
-    }
+  } catch (error) {
+    console.error(error);
+    callback(1);
+  }
 }
