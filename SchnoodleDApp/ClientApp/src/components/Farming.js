@@ -501,9 +501,15 @@ export class Farming extends Component {
                       <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                       </span>
                     </label>
-                    <div class="relative withbutton">
+                    <div class="relative flex">
                       <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.amountToDeposit || ''} onChange={this.updateAmountToDeposit} class="depositinput" />
-                      <button type="button" class="absolute top-0 right-0 rounded-l-none btn btn-accent opacity-80 bordered border-accent text-base-300 text-lg uppercase" onClick={this.depositMax}>Max</button>
+                        <button type="button" class="dwmbutton hidesmmd">25%</button>
+                        <button type="button" class="dwmbutton hidesmmd">50%</button>
+                        <button type="button" class="dwmbutton hidesmmd">75%</button>
+                        <button type="button" class="dwmbutton hidelg">&frac14;</button>
+                        <button type="button" class="dwmbutton hidelg">&frac12;</button>
+                        <button type="button" class="dwmbutton hidelg">&frac34;</button>
+                      <button type="button" class="maxbuttons" onClick={this.depositMax}>Max</button>
                     </div>
                     </div>
                   </div>
@@ -522,6 +528,7 @@ export class Farming extends Component {
                         <button type="button" class="dwmbutton hidelg">D</button>
                         <button type="button" class="dwmbutton hidelg">W</button>
                         <button type="button" class="dwmbutton hidelg">M</button>
+                        <button type="button" class="maxbuttons">Max</button>
                     </div>
                     <p class="approxLabel">{blocksDurationText(this.state.vestingBlocks)}</p>
                   </div>
@@ -540,6 +547,7 @@ export class Farming extends Component {
                         <button type="button" class="dwmbutton hidelg">D</button>
                         <button type="button" class="dwmbutton hidelg">W</button>
                         <button type="button" class="dwmbutton hidelg">M</button>
+                        <button type="button" class="maxbuttons">Max</button>
                     </div>
                     <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
                   </div>
@@ -562,7 +570,7 @@ export class Farming extends Component {
                     </div>
                   </div>
                   <div class="mb-3 form-control">
-                    <button type="button" className='btn btn-accent mt-5 text-xl font-black' disabled={this.state.amountToDeposit < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToDeposit > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                    <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.amountToDeposit < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToDeposit > availableAmount} onClick={this.addDeposit}>Deposit</button>
                   </div>
                   </fieldset>
                 </form>
