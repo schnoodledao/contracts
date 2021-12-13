@@ -83,11 +83,12 @@ fieldset:disabled button {
 .fakebutton {
   height: 37px;
 }
-/* .btn-accent {
-  @apply hover:bg-accent-focus;
-} */
+
 .btn-accent:hover {
     background-color: #fde68a !important
+}
+.btn-secondary:hover {
+    background-color: #88d8f7 !important
 }
 .maxwithdraw {
   @apply btn btn-link text-accent opacity-80 text-lg uppercase hover:bg-transparent hover:opacity-100;
@@ -161,15 +162,18 @@ input.withdrawinput {
   @apply input-accent withdraw text-base xl:text-lg text-left;
 }
 
-.depositbtns {
- @apply btn text-base-300 text-lg uppercase ml-1 opacity-80 bordered;
-}
 .dwmbutton {
-    @apply depositbtns btn-secondary bordered border-secondary ;
+  @apply depositbtns btn btn-secondary bordered border-secondary ;
 }
+
 .maxbuttons {
-    @apply depositbtns btn-accent border-accent;
+  @apply depositbtns btn btn-accent border-accent;
 }
+
+.depositbtns {
+  @apply text-base-300 text-lg uppercase ml-1 opacity-80 bordered;
+}
+
 .withbutton .depositinput {
   @apply sm:pr-11 md:pr-16 !important;
 }
