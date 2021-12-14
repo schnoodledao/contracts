@@ -117,6 +117,10 @@ export const resources = {
     WITHDRAW: {
       TITLE: 'Withdraw',
       INFO: 'The amount of the deposit that you wish to withdraw. This will be withdrawn when you press the Withdraw button, and your tokens will start to unbond.'
+    },
+    TOOLTIP: {
+      TITLE: 'Moon Farm',
+      INFO: 'The title for the summary tooltip'
     }
   },
   UNBONDING_SUMMARY: {
