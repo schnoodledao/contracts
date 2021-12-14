@@ -31,7 +31,7 @@ export class MoonControl extends Component {
       farmingOverview: [],
       farmData: null,
       arcsData: [],
-      globeClickPoint: { lat: 0, lng: 0 },
+      globeClickPoint: null,
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
@@ -122,7 +122,7 @@ export class MoonControl extends Component {
           ringColor: chroma.scale(['green', 'red'])(getPendingBlocks(depositInfo.deposit, this.state.blockNumber) / blocksPerDuration({ months: 3 })).toString(),
           maxRadius: Math.min(depositInfo.vestimatedApy, 20) / 2,
           propagationSpeed: 1,
-          repeatPeriod: 700,
+          repeatPeriod: 700
         }
       });
 
@@ -224,20 +224,23 @@ export class MoonControl extends Component {
   onPointClick(point) {
     this.globeEl.current.controls().autoRotate = false;
 
-    const { lat: startLat, lng: startLng } = this.state.globeClickPoint;
+    if (this.state.globeClickPoint != null) {
+      const { lat: startLat, lng: startLng } = this.state.globeClickPoint;
+
+      // Add and remove arc after 1 cycle
+      const arc = { startLat, startLng, endLat: point.lat, endLng: point.lng };
+      this.setState({ arcsData: [...this.state.arcsData, arc] });
+      setTimeout(() => this.setState({ arcsData: this.state.arcsData.filter(d => d !== arc) }), this.FLIGHT_TIME * 2);
+
+      // add and remove target rings
+      setTimeout(() => {
+        const targetRing = { lat: point.lat, lng: point.lng, ringColor: 'orange', maxRadius: 5, propagationSpeed: 5, repeatPeriod: this.FLIGHT_TIME * this.ARC_REL_LEN / 3 };
+        this.setState({ farmData: [...this.state.farmData, targetRing] });
+        setTimeout(() => this.setState({ farmData: this.state.farmData.filter(r => r !== targetRing) }), this.FLIGHT_TIME);
+      }, this.FLIGHT_TIME);
+    }
+
     this.setState({ globeClickPoint: { lat: point.lat, lng: point.lng } });
-
-    // Add and remove arc after 1 cycle
-    const arc = { startLat, startLng, endLat: point.lat, endLng: point.lng };
-    this.setState({ arcsData: [...this.state.arcsData, arc] });
-    setTimeout(() => this.setState({ arcsData: this.state.arcsData.filter(d => d !== arc) }), this.FLIGHT_TIME * 2);
-
-    // add and remove target rings
-    setTimeout(() => {
-      const targetRing = { lat: point.lat, lng: point.lng, ringColor: 'orange', maxRadius: 5, propagationSpeed: 5, repeatPeriod: this.FLIGHT_TIME * this.ARC_REL_LEN / 3 };
-      this.setState({ farmData: [...this.state.farmData, targetRing] });
-      setTimeout(() => this.setState({ farmData: this.state.farmData.filter(r => r !== targetRing) }), this.FLIGHT_TIME);
-    }, this.FLIGHT_TIME);
   };
 
   renderFarmingOverviewTable(farmingOverview) {
