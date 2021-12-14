@@ -34,12 +34,12 @@ export class MoonControl extends Component {
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
-      helpDetails: '',
-      globeEl: null
+      helpDetails: ''
     };
 
     this.closeHelpModal = this.closeHelpModal.bind(this);
-    this.state.globeEl = React.createRef();
+    this.globeRef = React.createRef();
+    this.globeEl = React.createRef();
   }
 
   async componentDidMount() {
@@ -61,7 +61,7 @@ export class MoonControl extends Component {
       window.ethereum.on('networkChanged', () => window.location.reload(true));
 
       // Set up Moon globe
-      const globeElControls = this.state.globeEl.current.controls();
+      const globeElControls = this.globeEl.current.controls();
       globeElControls.autoRotate = true;
       globeElControls.autoRotateSpeed = 0.5;
 
@@ -99,20 +99,19 @@ export class MoonControl extends Component {
         }))).filter(depositInfo => depositInfo != null);
       }))).flat();
 
-      let locations = {};
+      let farmCounts = {};
       const farmData = farmingOverview.map((depositInfo) => {
-        const addressParts = depositInfo.account.match(/.{1,22}/g);
-        const denominator = 2 ** 80;
-
-        if (!(depositInfo.account in locations)) {
-          locations[depositInfo.account] = 0;
+        if (!(depositInfo.account in farmCounts)) {
+          farmCounts[depositInfo.account] = 0;
         } else {
-          locations[depositInfo.account]++;
+          farmCounts[depositInfo.account]++;
         }
 
+        const farmPosition = this.getFarmPosition(depositInfo.account);
+
         return {
-          lat: 180 * addressParts[0] / denominator - 90 + (locations[depositInfo.account] % 2 === 0 ? locations[depositInfo.account] * 2 : 0),
-          lng: 360 * ('0x' + addressParts[1]) / denominator - 180 + (locations[depositInfo.account] % 2 === 1 ? locations[depositInfo.account] * 2 : 0),
+          lat: farmPosition.lat + (farmCounts[depositInfo.account] % 2 === 0 ? farmCounts[depositInfo.account] * 2 : 0),
+          lng: farmPosition.lng + (farmCounts[depositInfo.account] % 2 === 1 ? farmCounts[depositInfo.account] * 2 : 0),
           radius: Math.log10(scaleDownUnits(depositInfo.deposit.amount)) ** 2 / 10 / (2 * Math.PI), // Base the radius on the order of magnitude of the deposit
           altitude: depositInfo.reward / depositInfo.deposit.amount,
           pointColor: depositInfo.account.slice(depositInfo.account.length - 6),
@@ -156,9 +155,9 @@ export class MoonControl extends Component {
 
   renderMoonFarms() {
     return (
-      <div class="justify-center flex">
+      <div ref={this.globeRef} class="justify-center flex">
         <Globe
-          ref={this.state.globeEl}
+          ref={this.globeEl}
           globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
           bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
           backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
@@ -168,8 +167,8 @@ export class MoonControl extends Component {
           pointAltitude="altitude"
           pointColor="pointColor"
           pointLabel={(d) => this.farmInfo(d.depositInfo)}
-          onPointClick={() => this.state.globeEl.current.controls().autoRotate = false}
-          onPointHover={() => this.state.globeEl.current.controls().autoRotate = true}
+          onPointClick={() => this.globeEl.current.controls().autoRotate = false}
+          onPointHover={() => this.globeEl.current.controls().autoRotate = true}
 
           ringsData={this.state.farmData?.slice(0)}
           ringColor="ringColor"
@@ -194,6 +193,17 @@ export class MoonControl extends Component {
         <p>{`${resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE}: ${scaleDownUnits(depositInfo.reward).toLocaleString()}`}</p>
       </div>
     ));
+  }
+
+  showMoonFarm(account) {
+    this.globeEl.current.pointOfView(this.getFarmPosition(account), 2000);
+    this.globeRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  getFarmPosition(account) {
+    const addressParts = account.match(/.{1,22}/g);
+    const denominator = 2 ** 80;
+    return { lat: 180 * addressParts[0] / denominator - 90, lng: 360 * ('0x' + addressParts[1]) / denominator - 180 };
   }
 
   renderFarmingOverviewTable(farmingOverview) {
@@ -248,7 +258,7 @@ export class MoonControl extends Component {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
-              <div role="row" key={depositInfo.deposit.blockNumber}>
+              <div role="row" key={depositInfo.deposit.blockNumber} onClick={() => this.showMoonFarm(depositInfo.account)}>
                 <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0">{depositInfo.account}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
