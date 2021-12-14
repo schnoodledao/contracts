@@ -688,7 +688,7 @@ export class Farming extends Component {
                     <div class="grid mt-4">
 
                       {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
-                        <div class="overlay">
+                        <div class="overlay z-20">
                           <div class="overlayloader flex flex-col items-center justify-center ">
                             <div>
                               <Loader type="Puff" color="#00BFFF" />
@@ -700,7 +700,7 @@ export class Farming extends Component {
                         </div>
                       )}
                       
-                      <div class="plotcontainer">
+                      <div class="plotcontainer z-10">
                         <div class="flex flex-col xl:flex-row">
 
                           {this.state.vestiplotReward.length > 0 && (
