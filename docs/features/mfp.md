@@ -2,15 +2,15 @@
 coverY: 0
 ---
 
-# 🏆 Neoteric Farming Platform
+# 🏆 Moon Farming Platform
 
-Schnoodle introduces its pioneering moon farming platform. This is a revolutionary new yield farming concept, introduced in SchnoodleV7, and is more advanced than any other yield farming platform in existence, which is why we call it the Neoteric Farming Platform (NFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
+Schnoodle's revolutionary new yield farming concept, introduced in SchnoodleV7, is more advanced than any other yield farming platform in existence, which is why we call it the Moon Farming Platform (MFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
 * **Vestiplier:** This is a function of the deposit amounts, vesting blocks and unbonding blocks of all yield farmers which is used to calculate a multiplier based on a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function).
 * **Gamified Yield Incentivator (GYI):** This is the sister functionality of the Gamified HODL Incentivator (GHI) that is part of the Price Support Mechanism (PSM). It is a mechanism whereby the farming fund that is used to reward yield farmers is effectively supplied from a 4% fee (the sow rate) on all sells.
 
-![NFP Components](../.gitbook/assets/nfp-components.svg)
+![MFP Components](../.gitbook/assets/mfp-components.svg)
 
 ## Automated Superyield System
 
