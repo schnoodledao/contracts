@@ -85,6 +85,10 @@ export const resources = {
       TITLE: 'Block Number',
       INFO: 'The block number when this deposit was added.'
     },
+    CREATED: {
+      TITLE: 'Created',
+      INFO: 'The date/time when this deposit was added.'
+    },
     DEPOSIT_AMOUNT: {
       TITLE: 'Deposit Amount',
       INFO: 'The number of tokens that are deposited.'

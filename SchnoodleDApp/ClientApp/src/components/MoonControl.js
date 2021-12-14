@@ -91,8 +91,9 @@ export class MoonControl extends Component {
           try {
             const deposit = depositReward.deposit;
             const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
-            return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
+            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber);
+            const created = new Date((await web3.eth.getBlock(deposit.blockNumber)).timestamp * 1000);
+            return { account: account, deposit: deposit, created: created, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
           } catch (err) {
             if (err.message.includes('deposit not found')) {
               return null;
@@ -104,6 +105,7 @@ export class MoonControl extends Component {
 
       let farmCounts = {};
       const farmData = farmingOverview.map((depositInfo) => {
+        // Track the number of farms for each account so that they can be clustered around each other on the Metamoon
         if (!(depositInfo.account in farmCounts)) {
           farmCounts[depositInfo.account] = 0;
         } else {
@@ -113,8 +115,8 @@ export class MoonControl extends Component {
         const farmPoint = this.getFarmPoint(depositInfo.account);
 
         return {
-          lat: farmPoint.lat + (farmCounts[depositInfo.account] % 2 === 0 ? farmCounts[depositInfo.account] * 2 : 0),
-          lng: farmPoint.lng + (farmCounts[depositInfo.account] % 2 === 1 ? farmCounts[depositInfo.account] * 2 : 0),
+          lat: farmPoint.lat + 2 * (farmCounts[depositInfo.account] / 3),
+          lng: farmPoint.lng + 2 * (farmCounts[depositInfo.account] % 3),
           radius: Math.log10(scaleDownUnits(depositInfo.deposit.amount)) ** 2 / 10 / (2 * Math.PI), // Base the radius on the order of magnitude of the deposit
           altitude: depositInfo.reward / depositInfo.deposit.amount,
           pointColor: depositInfo.account.slice(depositInfo.account.length - 6),
@@ -201,6 +203,7 @@ export class MoonControl extends Component {
       <div>
         <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
         <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${depositInfo.created.toLocaleString()}`}</p>
         <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(depositInfo.deposit.amount).toLocaleString()}`}</p>
         <p>{`${resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE}: ${pendingBlocks} (${blocksDurationText(pendingBlocks)})`}</p>
         <p>{`${resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE}: ${depositInfo.deposit.unbondingBlocks} (${blocksDurationText(depositInfo.deposit.unbondingBlocks)})`}</p>
@@ -252,7 +255,7 @@ export class MoonControl extends Component {
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
-      <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
             <span role="columnheader">
@@ -262,6 +265,10 @@ export class MoonControl extends Component {
             <span role="columnheader">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="columnheader">
+              {resources.FARMING_SUMMARY.CREATED.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
@@ -297,6 +304,7 @@ export class MoonControl extends Component {
               <div role="row" key={depositInfo.deposit.blockNumber}>
                 <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0" onClick={() => this.showMoonFarm(depositInfo.account)} style={{ cursor: 'pointer' }}>{depositInfo.account}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"} title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
