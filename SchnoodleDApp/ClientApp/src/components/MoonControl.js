@@ -173,6 +173,7 @@ export class MoonControl extends Component {
           pointColor="pointColor"
           pointLabel={(d) => this.farmInfo(d.depositInfo)}
           onPointClick={(point) => { this.onPointClick(point) }}
+          onPointRightClick={() => this.globeEl.current.controls().autoRotate = false }
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
 
           ringsData={this.state.farmData?.slice(0)}
@@ -222,8 +223,6 @@ export class MoonControl extends Component {
   }
 
   onPointClick(point) {
-    this.globeEl.current.controls().autoRotate = false;
-
     if (this.state.globeClickPoint != null) {
       const { lat: startLat, lng: startLng } = this.state.globeClickPoint;
 
