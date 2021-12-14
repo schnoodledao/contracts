@@ -15,6 +15,7 @@ export const resources = {
   MOON_CONTROL: 'Moon Control',
   START_FARMING: 'Start Farming',
   ADD_DEPOSIT: 'Add Deposit',
+  MOON_FARM_DATA: 'Moon Farm Data',
   BLOCK_NUMBER: {
     TITLE: 'Block Number',
     INFO: 'The number of the current block on the blockchain. This increases sequentially.'
@@ -117,10 +118,6 @@ export const resources = {
     WITHDRAW: {
       TITLE: 'Withdraw',
       INFO: 'The amount of the deposit that you wish to withdraw. This will be withdrawn when you press the Withdraw button, and your tokens will start to unbond.'
-    },
-    TOOLTIP: {
-      TITLE: 'Moon Farm',
-      INFO: 'The title for the summary tooltip'
     }
   },
   UNBONDING_SUMMARY: {

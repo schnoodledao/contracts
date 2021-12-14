@@ -201,7 +201,7 @@ export class MoonControl extends Component {
 
     return ReactDOMServer.renderToString((
       <div class="moontip">
-        <span>{`${resources.FARMING_SUMMARY.TOOLTIP.TITLE}`}</span>
+        <span>{`${resources.MOON_FARM_DATA}`}</span>
         <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
         <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
         <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${depositInfo.created.toLocaleString()}`}</p>
