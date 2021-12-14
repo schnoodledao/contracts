@@ -171,7 +171,7 @@ export class MoonControl extends Component {
           pointRadius="radius"
           pointAltitude="altitude"
           pointColor="pointColor"
-          pointLabel={(d) => '<div class="moontip"><span>Moon Farm</span>'+this.farmInfo(d.depositInfo)+'</div>'}
+          pointLabel={(d) => this.farmInfo(d.depositInfo)}
           onPointClick={(point) => { this.onPointClick(point) }}
           onPointRightClick={() => this.globeEl.current.controls().autoRotate = false }
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
@@ -198,7 +198,8 @@ export class MoonControl extends Component {
     const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
 
     return ReactDOMServer.renderToString((
-      <div>
+      <div class="moontip">
+        <span>{`${resources.FARMING_SUMMARY.TOOLTIP.TITLE}`}</span>
         <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
         <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
         <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(depositInfo.deposit.amount).toLocaleString()}`}</p>
