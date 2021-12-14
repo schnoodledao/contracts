@@ -685,48 +685,57 @@ export class Farming extends Component {
                         </fieldset>
                       </form>
                     </div>
+                    <div class="grid mt-4">
 
-                    {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
-                      <div>
-                        <div class="justify-center flex mt-8">
-                          <Loader type="Puff" color="#00BFFF" />
+                      {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
+                        <div class="overlay">
+                          <div class="overlayloader flex flex-col items-center justify-center ">
+                            <div>
+                              <Loader type="Puff" color="#00BFFF" />
+                            </div>
+                            <div>
+                              <p class="approxLabel mt-4">{this.state.vestiplotProgress}%</p>
+                            </div>
+                          </div>
                         </div>
-                        <p class="approxLabel mt-4">{this.state.vestiplotProgress}%</p>
+                      )}
+                      
+                      <div class="plotcontainer">
+                        <div class="flex flex-col md:flex-row">
+
+                          {this.state.vestiplotReward.length > 0 && (
+                            <Plot
+                              data={this.state.vestiplotReward}
+                              layout={{
+                                scene: {
+                                  xaxis: { title: resources.VESTING_BLOCKS.TITLE },
+                                  yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
+                                  zaxis: { title: resources.VESTIMATED_REWARD.TITLE },
+                                },
+                                margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
+                                paper_bgcolor: 'rgba(0,0,0,0)',
+                                plot_bgcolor: 'rgba(0,0,0,0)'
+                              }}
+                            />
+                          )}
+
+                          {this.state.vestiplotApy.length > 0 && (
+                            <Plot
+                              data={this.state.vestiplotApy}
+                              layout={{
+                                scene: {
+                                  xaxis: { title: resources.VESTING_BLOCKS.TITLE },
+                                  yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
+                                  zaxis: { title: resources.VESTIMATED_APY.TITLE },
+                                },
+                                margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
+                                paper_bgcolor: 'rgba(0,0,0,0)',
+                                plot_bgcolor: 'rgba(0,0,0,0)'
+                              }}
+                            />
+                          )}
+                        </div>
                       </div>
-                    )}
-
-                    <div class="flex flex-col md:flex-row">
-                      {this.state.vestiplotReward.length > 0 && (
-                        <Plot
-                          data={this.state.vestiplotReward}
-                          layout={{
-                            scene: {
-                              xaxis: { title: resources.VESTING_BLOCKS.TITLE },
-                              yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
-                              zaxis: { title: resources.VESTIMATED_REWARD.TITLE },
-                            },
-                            margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)'
-                          }}
-                        />
-                      )}
-
-                      {this.state.vestiplotApy.length > 0 && (
-                        <Plot
-                          data={this.state.vestiplotApy}
-                          layout={{
-                            scene: {
-                              xaxis: { title: resources.VESTING_BLOCKS.TITLE },
-                              yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
-                              zaxis: { title: resources.VESTIMATED_APY.TITLE },
-                            },
-                            margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)'
-                          }}
-                        />
-                      )}
                     </div>
                   </div>
                 </div>
