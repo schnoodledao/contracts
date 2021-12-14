@@ -682,15 +682,14 @@ export class Farming extends Component {
 
                     {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
                       <div>
-                        <div class="justify-center flex">
+                        <div class="justify-center flex mt-8">
                           <Loader type="Puff" color="#00BFFF" />
                         </div>
-                        <br />
-                        <p class="approxLabel">{this.state.vestiplotProgress}%</p>
+                        <p class="approxLabel mt-4">{this.state.vestiplotProgress}%</p>
                       </div>
                     )}
 
-                    <span>
+                    <div class="flex flex-col md:flex-row">
                       {this.state.vestiplotReward.length > 0 && (
                         <Plot
                           data={this.state.vestiplotReward}
@@ -722,7 +721,7 @@ export class Farming extends Component {
                           }}
                         />
                       )}
-                    </span>
+                    </div>
                   </div>
                 </div>
 

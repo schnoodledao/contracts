@@ -171,7 +171,7 @@ export class MoonControl extends Component {
           pointRadius="radius"
           pointAltitude="altitude"
           pointColor="pointColor"
-          pointLabel={(d) => this.farmInfo(d.depositInfo)}
+          pointLabel={(d) => '<div class="moontip"><span>Moon Farm</span>'+this.farmInfo(d.depositInfo)+'</div>'}
           onPointClick={(point) => { this.onPointClick(point) }}
           onPointRightClick={() => this.globeEl.current.controls().autoRotate = false }
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
