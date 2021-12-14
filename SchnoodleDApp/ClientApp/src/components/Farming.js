@@ -4,7 +4,7 @@ import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
 import getWeb3 from "../getWeb3";
-import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText } from '../helpers';
+import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -190,9 +190,9 @@ export class Farming extends Component {
     try {
       const { schnoodleFarming, selectedAddress, withdrawAmounts, farmingSummary } = this.state;
 
-      const depositReward = farmingSummary[i];
-      const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositReward.deposit.amount);
-      const response = await schnoodleFarming.methods.withdraw(depositReward.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
+      const depositInfo = farmingSummary[i];
+      const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositInfo.deposit.amount);
+      const response = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -399,18 +399,18 @@ export class Farming extends Component {
           </div>
         </div>
         <div role="rowgroup" class="text-secondary">
-          {farmingSummary.map((depositReward, i) => {
-            const amount = scaleDownUnits(depositReward.deposit.amount);
-            const pendingBlocks = Math.max(0, parseInt(depositReward.deposit.blockNumber) + parseInt(depositReward.deposit.vestingBlocks) - this.state.blockNumber);
+          {farmingSummary.map((depositInfo, i) => {
+            const amount = scaleDownUnits(depositInfo.deposit.amount);
+            const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
-              <div role="row" key={depositReward.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositReward.deposit.blockNumber}</span>
+              <div role="row" key={depositInfo.deposit.blockNumber}>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositReward.deposit.unbondingBlocks)}>{depositReward.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow" >{depositReward.vestimatedApy}%</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositReward.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositReward.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.vestimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
                 <span role="cell" class="wider">
                   <form>
                     <fieldset disabled={pendingBlocks > 0}>
@@ -682,7 +682,7 @@ export class Farming extends Component {
 
                     {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
                       <div>
-                        <div class= "justify-center flex">
+                        <div class="justify-center flex">
                           <Loader type="Puff" color="#00BFFF" />
                         </div>
                         <br />
