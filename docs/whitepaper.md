@@ -272,8 +272,8 @@ This whitepaper primarily covers the core fundamentals of Schnoodle including it
 [psm.md](features/psm.md)
 {% endcontent-ref %}
 
-{% content-ref url="features/nfp.md" %}
-[nfp.md](features/nfp.md)
+{% content-ref url="features/mfp.md" %}
+[mfp.md](features/mfp.md)
 {% endcontent-ref %}
 
 As if that isn't enough, we many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.
