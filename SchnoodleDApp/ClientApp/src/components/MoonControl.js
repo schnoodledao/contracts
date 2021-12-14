@@ -258,8 +258,8 @@ export class MoonControl extends Component {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
-              <div role="row" key={depositInfo.deposit.blockNumber} onClick={() => this.showMoonFarm(depositInfo.account)}>
-                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0">{depositInfo.account}</span>
+              <div role="row" key={depositInfo.deposit.blockNumber}>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0" onClick={() => this.showMoonFarm(depositInfo.account)} style={{ cursor: 'pointer' }}>{depositInfo.account}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
