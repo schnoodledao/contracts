@@ -31,7 +31,7 @@ fieldset:disabled button {
 }
 
 .mooncontrol {
-	background-color: #000016;
+  background-color: #000016;
 }
 
 .maintitles {
@@ -125,6 +125,10 @@ fieldset:disabled button {
   @apply uppercase;
 }
 
+.card-body {
+    @apply px-4 lg:px-8;
+}
+
 .sectiontitle {
   @apply uppercase;
 }
@@ -176,7 +180,7 @@ input.withdrawinput {
 }
 
 .depositbtns {
-  @apply text-base-300 text-lg uppercase ml-1 opacity-80 bordered;
+  @apply text-base-300 md:text-lg uppercase ml-1 opacity-80 bordered;
 }
 
 .withbutton .depositinput {
@@ -211,11 +215,39 @@ fieldset:disabled .bottomstats {
   box-shadow: none;
 }
 
-video {
-    height: 100vh;
-    min-height: 100%;
+.scene-tooltip .moontip {
+  color: #ffffff;
+  font-size: 15px;
+  background: rgba(109, 40, 217, 0.7);
+  border-radius: 2rem;
+  padding: 1em;
+  margin: 1em;
+  text-align: left;
+}
+.scene-tooltip .moontip span {
+  font-size: 18px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
+.plotcontainer, .overlay {
+  grid-area: 1 / 1;
+}
+
+.overlayloader {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 10, 46, 0.6);
+}
+
+.js-plotly-plot {
+  display: block;
+  margin: auto;
+}
 
 /*
 ________________________________________________________________________
@@ -361,7 +393,7 @@ TABLE
     padding: 8px 10px;
   }
   [role="table"] [role="row"] {
-    @apply p-6;
+    @apply py-6 px-4;
   }
   [role="table"] [role="cell"] {
     border-bottom: 0;
@@ -408,7 +440,11 @@ TABLE
   }
 }
 
-@media only screen and (max-width: 769px) {}
+@media only screen and (max-width: 769px) {
+  #scene, #scene canvas, .svg-container {
+    width:80vw;
+  }
+}
 
 
 /* Modal */

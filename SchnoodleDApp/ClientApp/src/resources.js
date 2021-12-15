@@ -15,6 +15,7 @@ export const resources = {
   MOON_CONTROL: 'Moon Control',
   START_FARMING: 'Start Farming',
   ADD_DEPOSIT: 'Add Deposit',
+  MOON_FARM_DATA: 'Moon Farm Data',
   BLOCK_NUMBER: {
     TITLE: 'Block Number',
     INFO: 'The number of the current block on the blockchain. This increases sequentially.'
@@ -84,6 +85,10 @@ export const resources = {
     BLOCK_NUMBER: {
       TITLE: 'Block Number',
       INFO: 'The block number when this deposit was added.'
+    },
+    CREATED: {
+      TITLE: 'Created',
+      INFO: 'The date/time when this deposit was added.'
     },
     DEPOSIT_AMOUNT: {
       TITLE: 'Deposit Amount',

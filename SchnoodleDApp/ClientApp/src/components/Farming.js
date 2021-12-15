@@ -4,7 +4,7 @@ import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV8 from "../contracts/SchnoodleV8.json";
 import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
 import getWeb3 from "../getWeb3";
-import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText } from '../helpers';
+import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -36,7 +36,7 @@ export class Farming extends Component {
       sowRate: 0,
       sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
-      amountToDeposit: 0,
+      depositAmount: 0,
       vestingBlocks: 0,
       vestingBlocksMax: 0,
       unbondingBlocks: 0,
@@ -58,11 +58,13 @@ export class Farming extends Component {
       helpDetails: ''
     };
 
-    this.depositMax = this.depositMax.bind(this);
     this.addDeposit = this.addDeposit.bind(this);
-    this.updateAmountToDeposit = this.updateAmountToDeposit.bind(this);
+    this.updateDepositAmount = this.updateDepositAmount.bind(this);
+    this.maxDepositAmount = this.maxDepositAmount.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
+    this.maxVestingBlocks = this.maxVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
+    this.maxUnbondingBlocks = this.maxUnbondingBlocks.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
 
     this.updateVestimates = debounce(this.updateVestimates, 500);
@@ -121,8 +123,9 @@ export class Farming extends Component {
       const farmingSummary = await Promise.all([].concat(await schnoodleFarming.methods.getFarmingSummary(selectedAddress).call()).sort((a, b) => a.deposit.blockNumber > b.deposit.blockNumber ? 1 : -1).map(async (depositReward) => {
         const deposit = depositReward.deposit;
         const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-        const vestimatedApy = await calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(selectedAddress, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
-        return { deposit: deposit, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
+        const vestimatedApy = await calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(selectedAddress, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber);
+        const created = new Date((await web3.eth.getBlock(deposit.blockNumber)).timestamp * 1000);
+        return { deposit: deposit, created: created, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
       }));
 
       const unbondingSummary = [].concat(await schnoodleFarming.methods.getUnbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
@@ -174,10 +177,10 @@ export class Farming extends Component {
 
   async addDeposit() {
     try {
-      const { schnoodleFarming, selectedAddress, amountToDeposit, vestingBlocks, unbondingBlocks, availableAmount } = this.state;
+      const { schnoodleFarming, selectedAddress, depositAmount, vestingBlocks, unbondingBlocks, availableAmount } = this.state;
 
-      const amountToDepositValue = this.preventDust(amountToDeposit, availableAmount);
-      const response = await schnoodleFarming.methods.addDeposit(amountToDepositValue.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
+      const depositAmountValue = this.preventDust(depositAmount, availableAmount);
+      const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -188,9 +191,9 @@ export class Farming extends Component {
     try {
       const { schnoodleFarming, selectedAddress, withdrawAmounts, farmingSummary } = this.state;
 
-      const depositReward = farmingSummary[i];
-      const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositReward.deposit.amount);
-      const response = await schnoodleFarming.methods.withdraw(depositReward.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
+      const depositInfo = farmingSummary[i];
+      const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositInfo.deposit.amount);
+      const response = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -201,10 +204,6 @@ export class Farming extends Component {
     return userAmount === scaleDownUnits(maxAmount) ? maxAmount : scaleUpUnits(userAmount);
   }
 
-  async depositMax() {
-    this.setState({ amountToDeposit: scaleDownUnits(this.state.availableAmount) }, async () => await this.updateVestimates());
-  }
-
   updateWithdrawAmount(index, e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
@@ -213,16 +212,24 @@ export class Farming extends Component {
     this.setState({ withdrawAmounts });
   }
 
-  async withdrawMax(index) {
+  async maxWithdraw(index) {
     const { withdrawAmounts } = this.state;
     withdrawAmounts[index] = scaleDownUnits(this.state.farmingSummary[index].deposit.amount);
     this.setState({ withdrawAmounts });
   }
 
-  async updateAmountToDeposit(e) {
+  async updateDepositAmount(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    this.setState({ amountToDeposit: Math.min(value, scaleDownUnits(this.state.availableAmount)) }, async () => {
+    this.setDepositAmount(value);
+  }
+
+  async maxDepositAmount() {
+    this.setDepositAmount(scaleDownUnits(this.state.availableAmount));
+  }
+
+  async setDepositAmount(amount) {
+    this.setState({ depositAmount: Math.min(Math.floor(amount), scaleDownUnits(this.state.availableAmount)) }, async () => {
       await this.updateVestimates();
       await this.updateVestiplots();
     });
@@ -239,6 +246,10 @@ export class Farming extends Component {
     this.setState({ vestingBlocks: Math.min(vestingBlocks + blocks, this.state.vestingBlocksMax) }, async () => await this.updateVestimates());
   }
 
+  async maxVestingBlocks() {
+    this.setState({ vestingBlocks: this.state.vestingBlocksMax }, async () => await this.updateVestimates());
+  }
+
   async updateUnbondingBlocks(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
@@ -250,14 +261,18 @@ export class Farming extends Component {
     this.setState({ unbondingBlocks: Math.min(unbondingBlocks + blocks, this.state.unbondingBlocksMax) }, async () => await this.updateVestimates());
   }
 
+  async maxUnbondingBlocks() {
+    this.setState({ unbondingBlocks: this.state.unbondingBlocksMax }, async () => await this.updateVestimates());
+  }
+
   async updateVestimates() {
-    const { amountToDeposit, vestingBlocks, unbondingBlocks } = this.state;
-    const [vestimatedReward, vestimatedApy] = await this.getVestimates(scaleUpUnits(amountToDeposit), vestingBlocks, unbondingBlocks);
+    const { depositAmount, vestingBlocks, unbondingBlocks } = this.state;
+    const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocks, unbondingBlocks);
     this.setState({ vestimatedReward, vestimatedApy });
   }
 
   async updateVestiplots() {
-    const { amountToDeposit, vestingBlocksMax, unbondingBlocksMax } = this.state;
+    const { depositAmount, vestingBlocksMax, unbondingBlocksMax } = this.state;
 
     const token = this.vestiplotsCancellationToken = Symbol();
     const vestingBlocksList = range(10, vestingBlocksMax, vestingBlocksMax / 10);
@@ -271,12 +286,12 @@ export class Farming extends Component {
 
     let vestiplotProgress = 0;
 
-    if (amountToDeposit > 0) {
+    if (depositAmount > 0) {
       for (const vestingBlocksItem of vestingBlocksList) {
         for (const unbondingBlocksItem of unbondingBlocksList) {
           if (token !== this.vestiplotsCancellationToken) return;
 
-          const [vestimatedReward, vestimatedApy] = await this.getVestimates(amountToDeposit, vestingBlocksItem, unbondingBlocksItem);
+          const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocksItem, unbondingBlocksItem);
 
           rewardX.push(vestingBlocksItem);
           rewardY.push(unbondingBlocksItem);
@@ -318,12 +333,12 @@ export class Farming extends Component {
   async getVestimates(amount, vestingBlocks, unbondingBlocks) {
     const { schnoodleFarming, blockNumber } = this.state;
 
-    if (bigInt(amount).value === 0n || vestingBlocks === 0 || unbondingBlocks === 0) {
+    if (amount === 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
       return [0, 0];
     }
 
     const vestingBlocksFloored = Math.floor(vestingBlocks);
-    const vestimatedReward = await schnoodleFarming.methods.getReward(amount.toString(), vestingBlocksFloored, Math.floor(unbondingBlocks), blockNumber + vestingBlocksFloored).call();
+    const vestimatedReward = scaleDownUnits(await schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocksFloored, Math.floor(unbondingBlocks), blockNumber + vestingBlocksFloored).call());
     const vestimatedApy = await calculateApy(amount, vestimatedReward, vestingBlocks);
 
     return [vestimatedReward, vestimatedApy];
@@ -347,26 +362,30 @@ export class Farming extends Component {
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
-      <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
             <span role="columnheader" class="narrower">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
+            <span role="columnheader" class="narrower">
+              {resources.FARMING_SUMMARY.CREATED.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
             <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" class="narrower">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader">
+            <span role="columnheader" class="narrower">
               {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" class="narrower">
               {vestimatedApyTitleParts[0]}<br />{vestimatedApyTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -374,7 +393,7 @@ export class Farming extends Component {
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="wide">
+            <span role="columnheader">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -385,26 +404,27 @@ export class Farming extends Component {
           </div>
         </div>
         <div role="rowgroup" class="text-secondary">
-          {farmingSummary.map((depositReward, i) => {
-            const amount = scaleDownUnits(depositReward.deposit.amount);
-            const pendingBlocks = Math.max(0, parseInt(depositReward.deposit.blockNumber) + parseInt(depositReward.deposit.vestingBlocks) - this.state.blockNumber);
+          {farmingSummary.map((depositInfo, i) => {
+            const amount = scaleDownUnits(depositInfo.deposit.amount);
+            const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
-              <div role="row" key={depositReward.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositReward.deposit.blockNumber}</span>
+              <div role="row" key={depositInfo.deposit.blockNumber}>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrower" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositReward.deposit.unbondingBlocks)}>{depositReward.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow" >{depositReward.vestimatedApy}%</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositReward.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositReward.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrower" >{depositInfo.vestimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"}>{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
                 <span role="cell" class="wider">
                   <form>
                     <fieldset disabled={pendingBlocks > 0}>
                       <div class="relative">
                         <div class="flex">
                           <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput" />
-                          <button type="button" onClick={this.withdrawMax.bind(this, i)} class="maxwithdraw">Max</button>
-                          <button type="button" class="text-base xl:text-xl btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-8" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
+                          <button type="button" onClick={this.maxWithdraw.bind(this, i)} class="maxwithdraw">Max</button>
+                          <button type="button" class="text-base xl:text-xl btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-2" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>
@@ -420,7 +440,7 @@ export class Farming extends Component {
 
   renderUnbondingSummaryTable(unbondingSummary) {
     return (
-      <div role="table" aria-label="Unbonding Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+      <div role="table" aria-label={resources.UNBONDING_SUMMARY.TITLE} class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
             <span role="columnheader" class="">
@@ -592,14 +612,14 @@ export class Farming extends Component {
                                 </span>
                               </label>
                               <div class="relative flex">
-                                <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.amountToDeposit || ''} onChange={this.updateAmountToDeposit} class="depositinput" />
-                                <button type="button" class="dwmbutton hidesmmd">25%</button>
-                                <button type="button" class="dwmbutton hidesmmd">50%</button>
-                                <button type="button" class="dwmbutton hidesmmd">75%</button>
-                                <button type="button" class="dwmbutton hidelg">&frac14;</button>
-                                <button type="button" class="dwmbutton hidelg">&frac12;</button>
-                                <button type="button" class="dwmbutton hidelg">&frac34;</button>
-                                <button type="button" class="maxbuttons" onClick={this.depositMax}>Max</button>
+                                <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} class="depositinput" />
+                                <button type="button" class="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
+                                <button type="button" class="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
+                                <button type="button" class="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
+                                <button type="button" class="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
+                                <button type="button" class="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
+                                <button type="button" class="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                                <button type="button" class="maxbuttons" onClick={this.maxDepositAmount}>Max</button>
                               </div>
                             </div>
                           </div>
@@ -618,7 +638,7 @@ export class Farming extends Component {
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>D</button>
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>W</button>
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>M</button>
-                              <button type="button" class="maxbuttons">Max</button>
+                              <button type="button" class="maxbuttons" onClick={this.maxVestingBlocks}>Max</button>
                             </div>
                             <p class="approxLabel">{blocksDurationText(this.state.vestingBlocks)}</p>
                           </div>
@@ -637,7 +657,7 @@ export class Farming extends Component {
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>D</button>
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ weeks: 1 }))}>W</button>
                               <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ months: 1 }))}>M</button>
-                              <button type="button" class="maxbuttons">Max</button>
+                              <button type="button" class="maxbuttons" onClick={this.maxUnbondingBlocks}>Max</button>
                             </div>
                             <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
                           </div>
@@ -660,55 +680,63 @@ export class Farming extends Component {
                             </div>
                           </div>
                           <div class="mb-3 form-control">
-                            <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.amountToDeposit < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.amountToDeposit > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                            <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>
                     </div>
+                    <div class="grid mt-4">
 
-                    <span>
                       {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
-                        <div>
-                          <Loader
-                            type="BallTriangle"
-                            color="#00BFFF"
-                          />
-                          {this.state.vestiplotProgress}%
+                        <div class="overlay z-20">
+                          <div class="overlayloader flex flex-col items-center justify-center ">
+                            <div>
+                              <Loader type="Puff" color="#00BFFF" />
+                            </div>
+                            <div>
+                              <p class="approxLabel mt-4">{this.state.vestiplotProgress}%</p>
+                            </div>
+                          </div>
                         </div>
                       )}
+                      
+                      <div class="plotcontainer z-10">
+                        <div class="flex flex-col xl:flex-row">
 
-                      {this.state.vestiplotReward.length > 0 && (
-                        <Plot
-                          data={this.state.vestiplotReward}
-                          layout={{
-                            scene: {
-                              xaxis: { title: resources.VESTING_BLOCKS.TITLE },
-                              yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
-                              zaxis: { title: resources.VESTIMATED_REWARD.TITLE },
-                            },
-                            margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)'
-                          }}
-                        />
-                      )}
+                          {this.state.vestiplotReward.length > 0 && (
+                            <Plot
+                              data={this.state.vestiplotReward}
+                              layout={{
+                                scene: {
+                                  xaxis: { title: resources.VESTING_BLOCKS.TITLE },
+                                  yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
+                                  zaxis: { title: resources.VESTIMATED_REWARD.TITLE },
+                                },
+                                margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
+                                paper_bgcolor: 'rgba(0,0,0,0)',
+                                plot_bgcolor: 'rgba(0,0,0,0)'
+                              }}
+                            />
+                          )}
 
-                      {this.state.vestiplotApy.length > 0 && (
-                        <Plot
-                          data={this.state.vestiplotApy}
-                          layout={{
-                            scene: {
-                              xaxis: { title: resources.VESTING_BLOCKS.TITLE },
-                              yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
-                              zaxis: { title: resources.VESTIMATED_APY.TITLE },
-                            },
-                            margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
-                            paper_bgcolor: 'rgba(0,0,0,0)',
-                            plot_bgcolor: 'rgba(0,0,0,0)'
-                          }}
-                        />
-                      )}
-                    </span>
+                          {this.state.vestiplotApy.length > 0 && (
+                            <Plot
+                              data={this.state.vestiplotApy}
+                              layout={{
+                                scene: {
+                                  xaxis: { title: resources.VESTING_BLOCKS.TITLE },
+                                  yaxis: { title: resources.UNBONDING_BLOCKS.TITLE },
+                                  zaxis: { title: resources.VESTIMATED_APY.TITLE },
+                                },
+                                margin: { l: 0, r: 0, b: 0, t: 0, pad: 0 },
+                                paper_bgcolor: 'rgba(0,0,0,0)',
+                                plot_bgcolor: 'rgba(0,0,0,0)'
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

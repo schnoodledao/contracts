@@ -1,21 +1,22 @@
 import React, { Component } from 'react';
+import ReactDOMServer from 'react-dom/server';
 import { resources } from '../resources';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV7 from "../contracts/SchnoodleV7.json";
 import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
 import getWeb3 from "../getWeb3";
-import { initializeHelpers, scaleDownUnits, calculateApy, blocksDurationText } from '../helpers';
+import { initializeHelpers, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import * as d3 from "d3";
+import chroma from 'chroma-js';
 import Globe from "react-globe.gl";
 const bigInt = require("big-integer");
 
 export class MoonControl extends Component {
   static displayName = MoonControl.name;
-  
+
   constructor(props) {
     super(props);
 
@@ -26,19 +27,22 @@ export class MoonControl extends Component {
       schnoodle: null,
       schnoodleFarming: null,
       getInfoIntervalId: 0,
-      decimals: null,
       blockNumber: 0,
       farmingOverview: [],
       farmData: null,
+      arcsData: [],
+      globeClickPoint: null,
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
-      helpDetails: '',
-      globeEl: null
+      helpDetails: ''
     };
 
     this.closeHelpModal = this.closeHelpModal.bind(this);
-    this.state.globeEl = React.createRef();
+    this.globeRef = React.createRef();
+    this.globeEl = React.createRef();
+    this.ARC_REL_LEN = 0.4;
+    this.FLIGHT_TIME = 1000;
   }
 
   async componentDidMount() {
@@ -60,7 +64,7 @@ export class MoonControl extends Component {
       window.ethereum.on('networkChanged', () => window.location.reload(true));
 
       // Set up Moon globe
-      const globeElControls = this.state.globeEl.current.controls();
+      const globeElControls = this.globeEl.current.controls();
       globeElControls.autoRotate = true;
       globeElControls.autoRotateSpeed = 0.5;
 
@@ -87,8 +91,9 @@ export class MoonControl extends Component {
           try {
             const deposit = depositReward.deposit;
             const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
-            return { account: account, deposit: deposit, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
+            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber);
+            const created = new Date((await web3.eth.getBlock(deposit.blockNumber)).timestamp * 1000);
+            return { account: account, deposit: deposit, created: created, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
           } catch (err) {
             if (err.message.includes('deposit not found')) {
               return null;
@@ -98,7 +103,30 @@ export class MoonControl extends Component {
         }))).filter(depositInfo => depositInfo != null);
       }))).flat();
 
-      const farmData = await d3.csv("../../assets/csv/world_population.csv", ({ lat, lng, pop }) => ({ lat: +lat, lng: +lng, pop: +pop }));
+      let farmCounts = {};
+      const farmData = farmingOverview.map((depositInfo) => {
+        // Track the number of farms for each account so that they can be clustered around each other on the Metamoon
+        if (!(depositInfo.account in farmCounts)) {
+          farmCounts[depositInfo.account] = 0;
+        } else {
+          farmCounts[depositInfo.account]++;
+        }
+
+        const farmPoint = this.getFarmPoint(depositInfo.account);
+
+        return {
+          lat: farmPoint.lat + 2 * (farmCounts[depositInfo.account] / 3),
+          lng: farmPoint.lng + 2 * (farmCounts[depositInfo.account] % 3),
+          radius: Math.log10(scaleDownUnits(depositInfo.deposit.amount)) ** 2 / 10 / (2 * Math.PI), // Base the radius on the order of magnitude of the deposit
+          altitude: depositInfo.reward / depositInfo.deposit.amount,
+          pointColor: depositInfo.account.slice(depositInfo.account.length - 6),
+          depositInfo: depositInfo,
+          ringColor: chroma.scale(['green', 'red'])(getPendingBlocks(depositInfo.deposit, this.state.blockNumber) / blocksPerDuration({ months: 3 })).toString(),
+          maxRadius: Math.min(depositInfo.vestimatedApy, 20) / 2,
+          propagationSpeed: 1,
+          repeatPeriod: 700
+        }
+      });
 
       this.setState({ farmingOverview, farmData });
     });
@@ -133,25 +161,90 @@ export class MoonControl extends Component {
   }
 
   renderMoonFarms() {
-    const weightColor = d3.scaleSequentialSqrt(d3.interpolatePuBuGn).domain([0, 1e7]);
-
     return (
-      <Globe
-        ref={this.state.globeEl}
-        globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
-        bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
-        backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-        hexBinPointsData={this.state.farmData}
-        hexBinPointWeight="pop"
-        hexAltitude={(d) => d.sumWeight * 4e-8}
-        hexBinResolution={4}
-        hexTopColor={(d) => weightColor(d.sumWeight)}
-        hexSideColor={(d) => weightColor(d.sumWeight)}
-        hexBinMerge={true}
-        enablePointerInteraction={false}      
-      />
+      <div ref={this.globeRef} class="justify-center flex">
+        <Globe
+          ref={this.globeEl}
+          globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
+          bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
+          backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
+
+          pointsData={this.state.farmData}
+          pointRadius="radius"
+          pointAltitude="altitude"
+          pointColor="pointColor"
+          pointLabel={(d) => this.farmInfo(d.depositInfo)}
+          onPointClick={(point) => { this.onPointClick(point) }}
+          onPointRightClick={() => this.globeEl.current.controls().autoRotate = false }
+          onPointHover={() => this.globeEl.current.controls().autoRotate = true}
+
+          ringsData={this.state.farmData?.slice(0)}
+          ringColor="ringColor"
+          ringMaxRadius="maxRadius"
+          ringPropagationSpeed="propagationSpeed"
+          ringRepeatPeriod="repeatPeriod"
+
+          arcsData={this.state.arcsData}
+          arcColor={() => 'darkOrange'}
+          arcDashLength={this.ARC_REL_LEN}
+          arcDashGap={2}
+          arcDashInitialGap={1}
+          arcDashAnimateTime={this.FLIGHT_TIME}
+          arcsTransitionDuration={0}
+        />
+      </div>
     );
   }
+
+  farmInfo(depositInfo) {
+    const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
+
+    return ReactDOMServer.renderToString((
+      <div class="moontip">
+        <span>{`${resources.MOON_FARM_DATA}`}</span>
+        <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${depositInfo.created.toLocaleString()}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(depositInfo.deposit.amount).toLocaleString()}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE}: ${pendingBlocks} (${blocksDurationText(pendingBlocks)})`}</p>
+        <p>{`${resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE}: ${depositInfo.deposit.unbondingBlocks} (${blocksDurationText(depositInfo.deposit.unbondingBlocks)})`}</p>
+        <p>{`${resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE}: ${depositInfo.vestimatedApy}`}%</p>
+        <p>{`${resources.FARMING_SUMMARY.MULTIPLIER.TITLE}: ${depositInfo.deposit.multiplier / 1000}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE}: ${scaleDownUnits(depositInfo.reward).toLocaleString()}`}</p>
+      </div>
+    ));
+  }
+
+  showMoonFarm(account) {
+    this.globeEl.current.pointOfView(this.getFarmPoint(account), 2000);
+    this.globeRef.current.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  getFarmPoint(account) {
+    const addressParts = account.match(/.{1,22}/g);
+    const denominator = 2 ** 80;
+    return { lat: 180 * addressParts[0] / denominator - 90, lng: 360 * ('0x' + addressParts[1]) / denominator - 180 };
+  }
+
+  onPointClick(point) {
+    if (this.state.globeClickPoint != null) {
+      const { lat: startLat, lng: startLng } = this.state.globeClickPoint;
+
+      // Add and remove arc after 1 cycle
+      const arc = { startLat, startLng, endLat: point.lat, endLng: point.lng };
+      this.setState({ arcsData: [...this.state.arcsData, arc] });
+      setTimeout(() => this.setState({ arcsData: this.state.arcsData.filter(d => d !== arc) }), this.FLIGHT_TIME * 2);
+
+      // add and remove target rings
+      setTimeout(() => {
+        const targetRing = { lat: point.lat, lng: point.lng, ringColor: 'orange', maxRadius: 5, propagationSpeed: 5, repeatPeriod: this.FLIGHT_TIME * this.ARC_REL_LEN / 3 };
+        this.setState({ farmData: [...this.state.farmData, targetRing] });
+        setTimeout(() => this.setState({ farmData: this.state.farmData.filter(r => r !== targetRing) }), this.FLIGHT_TIME);
+      }, this.FLIGHT_TIME);
+    }
+
+    this.setState({ globeClickPoint: { lat: point.lat, lng: point.lng } });
+  };
 
   renderFarmingOverviewTable(farmingOverview) {
     const space = ' ';
@@ -163,26 +256,30 @@ export class MoonControl extends Component {
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
-      <div role="table" aria-label="Farming Summary" class="border-secondary border-4 rounded-2xl text-accent-content">
+      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="border-secondary border-4 rounded-2xl text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
-            <span role="columnheader">
+            <span role="columnheader" class="wider">
               {resources.FARMING_OVERVIEW.ACCOUNT.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_OVERVIEW.ACCOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader">
+            <span role="columnheader" class="narrow">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+            </span>
+            <span role="columnheader" class="narrow">
+              {resources.FARMING_SUMMARY.CREATED.TITLE}
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader">
+            <span role="columnheader" class="narrow">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader">
+            <span role="columnheader" class="narrow">
               {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -194,7 +291,7 @@ export class MoonControl extends Component {
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
-            <span role="columnheader">
+            <span role="columnheader" class="wide">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
               <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
             </span>
@@ -203,17 +300,18 @@ export class MoonControl extends Component {
         <div role="rowgroup" class="text-secondary">
           {farmingOverview.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
-            const pendingBlocks = Math.max(0, parseInt(depositInfo.deposit.blockNumber) + parseInt(depositInfo.deposit.vestingBlocks) - this.state.blockNumber);
+            const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0">{depositInfo.account}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0">{depositInfo.deposit.blockNumber}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow" >{depositInfo.vestimatedApy}%</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"}>{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0 cursor-pointer wider" onClick={() => this.showMoonFarm(depositInfo.account)}>{depositInfo.account}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrow">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrow" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"} >{amount.toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow">{depositInfo.vestimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow">{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
             );
           })}

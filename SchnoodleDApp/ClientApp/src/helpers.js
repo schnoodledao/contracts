@@ -45,6 +45,9 @@ export function blocksPerDuration(duration) {
 }
 
 export function blocksDurationText(blocks) {
-  if (blocks === 0) return;
-  return 'Approximately ' + humanizeDuration(Duration.fromObject({ seconds: blocks * averageBlockTime }), { largest: 2, round: true });
+  return (blocks !== 0 ? 'Approximately ' : '') + humanizeDuration(Duration.fromObject({ seconds: blocks * averageBlockTime }), { largest: 2, round: true });
+}
+
+export function getPendingBlocks(deposit, blockNumber) {
+  return Math.max(0, parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks) - blockNumber);
 }
