@@ -267,7 +267,7 @@ export class Farming extends Component {
 
   async updateVestimates() {
     const { depositAmount, vestingBlocks, unbondingBlocks } = this.state;
-    const [vestimatedReward, vestimatedApy] = await this.getVestimates(scaleUpUnits(depositAmount), vestingBlocks, unbondingBlocks);
+    const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocks, unbondingBlocks);
     this.setState({ vestimatedReward, vestimatedApy });
   }
 
@@ -333,12 +333,12 @@ export class Farming extends Component {
   async getVestimates(amount, vestingBlocks, unbondingBlocks) {
     const { schnoodleFarming, blockNumber } = this.state;
 
-    if (bigInt(amount).value === 0n || vestingBlocks === 0 || unbondingBlocks === 0) {
+    if (amount === 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
       return [0, 0];
     }
 
     const vestingBlocksFloored = Math.floor(vestingBlocks);
-    const vestimatedReward = await schnoodleFarming.methods.getReward(amount.toString(), vestingBlocksFloored, Math.floor(unbondingBlocks), blockNumber + vestingBlocksFloored).call();
+    const vestimatedReward = scaleDownUnits(await schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocksFloored, Math.floor(unbondingBlocks), blockNumber + vestingBlocksFloored).call());
     const vestimatedApy = await calculateApy(amount, vestimatedReward, vestingBlocks);
 
     return [vestimatedReward, vestimatedApy];
