@@ -243,9 +243,13 @@ fieldset:disabled .bottomstats {
   background: rgba(20, 10, 46, 0.6);
 }
 
-.js-plotly-plot {
-  display: block;
-  margin: auto;
+.js-plotly-plot, .js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+  display: block !important;
+  margin: auto !important;
+}
+.js-plotly-plot, #scene, #scene canvas {
+    max-width:80vw;
+    width:100% !important;
 }
 /*
 ________________________________________________________________________
@@ -438,7 +442,11 @@ TABLE
   }
 }
 
-@media only screen and (max-width: 769px) {}
+@media only screen and (max-width: 769px) {
+  #scene, #scene canvas, .svg-container {
+    width:80vw;
+  }
+}
 
 
 /* Modal */
