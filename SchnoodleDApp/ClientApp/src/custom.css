@@ -249,6 +249,12 @@ fieldset:disabled .bottomstats {
   margin: auto;
 }
 
+.js-plotly-plot, #scene, #scene canvas {
+  max-width: 736px;
+  width: 100% !important;
+  margin: auto;
+} 
+
 /*
 ________________________________________________________________________
 TABLE
@@ -381,6 +387,13 @@ TABLE
 }
 
 @media only screen and (max-width: 1023px) {
+
+  .js-plotly-plot, #scene, #scene canvas {
+    max-width: 85vw !important;
+    width: 100% !important;
+    margin: auto;
+  }
+
   [role="table"] .columnheader-group {
     display: none;
   }
