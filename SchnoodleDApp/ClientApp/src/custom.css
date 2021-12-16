@@ -223,6 +223,7 @@ fieldset:disabled .bottomstats {
   padding: 1em;
   margin: 1em;
   text-align: left;
+  max-width: 80vw;
 }
 .scene-tooltip .moontip span {
   font-size: 18px;
@@ -248,6 +249,12 @@ fieldset:disabled .bottomstats {
   display: block;
   margin: auto;
 }
+
+.js-plotly-plot, #scene, #scene canvas {
+  max-width: 736px;
+  width: 100% !important;
+  margin: auto;
+} 
 
 /*
 ________________________________________________________________________
@@ -381,6 +388,13 @@ TABLE
 }
 
 @media only screen and (max-width: 1023px) {
+
+  .js-plotly-plot, #scene, #scene canvas {
+    max-width: 85vw !important;
+    width: 100% !important;
+    margin: auto;
+  }
+
   [role="table"] .columnheader-group {
     display: none;
   }
@@ -443,6 +457,9 @@ TABLE
 @media only screen and (max-width: 769px) {
   #scene, #scene canvas, .svg-container {
     width:80vw;
+  }
+  .scene-tooltip .moontip {
+    font-size: 11px;
   }
 }
 
