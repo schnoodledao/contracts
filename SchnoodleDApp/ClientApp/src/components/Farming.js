@@ -667,7 +667,7 @@ export class Farming extends Component {
                                 {resources.VESTIMATED_REWARD.TITLE}
                                 <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </div>
-                              <div class="stat-value text-accent">{scaleDownUnits(this.state.vestimatedReward).toLocaleString()}</div>
+                              <div class="stat-value text-accent">{this.state.vestimatedReward.toLocaleString()}</div>
                               <div class="stat-desc">{token}</div>
                             </div>
                             <div class="stat border-t-1 md:border-t-0 md:border-base-200">
