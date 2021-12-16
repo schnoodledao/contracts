@@ -223,6 +223,7 @@ fieldset:disabled .bottomstats {
   padding: 1em;
   margin: 1em;
   text-align: left;
+  max-width: 80vw;
 }
 .scene-tooltip .moontip span {
   font-size: 18px;
@@ -456,6 +457,9 @@ TABLE
 @media only screen and (max-width: 769px) {
   #scene, #scene canvas, .svg-container {
     width:80vw;
+  }
+  .scene-tooltip .moontip {
+    font-size: 11px;
   }
 }
 
