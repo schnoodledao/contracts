@@ -46,6 +46,8 @@ export class Farming extends Component {
       vestiplotReward: [],
       vestiplotApy: [],
       vestiplotProgress: 0,
+      optimumVestingBlocks: 0,
+      optimumUnbondingBlocks: 0,
       lockedBalance: 0,
       unbondingBalance: 0,
       availableAmount: 0,
@@ -65,6 +67,7 @@ export class Farming extends Component {
     this.maxVestingBlocks = this.maxVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
     this.maxUnbondingBlocks = this.maxUnbondingBlocks.bind(this);
+    this.maximiseApy = this.maximiseApy.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
 
     this.updateVestimates = debounce(this.updateVestimates, 500);
@@ -275,8 +278,8 @@ export class Farming extends Component {
     const { depositAmount, vestingBlocksMax, unbondingBlocksMax } = this.state;
 
     const token = this.vestiplotsCancellationToken = Symbol();
-    const vestingBlocksList = range(10, vestingBlocksMax, vestingBlocksMax / 10);
-    const unbondingBlocksList = range(10, unbondingBlocksMax, unbondingBlocksMax / 10);
+    const vestingBlocksList = range(10, vestingBlocksMax, Math.ceil(vestingBlocksMax / 10));
+    const unbondingBlocksList = range(10, unbondingBlocksMax, Math.ceil(unbondingBlocksMax / 10));
     const rewardX = [];
     const rewardY = [];
     const rewardZ = [];
@@ -284,9 +287,15 @@ export class Farming extends Component {
     const apyY = [];
     const apyZ = [];
 
-    let vestiplotProgress = 0;
+    let optimumVestingBlocks = 0;
+    let optimumUnbondingBlocks = 0;
+    this.setState({ optimumVestingBlocks, optimumUnbondingBlocks });
 
     if (depositAmount > 0) {
+      let maxVestimatedApy = 0;
+      let steps = vestingBlocksList.length * unbondingBlocksList.length;
+      let vestiplotProgress = 0;
+
       for (const vestingBlocksItem of vestingBlocksList) {
         for (const unbondingBlocksItem of unbondingBlocksList) {
           if (token !== this.vestiplotsCancellationToken) return;
@@ -300,7 +309,13 @@ export class Farming extends Component {
           apyY.push(unbondingBlocksItem);
           apyZ.push(vestimatedApy);
 
-          this.setState({ vestiplotProgress: ++vestiplotProgress });
+          if (vestimatedApy > maxVestimatedApy) {
+            maxVestimatedApy = vestimatedApy;
+            optimumVestingBlocks = vestingBlocksItem;
+            optimumUnbondingBlocks = unbondingBlocksItem;
+          }
+
+          this.setState({ vestiplotProgress: Math.floor(100 * ++vestiplotProgress / steps) });
         }
       }
     }
@@ -327,7 +342,11 @@ export class Farming extends Component {
       }
     ];
 
-    this.setState({ vestiplotReward, vestiplotApy });
+    this.setState({ vestiplotReward, vestiplotApy, optimumVestingBlocks, optimumUnbondingBlocks });
+  }
+
+  async maximiseApy() {
+    this.setState({ vestingBlocks: this.state.optimumVestingBlocks, unbondingBlocks: this.state.optimumUnbondingBlocks }, async () => await this.updateVestimates());
   }
 
   async getVestimates(amount, vestingBlocks, unbondingBlocks) {
@@ -337,8 +356,7 @@ export class Farming extends Component {
       return [0, 0];
     }
 
-    const vestingBlocksFloored = Math.floor(vestingBlocks);
-    const vestimatedReward = scaleDownUnits(await schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocksFloored, Math.floor(unbondingBlocks), blockNumber + vestingBlocksFloored).call());
+    const vestimatedReward = scaleDownUnits(await schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocks, unbondingBlocks, blockNumber + vestingBlocks).call());
     const vestimatedApy = await calculateApy(amount, vestimatedReward, vestingBlocks);
 
     return [vestimatedReward, vestimatedApy];
@@ -661,13 +679,16 @@ export class Farming extends Component {
                             </div>
                             <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
                           </div>
+                          <div class="mb-3 form-control">
+                            <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                          </div>
                           <div class="shadow-sm bottomstats stats">
                             <div class="stat border-t-1 md:border-t-0 md:border-base-200">
                               <div class="stat-title">
                                 {resources.VESTIMATED_REWARD.TITLE}
                                 <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
                               </div>
-                              <div class="stat-value text-accent">{scaleDownUnits(this.state.vestimatedReward).toLocaleString()}</div>
+                              <div class="stat-value text-accent">{this.state.vestimatedReward.toLocaleString()}</div>
                               <div class="stat-desc">{token}</div>
                             </div>
                             <div class="stat border-t-1 md:border-t-0 md:border-base-200">
