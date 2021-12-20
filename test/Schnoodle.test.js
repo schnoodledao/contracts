@@ -32,6 +32,7 @@ beforeEach(async function () {
   schnoodleFarming = await SchnoodleFarming.new();
   await schnoodleFarming.initialize(schnoodle.address);
   await schnoodle.configure(true, serviceAccount, schnoodleFarming.address, { from: serviceAccount });
+  await schnoodleFarming.configure();
 });
 
 describe('Balance', () => {

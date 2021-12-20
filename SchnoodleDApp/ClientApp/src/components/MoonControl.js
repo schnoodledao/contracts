@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { resources } from '../resources';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
-import SchnoodleV7 from "../contracts/SchnoodleV7.json";
-import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
+import SchnoodleV8 from "../contracts/SchnoodleV8.json";
+import SchnoodleFarmingV1 from "../contracts/SchnoodleFarmingV1.json";
+import SchnoodleFarmingV2 from "../contracts/SchnoodleFarmingV2.json";
 import getWeb3 from "../getWeb3";
 import { initializeHelpers, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
@@ -28,6 +29,8 @@ export class MoonControl extends Component {
       schnoodleFarming: null,
       getInfoIntervalId: 0,
       blockNumber: 0,
+      vestingBlocksFactor: 0,
+      unbondingBlocksFactor: 0,
       farmingOverview: [],
       farmData: null,
       arcsData: [],
@@ -49,9 +52,9 @@ export class MoonControl extends Component {
     try {
       const web3 = await getWeb3();
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(SchnoodleV7.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
-      const schnoodleFarmingDeployedNetwork = SchnoodleFarming.networks[await web3.eth.net.getId()];
-      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
+      const schnoodle = new web3.eth.Contract(SchnoodleV8.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
+      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
       this.setState({ web3, schnoodle, schnoodleFarming }, async () => {
@@ -86,6 +89,9 @@ export class MoonControl extends Component {
     this.setState({ blockNumber }, async () => {
       const depositedEvents = await schnoodleFarming.getPastEvents('Deposited', { fromBlock: 0, toBlock: 'latest' });
       const accounts = [...new Set(await depositedEvents.map((depositedEvent) => depositedEvent.returnValues.account))];
+      const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
+      const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
+
       const farmingOverview = (await Promise.all(accounts.map(async (account) => {
         return (await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward) => {
           try {
@@ -121,16 +127,22 @@ export class MoonControl extends Component {
           altitude: depositInfo.reward / depositInfo.deposit.amount,
           pointColor: depositInfo.account.slice(depositInfo.account.length - 6),
           depositInfo: depositInfo,
-          ringColor: chroma.scale(['green', 'red'])(getPendingBlocks(depositInfo.deposit, this.state.blockNumber) / blocksPerDuration({ months: 3 })).toString(),
+          ringColor: chroma.scale(['green', 'red'])(this.getPendingBlocks(depositInfo) / blocksPerDuration({ months: 3 })).toString(),
           maxRadius: Math.min(depositInfo.vestimatedApy, 20) / 2,
           propagationSpeed: 1,
           repeatPeriod: 700
         }
       });
 
-      this.setState({ farmingOverview, farmData });
+      this.setState({ vestingBlocksFactor, unbondingBlocksFactor, farmingOverview, farmData });
     });
   }
+
+  getPendingBlocks(depositInfo) {
+    return getPendingBlocks(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor, depositInfo.deposit.blockNumber, this.state.blockNumber);
+  }
+
+  //#region Error handling
 
   async handleResponse(response) {
     if (response.status) {
@@ -152,6 +164,10 @@ export class MoonControl extends Component {
     alert(message);
   }
 
+  //#endregion
+
+  //#region Help functions
+
   openHelpModal(content) {
     this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true })
   }
@@ -159,6 +175,10 @@ export class MoonControl extends Component {
   closeHelpModal() {
     this.setState({ openHelpModal: false })
   }
+
+  //#endregion
+
+  //#region Metamoon
 
   renderMoonFarms() {
     return (
@@ -175,7 +195,7 @@ export class MoonControl extends Component {
           pointColor="pointColor"
           pointLabel={(d) => this.farmInfo(d.depositInfo)}
           onPointClick={(point) => { this.onPointClick(point) }}
-          onPointRightClick={() => this.globeEl.current.controls().autoRotate = false }
+          onPointRightClick={() => this.globeEl.current.controls().autoRotate = false}
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
 
           ringsData={this.state.farmData?.slice(0)}
@@ -197,7 +217,8 @@ export class MoonControl extends Component {
   }
 
   farmInfo(depositInfo) {
-    const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
+    const pendingBlocks = this.getPendingBlocks(depositInfo);
+    const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
 
     return ReactDOMServer.renderToString((
       <div class="moontip">
@@ -207,7 +228,7 @@ export class MoonControl extends Component {
         <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${depositInfo.created.toLocaleString()}`}</p>
         <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(depositInfo.deposit.amount).toLocaleString()}`}</p>
         <p>{`${resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE}: ${pendingBlocks} (${blocksDurationText(pendingBlocks)})`}</p>
-        <p>{`${resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE}: ${depositInfo.deposit.unbondingBlocks} (${blocksDurationText(depositInfo.deposit.unbondingBlocks)})`}</p>
+        <p>{`${resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE}: ${unbondingBlocks} (${blocksDurationText(unbondingBlocks)})`}</p>
         <p>{`${resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE}: ${depositInfo.vestimatedApy}`}%</p>
         <p>{`${resources.FARMING_SUMMARY.MULTIPLIER.TITLE}: ${depositInfo.deposit.multiplier / 1000}`}</p>
         <p>{`${resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE}: ${scaleDownUnits(depositInfo.reward).toLocaleString()}`}</p>
@@ -245,6 +266,10 @@ export class MoonControl extends Component {
 
     this.setState({ globeClickPoint: { lat: point.lat, lng: point.lng } });
   };
+
+  //#endregion
+
+  //#region Rendering
 
   renderFarmingOverviewTable(farmingOverview) {
     const space = ' ';
@@ -300,7 +325,9 @@ export class MoonControl extends Component {
         <div role="rowgroup" class="text-secondary">
           {farmingOverview.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
-            const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
+            const pendingBlocks = this.getPendingBlocks(depositInfo);
+            const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
+
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
                 <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="border-l-0 cursor-pointer wider" onClick={() => this.showMoonFarm(depositInfo.account)}>{depositInfo.account}</span>
@@ -308,7 +335,7 @@ export class MoonControl extends Component {
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrow" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"} >{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(unbondingBlocks)}>{unbondingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow">{depositInfo.vestimatedApy}%</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow">{depositInfo.deposit.multiplier / 1000}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
@@ -383,4 +410,6 @@ export class MoonControl extends Component {
       </div>
     );
   }
+
+  //#endregion
 }

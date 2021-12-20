@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import { resources } from '../resources';
 import SchnoodleV1 from "../contracts/SchnoodleV1.json";
 import SchnoodleV8 from "../contracts/SchnoodleV8.json";
-import SchnoodleFarming from "../contracts/SchnoodleFarmingV1.json";
+import SchnoodleFarmingV1 from "../contracts/SchnoodleFarmingV1.json";
+import SchnoodleFarmingV2 from "../contracts/SchnoodleFarmingV2.json";
 import getWeb3 from "../getWeb3";
 import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
@@ -37,10 +38,12 @@ export class Farming extends Component {
       sellQuota: { 'blockMetric': 0, 'amount': 0 },
       balance: 0,
       depositAmount: 0,
-      vestingBlocks: 0,
-      vestingBlocksMax: 0,
-      unbondingBlocks: 0,
-      unbondingBlocksMax: 0,
+      vestingBlocksFactor: 0,
+      factoredVestingBlocks: 0,
+      factoredVestingBlocksMax: 0,
+      unbondingBlocksFactor: 0,
+      factoredUnbondingBlocks: 0,
+      factoredUnbondingBlocksMax: 0,
       vestimatedReward: 0,
       vestimatedApy: 0,
       vestiplotReward: [],
@@ -79,8 +82,8 @@ export class Farming extends Component {
       const web3 = await getWeb3();
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
       const schnoodle = new web3.eth.Contract(SchnoodleV8.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
-      const schnoodleFarmingDeployedNetwork = SchnoodleFarming.networks[await web3.eth.net.getId()];
-      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
+      const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
+      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
       this.setState({ web3, schnoodle, schnoodleFarming, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
@@ -119,8 +122,10 @@ export class Farming extends Component {
       const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
       const unbondingBalance = bigInt(await schnoodleFarming.methods.unbondingBalanceOf(selectedAddress).call());
       const availableAmount = balance.subtract(lockedBalance);
-      const vestingBlocksMax = blocksPerDuration({ years: 1 });
-      const unbondingBlocksMax = blocksPerDuration({ years: 1 });
+      const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
+      const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
+      const factoredVestingBlocksMax = blocksPerDuration({ years: 1 }) * vestingBlocksFactor;
+      const factoredUnbondingBlocksMax = await schnoodleFarming.methods.getMaxUnbondingBlocks().call() * unbondingBlocksFactor;
 
       // Fetch the farming summary while also calculating the APY for each deposit
       const farmingSummary = await Promise.all([].concat(await schnoodleFarming.methods.getFarmingSummary(selectedAddress).call()).sort((a, b) => a.deposit.blockNumber > b.deposit.blockNumber ? 1 : -1).map(async (depositReward) => {
@@ -146,8 +151,10 @@ export class Farming extends Component {
         sowRate,
         sellQuota,
         balance,
-        vestingBlocksMax,
-        unbondingBlocksMax,
+        vestingBlocksFactor,
+        factoredVestingBlocksMax,
+        unbondingBlocksFactor,
+        factoredUnbondingBlocksMax,
         lockedBalance,
         unbondingBalance,
         availableAmount,
@@ -157,6 +164,8 @@ export class Farming extends Component {
       });
     });
   }
+
+  //#region Error handling
 
   async handleResponse(response) {
     if (response.status) {
@@ -178,12 +187,16 @@ export class Farming extends Component {
     alert(message);
   }
 
+  //#endregion
+
+  //#region Deposit functions
+
   async addDeposit() {
     try {
-      const { schnoodleFarming, selectedAddress, depositAmount, vestingBlocks, unbondingBlocks, availableAmount } = this.state;
+      const { schnoodleFarming, selectedAddress, depositAmount, availableAmount } = this.state;
 
       const depositAmountValue = this.preventDust(depositAmount, availableAmount);
-      const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), vestingBlocks, unbondingBlocks).send({ from: selectedAddress });
+      const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), this.vestingBlocks(), this.unbondingBlocks()).send({ from: selectedAddress });
       this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
@@ -207,6 +220,10 @@ export class Farming extends Component {
     return userAmount === scaleDownUnits(maxAmount) ? maxAmount : scaleUpUnits(userAmount);
   }
 
+  //#endregion
+
+  //#region Withdraw amount functions
+
   updateWithdrawAmount(index, e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
@@ -220,6 +237,10 @@ export class Farming extends Component {
     withdrawAmounts[index] = scaleDownUnits(this.state.farmingSummary[index].deposit.amount);
     this.setState({ withdrawAmounts });
   }
+
+  //#endregion
+
+  //#region Deposit amount functions
 
   async updateDepositAmount(e) {
     const value = Number(e.target.value);
@@ -238,48 +259,69 @@ export class Farming extends Component {
     });
   }
 
+  //#endregion
+
+  //#region Vesting blocks functions
+
+  vestingBlocks() {
+    const { factoredVestingBlocks, vestingBlocksFactor } = this.state;
+    return factoredVestingBlocks / vestingBlocksFactor;
+  }
+
   async updateVestingBlocks(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    this.setState({ vestingBlocks: Math.min(value, this.state.vestingBlocksMax) }, async () => await this.updateVestimates());
+    this.setState({ factoredVestingBlocks: Math.min(value, this.state.factoredVestingBlocksMax) }, async () => await this.updateVestimates());
   }
 
   async addVestingBlocks(blocks) {
-    const { vestingBlocks } = this.state;
-    this.setState({ vestingBlocks: Math.min(vestingBlocks + blocks, this.state.vestingBlocksMax) }, async () => await this.updateVestimates());
+    const { factoredVestingBlocks, factoredVestingBlocksMax } = this.state;
+    this.setState({ factoredVestingBlocks: Math.min(factoredVestingBlocks + blocks, factoredVestingBlocksMax) }, async () => await this.updateVestimates());
   }
 
   async maxVestingBlocks() {
-    this.setState({ vestingBlocks: this.state.vestingBlocksMax }, async () => await this.updateVestimates());
+    this.setState({ factoredVestingBlocks: this.state.factoredVestingBlocksMax }, async () => await this.updateVestimates());
+  }
+
+  //#endregion
+
+  //#region Unbonding blocks functions
+
+  unbondingBlocks() {
+    const { factoredUnbondingBlocks, unbondingBlocksFactor } = this.state;
+    return factoredUnbondingBlocks / unbondingBlocksFactor;
   }
 
   async updateUnbondingBlocks(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    this.setState({ unbondingBlocks: Math.min(value, this.state.unbondingBlocksMax) }, async () => await this.updateVestimates());
+    this.setState({ factoredUnbondingBlocks: Math.min(value, this.state.factoredUnbondingBlocksMax) }, async () => await this.updateVestimates());
   }
 
   async addUnbondingBlocks(blocks) {
-    const { unbondingBlocks } = this.state;
-    this.setState({ unbondingBlocks: Math.min(unbondingBlocks + blocks, this.state.unbondingBlocksMax) }, async () => await this.updateVestimates());
+    const { factoredUnbondingBlocks, factoredUnbondingBlocksMax } = this.state;
+    this.setState({ factoredUnbondingBlocks: Math.min(factoredUnbondingBlocks + blocks, factoredUnbondingBlocksMax) }, async () => await this.updateVestimates());
   }
 
   async maxUnbondingBlocks() {
-    this.setState({ unbondingBlocks: this.state.unbondingBlocksMax }, async () => await this.updateVestimates());
+    this.setState({ factoredUnbondingBlocks: this.state.factoredUnbondingBlocksMax }, async () => await this.updateVestimates());
   }
 
+  //#endregion
+
+  //#region Vestimates / Vestiplots
+
   async updateVestimates() {
-    const { depositAmount, vestingBlocks, unbondingBlocks } = this.state;
-    const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocks, unbondingBlocks);
+    const [vestimatedReward, vestimatedApy] = await this.getVestimates(this.state.depositAmount, this.vestingBlocks(), this.unbondingBlocks());
     this.setState({ vestimatedReward, vestimatedApy });
   }
 
   async updateVestiplots() {
-    const { depositAmount, vestingBlocksMax, unbondingBlocksMax } = this.state;
+    const { depositAmount, factoredVestingBlocksMax, factoredUnbondingBlocksMax, vestingBlocksFactor, unbondingBlocksFactor } = this.state;
 
     const token = this.vestiplotsCancellationToken = Symbol();
-    const vestingBlocksList = range(10, vestingBlocksMax, Math.ceil(vestingBlocksMax / 10));
-    const unbondingBlocksList = range(10, unbondingBlocksMax, Math.ceil(unbondingBlocksMax / 10));
+    const vestingBlocksList = range(10, factoredVestingBlocksMax, Math.ceil(factoredVestingBlocksMax / 10));
+    const unbondingBlocksList = range(10, factoredUnbondingBlocksMax, Math.ceil(factoredUnbondingBlocksMax / 10));
     const rewardX = [];
     const rewardY = [];
     const rewardZ = [];
@@ -300,7 +342,7 @@ export class Farming extends Component {
         for (const unbondingBlocksItem of unbondingBlocksList) {
           if (token !== this.vestiplotsCancellationToken) return;
 
-          const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocksItem, unbondingBlocksItem);
+          const [vestimatedReward, vestimatedApy] = await this.getVestimates(depositAmount, vestingBlocksItem / vestingBlocksFactor, unbondingBlocksItem / unbondingBlocksFactor);
 
           rewardX.push(vestingBlocksItem);
           rewardY.push(unbondingBlocksItem);
@@ -346,7 +388,7 @@ export class Farming extends Component {
   }
 
   async maximiseApy() {
-    this.setState({ vestingBlocks: this.state.optimumVestingBlocks, unbondingBlocks: this.state.optimumUnbondingBlocks }, async () => await this.updateVestimates());
+    this.setState({ factoredVestingBlocks: this.state.optimumVestingBlocks, factoredUnbondingBlocks: this.state.optimumUnbondingBlocks }, async () => await this.updateVestimates());
   }
 
   async getVestimates(amount, vestingBlocks, unbondingBlocks) {
@@ -362,6 +404,10 @@ export class Farming extends Component {
     return [vestimatedReward, vestimatedApy];
   }
 
+  //#endregion
+
+  //#region Help functions
+
   openHelpModal(content) {
     this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true })
   }
@@ -369,6 +415,10 @@ export class Farming extends Component {
   closeHelpModal() {
     this.setState({ openHelpModal: false })
   }
+
+  //#endregion
+
+  //#region Rendering
 
   renderFarmingSummaryTable(farmingSummary) {
     const space = ' ';
@@ -424,14 +474,16 @@ export class Farming extends Component {
         <div role="rowgroup" class="text-secondary">
           {farmingSummary.map((depositInfo, i) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
-            const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
+            const pendingBlocks = getPendingBlocks(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor, depositInfo.deposit.blockNumber, this.state.blockNumber);
+            const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
+
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrower" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(depositInfo.deposit.unbondingBlocks)}>{depositInfo.deposit.unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(unbondingBlocks)}>{unbondingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrower" >{depositInfo.vestimatedApy}%</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow" >{depositInfo.deposit.multiplier / 1000}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"}>{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
@@ -649,16 +701,16 @@ export class Farming extends Component {
                               </span>
                             </label>
                             <div class="mb-3 flex">
-                              <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="depositinput w-full" />
+                              <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={'Max: ' + this.state.factoredVestingBlocksMax} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} class="depositinput w-full" />
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>D</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>W</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>M</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
                               <button type="button" class="maxbuttons" onClick={this.maxVestingBlocks}>Max</button>
                             </div>
-                            <p class="approxLabel">{blocksDurationText(this.state.vestingBlocks)}</p>
+                            <p class="approxLabel">{blocksDurationText(this.state.factoredVestingBlocks)}</p>
                           </div>
                           <div class="mb-3 form-control nobutton">
                             <label class="label">
@@ -668,16 +720,16 @@ export class Farming extends Component {
                               </span>
                             </label>
                             <div class="mb-3 flex">
-                              <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
+                              <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={'Max: ' + this.state.factoredUnbondingBlocksMax} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
+                              <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
+                              <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                              <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
-                              <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>D</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ weeks: 1 }))}>W</button>
-                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ months: 1 }))}>M</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
+                              <button type="button" class="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
                               <button type="button" class="maxbuttons" onClick={this.maxUnbondingBlocks}>Max</button>
                             </div>
-                            <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
+                            <p class="approxLabel">{blocksDurationText(this.state.factoredUnbondingBlocks)}</p>
                           </div>
                           <div class="mb-3 form-control">
                             <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
@@ -798,4 +850,6 @@ export class Farming extends Component {
       </div>
     );
   }
+
+  //#endregion
 }

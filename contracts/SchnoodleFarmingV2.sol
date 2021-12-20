@@ -22,6 +22,10 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
     // Adjust to change the sigmoid curve of the multiplier
     SigmoidParams private _sigmoidParams;
 
+    uint256 private _vestingBlocksFactor;
+    uint256 private _unbondingBlocksFactor;
+    uint256 private _maxUnbondingBlocks;
+
     struct Deposit {
         uint256 id;
         uint256 amount;
@@ -52,6 +56,14 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         _sigmoidParams = SigmoidParams(5, 1);
     }
 
+    function configure() external onlyOwner {
+        _vestingBlocksFactor = 1000;
+        _unbondingBlocksFactor = 20;
+        _maxUnbondingBlocks = 3000000;
+    }
+
+    // Deposit functions
+
     /// Deposits the specified amount of tokens for the sender, and adds the details to a stored deposit object
     function addDeposit(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) external {
         address msgSender = _msgSender();
@@ -69,7 +81,7 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         _checkpointBlock = deposit.blockNumber;
         _balances[msgSender] += amount;
 
-        emit AddedDeposit(msgSender, deposit.id, deposit.amount, deposit.vestingBlocks, deposit.unbondingBlocks, deposit.multiplier, _totalTokens, _totalDepositWeight, _cumulativeTotal);
+        emit Deposited(msgSender, deposit.id, deposit.amount, deposit.vestingBlocks, deposit.unbondingBlocks, deposit.multiplier, _totalTokens, _totalDepositWeight, _cumulativeTotal);
     }
 
     /// Updates the vesting blocks and unbonding blocks of the sender's deposit with the specified ID
@@ -101,19 +113,19 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
 
         (Deposit storage deposit, Deposit[] storage deposits, uint256 index) = _getDeposit(msgSender, id);
         require(deposit.amount >= amount, "SchnoodleFarming: cannot withdraw more than deposited");
-        require(deposit.blockNumber + deposit.vestingBlocks < blockNumber, "SchnoodleFarming: cannot withdraw during vesting blocks");
+        require(deposit.blockNumber + _vestingBlocksFactor * deposit.vestingBlocks / 1000 < blockNumber, "SchnoodleFarming: cannot withdraw during vesting blocks");
 
         (uint256 netReward, uint256 grossReward, uint256 newCumulativeTotal) = _getRewardInfo(deposit, amount, blockNumber);
 
         // Update all tracking states to remove the withdrawn deposit
-        (_totalTokens, _totalDepositWeight) = _updateTracking(-int256(amount), deposit.vestingBlocks, deposit.unbondingBlocks);
+        (_totalTokens, _totalDepositWeight) = _getAggregatedTotals(-int256(amount), deposit.vestingBlocks, deposit.unbondingBlocks);
         _cumulativeTotal = newCumulativeTotal;
         _checkpointBlock = blockNumber;
         _balances[msgSender] -= amount;
         deposit.amount -= amount;
 
         // Start the unbonding procedure for the withdrawn amount
-        unbonds.push(Unbond(amount, blockNumber + deposit.unbondingBlocks));
+        unbonds.push(Unbond(amount, blockNumber + _unbondingBlocksFactor * deposit.unbondingBlocks / 1000));
 
         // Remove the deposit if it is fully withdrawn by replacing it with the last deposit in the array
         if (deposit.amount == 0) {
@@ -126,13 +138,53 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         emit Withdrawn(msgSender, id, amount, netReward, grossReward, _totalTokens, _totalDepositWeight, _cumulativeTotal);
     }
 
-    function changeSigmoidParams(uint256 k, uint256 a) external onlyOwner {
-        _sigmoidParams = SigmoidParams(k, a);
+    function _buildDeposit(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns (Deposit memory, uint256, uint256, uint256) {
+        (uint256 multiplier, uint256 totalTokens, uint256 totalDepositWeight) = _getMultiplier(amount, vestingBlocks, unbondingBlocks);
+        uint256 blockNumber = block.number;
+        return (Deposit(_depositId, amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _getCumulativeTotal(blockNumber), totalTokens, totalDepositWeight);
     }
 
-    function sigmoidParams() external view returns(SigmoidParams memory) {
-        return _sigmoidParams;
+    function _getDeposit(address account, uint256 id) private view returns(Deposit storage, Deposit[] storage, uint256) {
+        Deposit[] storage deposits = _accountDeposits[account];
+
+        for (uint256 i = 0; i < deposits.length; i++) {
+            Deposit storage deposit = deposits[i];
+            if (deposit.id == id) {
+                return (deposit, deposits, i);
+            }
+        }
+
+        revert("SchnoodleFarming: deposit not found");
     }
+
+    function changeVestingBlocksFactor(uint256 rate) external onlyOwner {
+        _vestingBlocksFactor = rate;
+        emit VestingBlocksFactorChanged(rate);
+    }
+
+    function getVestingBlocksFactor() external view returns(uint256) {
+        return _vestingBlocksFactor;
+    }
+
+    function changeUnbondingBlocksFactor(uint256 rate) external onlyOwner {
+        _unbondingBlocksFactor = rate;
+        emit UnbondingBlocksFactorChanged(rate);
+    }
+
+    function getUnbondingBlocksFactor() external view returns(uint256) {
+        return _unbondingBlocksFactor;
+    }
+
+    function changeMaxUnbondingBlocks(uint256 max) external onlyOwner {
+        _maxUnbondingBlocks = max;
+        emit MaxUnbondingBlocksChanged(max);
+    }
+
+    function getMaxUnbondingBlocks() external view returns(uint256) {
+        return _maxUnbondingBlocks;
+    }
+
+    // Reward calculation functions
 
     function getReward(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 rewardBlock) external view returns(uint256) {
         (Deposit memory deposit, uint256 cumulativeTotal, uint256 totalTokens, uint256 totalDepositWeight) = _buildDeposit(amount, vestingBlocks, unbondingBlocks);
@@ -162,7 +214,7 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         uint256 cumulativeAmount = amount * (MathUpgradeable.max(rewardBlock, deposit.blockNumber) - deposit.blockNumber);
 
         // Get the new cumulative total of all deposits as the current stored value is from the previous farming activity
-        uint256 newCumulativeTotal = _newCumulativeTotal(rewardBlock, checkpointBlock, cumulativeTotal, totalTokens);
+        uint256 newCumulativeTotal = _getCumulativeTotal(rewardBlock, checkpointBlock, cumulativeTotal, totalTokens);
 
         if (cumulativeAmount > 0 && totalDepositWeight > 0) {
             // Calculate the reward as a relative proportion of the cumulative total of all holders' deposits, adjusted by the multiplier
@@ -176,31 +228,15 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         return (0, 0, newCumulativeTotal);
     }
 
-    function _buildDeposit(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns (Deposit memory, uint256, uint256, uint256) {
-        (uint256 multiplier, uint256 totalTokens, uint256 totalDepositWeight) = _getMultiplier(amount, vestingBlocks, unbondingBlocks);
-        uint256 blockNumber = block.number;
-        return (Deposit(_depositId, amount, blockNumber, vestingBlocks, unbondingBlocks, multiplier), _newCumulativeTotal(blockNumber), totalTokens, totalDepositWeight);
-    }
-
-    function _getDeposit(address account, uint256 id) private view returns(Deposit storage, Deposit[] storage, uint256) {
-        Deposit[] storage deposits = _accountDeposits[account];
-
-        for (uint256 i = 0; i < deposits.length; i++) {
-            Deposit storage deposit = deposits[i];
-            if (deposit.id == id) {
-                return (deposit, deposits, i);
-            }
-        }
-
-        revert("SchnoodleFarming: deposit not found");
-    }
+    // Vestiplier functions
 
     function _getMultiplier(uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256, uint256) {
         require(amount > 0, "SchnoodleFarming: deposit amount must be greater than zero");
         require(vestingBlocks > 0, "SchnoodleFarming: vesting blocks must be greater than zero");
         require(unbondingBlocks > 0, "SchnoodleFarming: unbonding blocks must be greater than zero");
+        require(unbondingBlocks <= _maxUnbondingBlocks, "SchnoodleFarming: unbonding blocks is greater than the defined maximum");
 
-        (uint256 totalTokens, uint256 totalDepositWeight) = _updateTracking(int256(amount), vestingBlocks, unbondingBlocks);
+        (uint256 totalTokens, uint256 totalDepositWeight) = _getAggregatedTotals(int256(amount), vestingBlocks, unbondingBlocks);
         uint256 lockProductWeightedAverage = totalDepositWeight / totalTokens;
 
         // Calculate a reward multiplier based on a sigmoid curve defined by logistic function 1 ÷ (1 + eᶻ)ᵃ where z = -k₀(x - x₀)
@@ -232,21 +268,33 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
         return (multiplier, totalTokens, totalDepositWeight);
     }
 
-    function _newCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
-        return _newCumulativeTotal(rewardBlock, _checkpointBlock, _cumulativeTotal, _totalTokens);
+    function changeSigmoidParams(uint256 k, uint256 a) external onlyOwner {
+        _sigmoidParams = SigmoidParams(k, a);
     }
 
-    function _newCumulativeTotal(uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
+    function sigmoidParams() external view returns(SigmoidParams memory) {
+        return _sigmoidParams;
+    }
+
+    // Autoregulator functions
+    
+    function _getCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
+        return _getCumulativeTotal(rewardBlock, _checkpointBlock, _cumulativeTotal, _totalTokens);
+    }
+
+    function _getCumulativeTotal(uint256 rewardBlock, uint256 checkpointBlock, uint256 cumulativeTotal, uint256 totalTokens) private pure returns(uint256) {
         // Add the total of all deposits multiplied across all blocks since the previous checkpoint calculation to the cumulative total
         return cumulativeTotal + totalTokens * (rewardBlock - checkpointBlock);
     }
 
-    function _updateTracking(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256) {
+    function _getAggregatedTotals(int256 amountDelta, uint256 vestingBlocks, uint256 unbondingBlocks) private view returns(uint256, uint256) {
         return (
-            uint256(int256(_totalTokens) + amountDelta), // Update total tokens
-            uint256(int256(_totalDepositWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks)) // Update total deposit weight
+            uint256(int256(_totalTokens) + amountDelta), // Aggregate total tokens
+            uint256(int256(_totalDepositWeight) + amountDelta * int256(vestingBlocks) * int256(unbondingBlocks)) // Aggregate total deposit weight
         );
     }
+
+    // Balance functions
 
     function depositedBalanceOf(address account) public view returns(uint256) {
         return _balances[account];
@@ -270,6 +318,8 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
     function lockedBalanceOf(address account) public view returns (uint256) {
         return unbondingBalanceOf(account) + depositedBalanceOf(account);
     }
+
+    // Summary functions
 
     function getFarmingSummary(address account) public view returns(DepositReward[] memory) {
         Deposit[] storage deposits = _accountDeposits[account];
@@ -308,9 +358,15 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
 
     // Events
 
-    event AddedDeposit(address indexed account, uint256 depositId, uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 multiplier, uint256 totalTokens, uint256 totalDepositWeight, uint256 cumulativeTotal);
+    event Deposited(address indexed account, uint256 depositId, uint256 amount, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 multiplier, uint256 totalTokens, uint256 totalDepositWeight, uint256 cumulativeTotal);
 
     event UpdatedDeposit(address indexed account, uint256 depositId, uint256 vestingBlocks, uint256 unbondingBlocks, uint256 multiplier);
 
     event Withdrawn(address indexed account, uint256 depositId, uint256 amount, uint256 netReward, uint256 grossReward, uint256 totalTokens, uint256 totalDepositWeight, uint256 cumulativeTotal);
+
+    event VestingBlocksFactorChanged(uint256 rate);
+
+    event UnbondingBlocksFactorChanged(uint256 rate);
+
+    event MaxUnbondingBlocksChanged(uint256 max);
 }

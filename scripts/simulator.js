@@ -26,20 +26,19 @@ module.exports = async function main(callback) {
     const schnoodleFarming = await SchnoodleFarming.new();
     await schnoodleFarming.initialize(schnoodle.address);
     await schnoodle.configure(true, serviceAccount, schnoodleFarming.address);
+    await schnoodleFarming.configure();
     const farmingFund = await schnoodle.getFarmingFund();
 
     const chance = new Chance();
-    const feeRate = chance.integer({ min: 1, max: 5 });
-    const donationRate = chance.integer({ min: 1, max: 5 });
-    const sowRate = chance.integer({ min: 1, max: 5 });
-    await schnoodle.changeFeeRate(feeRate);
+    const feeRate = await schnoodle.getFeeRate();
+    const sowRate = await schnoodle.getSowRate();
+    const donationRate = chance.integer({ min: 10, max: 50 });
     await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate);
-    await schnoodle.changeSowRate(sowRate);
 
     console.log(`Service Account:      ${serviceAccount}`);
     console.log(`Eleemosynary Account: ${eleemosynaryAccount}`);
     console.log(`Farming Fund:         ${farmingFund}`);
-    console.log(`Fee: ${feeRate}% | Donation: ${donationRate}% | Sow: ${sowRate}%`);
+    console.log(`Fee: ${feeRate / 10}% | Donation: ${donationRate / 10}% | Sow: ${sowRate/ 10}%`);
 
     const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
     const delimiter = ' | ';

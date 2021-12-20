@@ -29,10 +29,9 @@ abstract contract SchnoodleV8Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     }
 
     function configure(bool testnet) internal onlyOwner {
-        _feeRate = 40;
-        _rateEscalator = 6;
-
         if (testnet) {
+            _feeRate = 40;
+            _rateEscalator = 6;
             _sellThreshold = 10 ** 9 * 10 ** decimals();
         }
     }

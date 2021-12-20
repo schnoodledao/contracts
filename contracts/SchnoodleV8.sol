@@ -17,15 +17,15 @@ contract SchnoodleV8 is SchnoodleV8Base, AccessControlUpgradeable {
     bytes32 public constant LOCKED = keccak256("LOCKED");
 
     function configure(bool testnet, address liquidityToken, address schnoodleFarming) external onlyOwner {
-        require(_farmingFund == address(0), "Schnoodle: already configured");
+        if (testnet) {
+            _setupRole(DEFAULT_ADMIN_ROLE, owner());
+            _setupRole(LIQUIDITY, liquidityToken);
+            _setupRole(FARMING_CONTRACT, schnoodleFarming);
+            _schnoodleFarming = schnoodleFarming;
+            _farmingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
+            _sowRate = 40;
+        }
 
-        _setupRole(DEFAULT_ADMIN_ROLE, owner());
-        _setupRole(LIQUIDITY, liquidityToken);
-        _setupRole(FARMING_CONTRACT, schnoodleFarming);
-        _schnoodleFarming = schnoodleFarming;
-        _farmingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
-
-        _sowRate = 40;
         configure(testnet);
     }
 
