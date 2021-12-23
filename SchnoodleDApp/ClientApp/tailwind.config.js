@@ -14,6 +14,7 @@ module.exports = {
         opacity: ['disabled'],
       }
     },
+    prefix: 'tw-',
     plugins: [
         require('daisyui'),
     ],

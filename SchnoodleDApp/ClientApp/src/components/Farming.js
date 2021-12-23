@@ -380,54 +380,54 @@ export class Farming extends Component {
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
-      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="border-secondary border-4 rounded-2xl text-accent-content">
+      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="tw-border-secondary tw-border-4 tw-rounded-2xl tw-text-accent-content">
         <div role="rowgroup" class="columnheader-group">
           <div role="row">
             <span role="columnheader" class="narrower">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrower">
               {resources.FARMING_SUMMARY.CREATED.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrower">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrower">
               {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrower">
               {vestimatedApyTitleParts[0]}<br />{vestimatedApyTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="narrow">
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="wider">
               {resources.FARMING_SUMMARY.WITHDRAW.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.WITHDRAW)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.WITHDRAW)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
           </div>
         </div>
-        <div role="rowgroup" class="text-secondary">
+        <div role="rowgroup" class="tw-text-secondary">
           {farmingSummary.map((depositInfo, i) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = getPendingBlocks(depositInfo.deposit, this.state.blockNumber);
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="tw-border-l-0 narrower">{depositInfo.deposit.blockNumber}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrower" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"}>{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrower" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
@@ -438,11 +438,11 @@ export class Farming extends Component {
                 <span role="cell" class="wider">
                   <form>
                     <fieldset disabled={pendingBlocks > 0}>
-                      <div class="relative">
-                        <div class="flex">
+                      <div class="tw-relative">
+                        <div class="tw-flex">
                           <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput" />
                           <button type="button" onClick={this.maxWithdraw.bind(this, i)} class="maxwithdraw">Max</button>
-                          <button type="button" class="text-base xl:text-xl btn btn-secondary text-base-300 px-2 lg:px-3 xl:px-2" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
+                          <button type="button" class="tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>
@@ -463,19 +463,19 @@ export class Farming extends Component {
           <div role="row">
             <span role="columnheader" class="">
               {resources.UNBONDING_SUMMARY.AMOUNT.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.AMOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader" class="">
               {resources.UNBONDING_SUMMARY.PENDING_BLOCKS.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.PENDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.PENDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {resources.UNBONDING_SUMMARY.TIME_REMAINING.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.TIME_REMAINING)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_SUMMARY.TIME_REMAINING)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
           </div>
         </div>
-        <div role="rowgroup" class="text-secondary">
+        <div role="rowgroup" class="tw-text-secondary">
           {unbondingSummary.map((unbond) => {
             const amount = scaleDownUnits(unbond.amount);
             const pendingBlocks = parseInt(unbond.expiryBlock) - this.state.blockNumber;
@@ -504,15 +504,15 @@ export class Farming extends Component {
 
     if (!this.state.web3) {
       return (
-        <div class="overflow-hidden antialiased font-roboto mx-4">
-          <div class="h-noheader md:flex">
-            <div class="flex items-center justify-center w-full">
-              <div class="px-4">
-                <img class="object-cover w-1/2 my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                <div class="maintitles uppercase">{resources.MOON_FARMING}</div>
-                <div class="w-16 h-1 my-3 bg-secondary md:my-6" />
-                <p class="text-4xl font-light leading-normal text-accent md:text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div class="px-4 mt-4 fakebutton">&nbsp;</div>
+        <div class="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
+          <div class="h-noheader md:tw-flex">
+            <div class="tw-flex tw-items-center tw-justify-center tw-w-full">
+              <div class="tw-px-4">
+                <img class="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <div class="maintitles tw-uppercase">{resources.MOON_FARMING}</div>
+                <div class="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
+                <p class="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <div class="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -520,116 +520,116 @@ export class Farming extends Component {
       );
     }
     return (
-      <div class="farming w-100">
-        <div class="m-auto px-4 max-w-screen-2xl">
-          <div class="h-noheader overflow-hidden bg-neutral-focus mx-2 md:m-auto font-roboto">
-            <div class="text-center px-1 md:px-4">
-              <div class="text-base-200 w-full">
-                <h1 class="mt-10 mb-2 maintitles leading-tight text-center md:text-left uppercase">{resources.MOON_FARMING}</h1>
-                <p class="my-2 text-2xl md:text-3xl leading-tight titlefont w-2/3 md:w-full m-auto md:mx-0 textfade from-green-400 to-purple-500">
-                  <span class="block md:hidden text-center">{subtitle1}<br />{subtitle2}</span>
-                  <span class="hidden md:block text-left">{subtitle1} {subtitle2}</span>
+      <div class="farming tw-w-100">
+        <div class="tw-m-auto tw-px-4 tw-max-w-screen-2xl">
+          <div class="h-noheader tw-overflow-hidden tw-bg-neutral-focus tw-mx-2 md:tw-m-auto tw-font-roboto">
+            <div class="tw-text-center tw-px-1 md:tw-px-4">
+              <div class="tw-text-base-200 tw-w-full">
+                <h1 class="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_FARMING}</h1>
+                <p class="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
+                  <span class="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
+                  <span class="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
                 </p>
-                <div class="stats topstats">
-                  <div class="stat">
-                    <div class="stat-title">
+                <div class="tw-stats stats topstats">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.BLOCK_NUMBER.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.BLOCK_NUMBER)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.BLOCK_NUMBER)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{this.state.blockNumber}</div>
-                    <div class="stat-desc">&nbsp;</div>
+                    <div class="tw-stat-value greenfade">{this.state.blockNumber}</div>
+                    <div class="tw-stat-desc">&nbsp;</div>
                   </div>
-                  <div class="stat">
-                    <div class="stat-title">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.SELL_QUOTA.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.SELL_QUOTA)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.SELL_QUOTA)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
-                    <div class="stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
+                    <div class="tw-stat-value greenfade">{scaleDownUnits(this.state.sellQuota.amount).toLocaleString()}</div>
+                    <div class="tw-stat-desc">{token} since {new Date(this.state.sellQuota.blockMetric * 1000).toLocaleString()}</div>
                   </div>
-                  <div class="stat">
-                    <div class="stat-title">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.FARMING_FUND_BALANCE.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_BALANCE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{scaleDownUnits(this.state.farmingFundBalance).toLocaleString()}</div>
-                    <div class="stat-desc">{token}</div>
+                    <div class="tw-stat-value greenfade">{scaleDownUnits(this.state.farmingFundBalance).toLocaleString()}</div>
+                    <div class="tw-stat-desc">{token}</div>
                   </div>
                 </div>
 
-                <div class="stats topstats">
-                  <div class="stat">
-                    <div class="stat-title">
+                <div class="tw-stats stats topstats">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.OPERATIVE_FEE_RATE.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.OPERATIVE_FEE_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.OPERATIVE_FEE_RATE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
-                    <div class="stat-desc">%</div>
+                    <div class="tw-stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
+                    <div class="tw-stat-desc">%</div>
                   </div>
-                  <div class="stat">
-                    <div class="stat-title">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{this.state.donationRate / 10}</div>
-                    <div class="stat-desc">%</div>
+                    <div class="tw-stat-value greenfade">{this.state.donationRate / 10}</div>
+                    <div class="tw-stat-desc">%</div>
                   </div>
-                  <div class="stat">
-                    <div class="stat-title">
+                  <div class="tw-stat">
+                    <div class="tw-stat-title">
                       {resources.FARMING_FUND_SOW_RATE.TITLE}
-                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_SOW_RATE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                      <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_FUND_SOW_RATE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                     </div>
-                    <div class="stat-value greenfade">{this.state.sowRate / 10}</div>
-                    <div class="stat-desc">%</div>
+                    <div class="tw-stat-value greenfade">{this.state.sowRate / 10}</div>
+                    <div class="tw-stat-desc">%</div>
                   </div>
                 </div>
 
-                <div class="card shadow-sm border-purple-500 border-4 rounded-2xl text-accent-content mt-5 mb-5 container-lg">
-                  <div class="card-body my-6 md:my-10 rounded-4xl">
-                    <h2 class="card-title headingfont text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
-                    <div class="shadow-sm bottomstats stats">
-                      <div class="stat border-t-0">
-                        <div class="stat-title">
+                <div class="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
+                  <div class="tw-card-body tw-my-6 md:tw-my-10 tw-rounded-4xl">
+                    <h2 class="tw-card-title headingfont tw-text-purple-500"><span class="purplefade">Your {token} Tokens</span></h2>
+                    <div class="tw-shadow-sm bottomstats tw-stats stats">
+                      <div class="tw-stat tw-border-t-0">
+                        <div class="tw-stat-title">
                           {resources.TOTAL_BALANCE.TITLE}
-                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.TOTAL_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.TOTAL_BALANCE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                         </div>
-                        <div class="stat-value purplefade">{balance.toLocaleString()}</div>
-                        <div class="stat-desc">{token}</div>
+                        <div class="tw-stat-value purplefade">{balance.toLocaleString()}</div>
+                        <div class="tw-stat-desc">{token}</div>
                       </div>
-                      <div class="stat">
-                        <div class="stat-title">
+                      <div class="tw-stat">
+                        <div class="tw-stat-title">
                           {resources.LOCKED_BALANCE.TITLE}
-                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.LOCKED_BALANCE)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.LOCKED_BALANCE)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                         </div>
-                        <div class="stat-value purplefade">{lockedBalance.toLocaleString()}</div>
-                        <div class="stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
+                        <div class="tw-stat-value purplefade">{lockedBalance.toLocaleString()}</div>
+                        <div class="tw-stat-desc">{token}{unbondingBalance > 0 && (<span class="opacity-60 text-xs"><br />{unbondingBalance.toLocaleString()} unbonding</span>)}</div>
                       </div>
-                      <div class="stat">
-                        <div class="stat-title">
+                      <div class="tw-stat">
+                        <div class="tw-stat-title">
                           {resources.AVAILABLE_AMOUNT.TITLE}
-                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.AVAILABLE_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                          <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.AVAILABLE_AMOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                         </div>
-                        <div class="stat-value purplefade">{availableAmount.toLocaleString()}</div>
-                        <div class="stat-desc">{token}</div>
+                        <div class="tw-stat-value purplefade">{availableAmount.toLocaleString()}</div>
+                        <div class="tw-stat-desc">{token}</div>
                       </div>
                     </div>
 
-                    <div class="divider mt-10">
-                      <h3 class="sectiontitle text-2xl md:text-3xl leading-tight">{resources.ADD_DEPOSIT}</h3>
+                    <div class="tw-divider tw-mt-10">
+                      <h3 class="sectiontitle tw-text-2xl md:tw-text-3xl tw-leading-tight">{resources.ADD_DEPOSIT}</h3>
                     </div>
 
-                    <div class="card-actions text-center mx-auto w-full">
-                      <form class="justify-center fullhalfwidth mx-auto mt-5">
+                    <div class="tw-card-actions tw-text-center tw-mx-auto tw-w-full">
+                      <form class="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
                         <fieldset disabled={availableAmount === 0}>
-                          <div class="form-control">
+                          <div class="tw-form-control">
                             <div>
-                              <label class="label">
-                                <span class="label-text">
+                              <label class="tw-label">
+                                <span class="tw-label-text">
                                   {resources.DEPOSIT_AMOUNT.TITLE}
-                                  <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.DEPOSIT_AMOUNT)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                                  <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.DEPOSIT_AMOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                                 </span>
                               </label>
-                              <div class="relative flex">
+                              <div class="tw-relative tw-flex">
                                 <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} class="depositinput" />
                                 <button type="button" class="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
                                 <button type="button" class="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
@@ -641,14 +641,14 @@ export class Farming extends Component {
                               </div>
                             </div>
                           </div>
-                          <div class="mb-3 form-control nobutton">
-                            <label class="label">
-                              <span class="label-text">
+                          <div class="tw-mb-3 tw-form-control nobutton">
+                            <label class="tw-label">
+                              <span class="tw-label-text">
                                 {resources.VESTING_BLOCKS.TITLE}
-                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                               </span>
                             </label>
-                            <div class="mb-3 flex">
+                            <div class="tw-mb-3 tw-flex">
                               <input type="number" min="1" max={this.state.vestingBlocksMax} placeholder={'Max: ' + this.state.vestingBlocksMax} value={this.state.vestingBlocks || ''} onChange={this.updateVestingBlocks} class="depositinput w-full" />
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
@@ -660,14 +660,14 @@ export class Farming extends Component {
                             </div>
                             <p class="approxLabel">{blocksDurationText(this.state.vestingBlocks)}</p>
                           </div>
-                          <div class="mb-3 form-control nobutton">
-                            <label class="label">
-                              <span class="label-text">
+                          <div class="tw-mb-3 tw-form-control nobutton">
+                            <label class="tw-label">
+                              <span class="tw-label-text">
                                 {resources.UNBONDING_BLOCKS.TITLE}
-                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.UNBONDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer tw-minustop" />
                               </span>
                             </label>
-                            <div class="mb-3 flex">
+                            <div class="tw-mb-3 tw-flex">
                               <input type="number" min="1" max={this.state.unbondingBlocksMax} placeholder={'Max: ' + this.state.unbondingBlocksMax} value={this.state.unbondingBlocks || ''} onChange={this.updateUnbondingBlocks} class="depositinput" />
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
                               <button type="button" class="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
@@ -679,50 +679,50 @@ export class Farming extends Component {
                             </div>
                             <p class="approxLabel">{blocksDurationText(this.state.unbondingBlocks)}</p>
                           </div>
-                          <div class="mb-3 form-control">
-                            <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                          <div class="tw-mb-3 tw-form-control">
+                            <button type="button" className='tw-btn tw-btn-accent tw-mt-5 tw-text-xl tw-font-black hover:tw-bg-yellow-200' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
                           </div>
-                          <div class="shadow-sm bottomstats stats">
-                            <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                              <div class="stat-title">
+                          <div class="tw-shadow-sm bottomstats tw-stats stats">
+                            <div class="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
+                              <div class="tw-stat-title">
                                 {resources.VESTIMATED_REWARD.TITLE}
-                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_REWARD)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_REWARD)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                               </div>
-                              <div class="stat-value text-accent">{this.state.vestimatedReward.toLocaleString()}</div>
-                              <div class="stat-desc">{token}</div>
+                              <div class="tw-stat-value tw-text-accent">{this.state.vestimatedReward.toLocaleString()}</div>
+                              <div class="tw-stat-desc">{token}</div>
                             </div>
-                            <div class="stat border-t-1 md:border-t-0 md:border-base-200">
-                              <div class="stat-title">
+                            <div class="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
+                              <div class="tw-stat-title">
                                 {resources.VESTIMATED_APY.TITLE}
-                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_APY)} class="h-4 w-4 inline-block ml-2 cursor-pointer minustop" />
+                                <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.VESTIMATED_APY)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
                               </div>
-                              <div class="stat-value text-accent">{this.state.vestimatedApy}</div>
-                              <div class="stat-desc">%</div>
+                              <div class="tw-stat-value tw-text-accent">{this.state.vestimatedApy}</div>
+                              <div class="tw-stat-desc">%</div>
                             </div>
                           </div>
-                          <div class="mb-3 form-control">
-                            <button type="button" className='btn btn-accent mt-5 text-xl font-black hover:bg-yellow-200' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                          <div class="tw-mb-3 tw-form-control">
+                            <button type="button" className='tw-btn tw-btn-accent tw-mt-5 tw-text-xl tw-font-black hover:tw-bg-yellow-200' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>
                     </div>
-                    <div class="grid mt-4">
+                    <div class="tw-grid tw-mt-4">
 
                       {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
-                        <div class="overlay z-20">
-                          <div class="overlayloader flex flex-col items-center justify-center ">
+                        <div class="tw-overlay tw-z-20">
+                          <div class="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
                               <Loader type="Puff" color="#00BFFF" />
                             </div>
                             <div>
-                              <p class="approxLabel mt-4">{this.state.vestiplotProgress}%</p>
+                              <p class="approxLabel tw-mt-4">{this.state.vestiplotProgress}%</p>
                             </div>
                           </div>
                         </div>
                       )}
                       
-                      <div class="plotcontainer z-10">
-                        <div class="flex flex-col xl:flex-row">
+                      <div class="plotcontainer tw-z-10">
+                        <div class="tw-flex tw-flex-col xl:tw-flex-row">
 
                           {this.state.vestiplotReward.length > 0 && (
                             <Plot
@@ -763,8 +763,8 @@ export class Farming extends Component {
 
                 {this.state.farmingSummary.length > 0 && (
                   <div class="summarytable">
-                    <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.FARMING_SUMMARY.TITLE}</h3>
-                    <div class="overflow-x-auto text-secondary my-5">
+                    <h3 class="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_SUMMARY.TITLE}</h3>
+                    <div class="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderFarmingSummaryTable(this.state.farmingSummary)}
                     </div>
                   </div>
@@ -772,8 +772,8 @@ export class Farming extends Component {
 
                 {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
                   <div class="summarytable">
-                    <h3 class="mb-5 headingfont sectiontitle mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
-                    <div class="overflow-x-auto text-secondary my-5">
+                    <h3 class="tw-mb-5 tw-headingfont tw-sectiontitle tw-mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
+                    <div class="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                     </div>
                   </div>
