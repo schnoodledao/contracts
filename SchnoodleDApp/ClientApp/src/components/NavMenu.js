@@ -27,7 +27,7 @@ export class NavMenu extends Component {
         <header>
         <Navbar className="navbar-expand-sm navbar-toggleable-sm tw-bg-neutral tw-text-neutral-content tw-font-roboto tw-px-1 md:tw-px-4" dark>
             <NavbarBrand tag={Link} to="/" className="tw-leading-tight tw-uppercase tw-font-bold">{resources.APP_NAME}</NavbarBrand>
-                <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
+            <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
             <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
               <ul className="navbar-nav flex-grow">
                 <NavItem>
@@ -46,4 +46,3 @@ export class NavMenu extends Component {
     );
   }
 }
-
