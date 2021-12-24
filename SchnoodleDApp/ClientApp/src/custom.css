@@ -30,56 +30,61 @@ fieldset:disabled button {
   box-shadow: none;
 }
 
+
 .mooncontrol {
   background-color: #000016;
 }
 
 .maintitles {
-  @apply text-6xl font-black purplefade md:text-8xl;
+  @apply tw-text-6xl tw-font-black purplefade md:tw-text-8xl;
+}
+
+.titlefont {
+  @apply md:tw-leading-10 !important;
 }
 
 .hidemd {
-  @apply block md:hidden !important;
+  @apply tw-block md:tw-hidden !important;
 }
 
 .hidelg {
-  @apply block lg:hidden !important;
+  @apply tw-block lg:tw-hidden !important;
 }
 
 .showmd {
-  @apply hidden md:block lg:hidden;
+  @apply tw-hidden md:tw-block lg:tw-hidden;
 }
 
 .dontshowmd {
-  @apply block md:hidden lg:block;
+  @apply tw-block md:tw-hidden lg:tw-block;
 }
 
 .hidesm {
-  @apply hidden md:block !important;
+  @apply tw-hidden md:tw-block !important;
 }
 
 .hidesmmd {
-  @apply hidden lg:block !important;
+  @apply tw-hidden lg:tw-block !important;
 }
 
 .textfade {
-  @apply bg-clip-text text-transparent bg-gradient-to-r;
+  @apply tw-bg-clip-text tw-text-transparent tw-bg-gradient-to-r;
 }
 
 .redfade {
-  @apply textfade from-red-600 to-red-400;
+  @apply textfade tw-from-red-600 tw-to-red-400;
 }
 
 .purplefade {
-  @apply textfade from-purple-700 to-purple-500;
+  @apply textfade tw-from-purple-700 tw-to-purple-500;
 }
 
 .greenfade {
-  @apply textfade from-green-600 to-green-400;
+  @apply textfade tw-from-green-600 tw-to-green-400;
 }
 
 .yellowfade {
-  @apply textfade from-yellow-300 to-yellow-200;
+  @apply textfade tw-from-yellow-300 tw-to-yellow-200;
 }
 
 .fakebutton {
@@ -95,7 +100,7 @@ fieldset:disabled button {
 }
 
 .maxwithdraw {
-  @apply btn btn-link text-accent opacity-80 text-lg uppercase hover:bg-transparent hover:opacity-100;
+  @apply  tw-btn tw-btn-link tw-text-accent tw-opacity-80 tw-text-lg tw-uppercase hover:tw-bg-transparent hover:tw-opacity-100;
   background-color: transparent !important;
   text-decoration: none !important;
 }
@@ -105,106 +110,106 @@ fieldset:disabled button {
 }
 
 .stats {
-  @apply w-full grid-flow-row lg:grid-flow-col my-6 md:my-5;
+  @apply tw-w-full tw-grid-flow-row lg:tw-grid-flow-col tw-my-6 md:tw-my-5;
 }
 
 .stat {
-  @apply place-items-center place-content-center;
+  @apply tw-place-items-center tw-place-content-center;
 }
 
 .stats.stats .stat+.stat {
-  @apply border-t-2 lg:border-base-200;
+  @apply tw-border-t-2 lg:tw-border-base-200;
 }
 
 .stat-value {
-  @apply text-3xl xl:text-5xl;
+  @apply tw-text-3xl xl:tw-text-5xl;
 }
 
 .stat-title,
 .card-title {
-  @apply uppercase;
+  @apply tw-uppercase;
 }
 
 .card-body {
-    @apply px-4 lg:px-8;
+    @apply tw-px-4 lg:tw-px-8;
 }
 
 .sectiontitle {
-  @apply uppercase;
+  @apply tw-uppercase;
 }
 
 .topstats .stat-title,
 .sectiontitle {
-  @apply text-secondary font-bold;
+  @apply tw-text-secondary tw-font-bold;
 }
 
 .bottomstats .stat-title {
-  @apply font-bold;
+  @apply tw-font-bold;
 }
 
 .stat-title,
 .stat-desc {
-  @apply opacity-80;
+  @apply tw-opacity-80;
 }
 
 .topstats .stat {
-  @apply bg-base-100;
+  @apply tw-bg-base-100;
 }
 
 .bottomstats .stat {
-  @apply bg-base-200;
+  @apply tw-bg-base-200;
 }
 
 .headingfont {
-  @apply text-3xl md:text-5xl font-bold mb-6 md:mb-10;
+  @apply tw-text-3xl md:tw-text-5xl tw-font-bold tw-mb-6 md:tw-mb-10;
 }
 
 .withdraw {
-  @apply input pl-1 md:pl-4 w-full input-bordered text-white !important;
+  @apply tw-input tw-pl-1 md:tw-pl-4 tw-w-full tw-input-bordered tw-text-white !important;
 }
 
 input.withdrawinput {
-  @apply input-secondary withdraw text-base xl:text-lg text-left !important;
+  @apply tw-input-secondary withdraw tw-text-base xl:tw-text-lg tw-text-left !important;
 }
 
 .depositinput {
-  @apply input-accent withdraw text-base xl:text-lg text-left;
+  @apply tw-input-accent withdraw tw-text-base xl:tw-text-lg tw-text-left;
 }
 
 .dwmbutton {
-  @apply depositbtns btn btn-secondary bordered border-secondary ;
+  @apply depositbtns tw-btn tw-btn-secondary tw-bordered tw-border-secondary ;
 }
 
 .maxbuttons {
-  @apply depositbtns btn btn-accent border-accent;
+  @apply depositbtns tw-btn tw-btn-accent tw-border-accent;
 }
 
 .depositbtns {
-  @apply text-base-300 md:text-lg uppercase ml-1 opacity-80 bordered;
+  @apply tw-text-base-300 md:tw-text-lg tw-uppercase tw-ml-1 tw-opacity-80 tw-bordered;
 }
 
 .withbutton .depositinput {
-  @apply sm:pr-11 md:pr-16 !important;
+  @apply sm:tw-pr-11 md:tw-pr-16 !important;
 }
 
 .nobutton .depositinput {
-  @apply pr-2 !important;
+  @apply tw-pr-2 !important;
 }
 
 .fullhalfwidth {
-  @apply w-full md:w-1/2;
+  @apply tw-w-full md:tw-w-1/2;
 }
 
 .label-text {
-  @apply text-lg text-white text-left mt-5 mb-2 uppercase font-bold;
+  @apply tw-text-lg tw-text-white tw-text-left tw-mt-5 tw-mb-2 tw-uppercase tw-font-bold;
 }
 
 fieldset:disabled p.approxLabel {
-  @apply opacity-20;
+  @apply tw-opacity-20;
 }
 
 p.approxLabel {
-  @apply text-white opacity-40 !important;
+  @apply tw-text-white tw-opacity-40 !important;
 }
 
 fieldset:disabled .bottomstats {
@@ -256,6 +261,7 @@ fieldset:disabled .bottomstats {
   margin: auto;
 } 
 
+
 /*
 ________________________________________________________________________
 TABLE
@@ -281,16 +287,16 @@ TABLE
 [role="table"] [role="cell"] {
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
+  tw-text-overflow: ellipsis;
   /* Minimum single cell width (cell padding and border deducted) */
   flex: 1 1 calc(10% - 20px - 2px);
   -webkit-flex: calc(10% - 20px - 2px);
   padding: 20px 0px;
-  @apply text-secondary text-left;
+  @apply tw-text-secondary tw-text-left;
 }
 
 [role="table"] [role="rowgroup"]+[role="rowgroup"]>[role="row"] {
-  @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0
+  @apply tw-border-b-2 tw-border-secondary tw-border-t-0 tw-border-l-0 tw-border-r-0
 }
 
 [role="table"]>[role="rowgroup"]:last-child {
@@ -303,7 +309,7 @@ TABLE
   text-align: center;
   font-family: arial, sans-serif;
   min-width: 20px;
-  @apply text-secondary;
+  @apply tw-text-secondary;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
@@ -319,7 +325,7 @@ TABLE
 /* Table Header */
 
 [role="table"] [role="row"] [role="columnheader"] {
-  @apply ml-0 text-base xl:text-lg px-1 md:px-4 text-secondary border-b-2 border-secondary;
+  @apply tw-ml-0 tw-text-base xl:tw-text-lg tw-px-1 md:tw-px-4 tw-text-secondary tw-border-b-2 tw-border-secondary;
 }
 
 [role="table"] [role="columnheader"].narrow {
@@ -353,11 +359,11 @@ TABLE
 /* Table Cell */
 
 [role="table"] [role="row"] [role="cell"] {
-  @apply text-lg lg:text-sm xl:text-lg text-left px-1 py-2 md:px-4 leading-6 lg:leading-10 xl:leading-10 !important;
+  @apply tw-text-lg lg:tw-text-sm xl:tw-text-lg tw-text-left tw-px-1 tw-py-2 md:tw-px-4 tw-leading-6 lg:tw-leading-10 xl:tw-leading-10 !important;
 }
 
 [role="table"] [role="row"] [role="cell"]:not(:first-child) {
-  @apply border-l-0 border-r-0;
+  @apply tw-border-l-0 tw-border-r-0;
 }
 
 [role="table"] [role="row"] [role="cell"]:last-child {
@@ -407,7 +413,7 @@ TABLE
     padding: 8px 10px;
   }
   [role="table"] [role="row"] {
-    @apply py-6 px-4;
+    @apply tw-py-6 tw-px-4;
   }
   [role="table"] [role="cell"] {
     border-bottom: 0;
@@ -436,21 +442,21 @@ TABLE
     font-size: 1.125rem;
     font-weight: 700;
     text-transform: uppercase;
-    --tw-text-opacity: 1;
-    color: rgba(255, 255, 255, var(--tw-text-opacity));
+    --tw-tw-text-opacity: 1;
+    color: rgba(255, 255, 255, var(--tw-tw-text-opacity));
     margin-right: 20px;
   }
   [role="table"] [role="rowgroup"] [role="row"]:nth-child(even) {
-    @apply bg-base-200;
+    @apply tw-bg-base-200;
   }
   [role="table"] [role="rowgroup"]+[role="rowgroup"]>[role="row"]:not(:last-child) {
-    @apply border-b-2 border-secondary border-t-0 border-l-0 border-r-0;
+    @apply tw-border-b-2 tw-border-secondary tw-border-t-0 tw-border-l-0 tw-border-r-0;
   }
   [role="table"] [role="row"] [role="cell"] {
-    @apply border-l-0 border-r-0;
+    @apply tw-border-l-0 tw-border-r-0;
   }
   [role="table"] [role="rowgroup"]:last-child [role="row"]:last-child [role="cell"].expandable {
-    @apply border-b-0;
+    @apply tw-border-b-0;
   }
 }
 

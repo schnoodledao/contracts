@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
+import { Collapse, Container, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
 import { resources } from '../resources';
@@ -24,37 +24,26 @@ export class NavMenu extends Component {
 
   render () {
     return (
-      <header>
-        <Navbar className="navbar mb-2 shadow-lg bg-neutral text-neutral-content font-roboto" light>
-          <div className="m-auto w-full">
-            <div class="flex-1 px-2 mx-2">
-              <span class="text-lg font-bold">
-                <NavbarBrand tag={Link} to="/" className="leading-tight uppercase">{resources.APP_NAME}</NavbarBrand>
-              </span>
-            </div>
-            <div class="flex-none hidden px-2 mx-2 lg:flex">
-              <div class="flex items-stretch">
-                <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
-                  <ul className="navbar-nav flex-grow">
-                    <NavItem className="btn btn-ghost rounded-btn">
-                      <NavLink tag={Link} className="" to="/">Home</NavLink>
-                    </NavItem>
-                    <NavItem className="btn btn-ghost rounded-btn">
-                      <NavLink tag={Link} className="" to="/farming">{resources.MOON_FARMING}</NavLink>
-                    </NavItem>
-                    <NavItem className="btn btn-ghost rounded-btn">
-                      <NavLink tag={Link} className="" to="/mooncontrol">{resources.MOON_CONTROL}</NavLink>
-                    </NavItem>
-                  </ul>
-                </Collapse>
-                <div class="flex-none">
-                  <NavbarToggler onClick={this.toggleNavbar} />
-                </div>
-              </div>
-            </div>
-          </div>
+        <header>
+        <Navbar className="navbar-expand-sm navbar-toggleable-sm tw-bg-neutral tw-text-neutral-content tw-font-roboto tw-px-1 md:tw-px-4" dark>
+            <NavbarBrand tag={Link} to="/" className="tw-leading-tight tw-uppercase tw-font-bold">{resources.APP_NAME}</NavbarBrand>
+                <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
+            <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>
+              <ul className="navbar-nav flex-grow">
+                <NavItem>
+                  <NavLink tag={Link} className="text-light tw-uppercase" to="/" onClick={this.toggleNavbar}>Home</NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink tag={Link} className="text-light tw-uppercase" to="/farming" onClick={this.toggleNavbar}>Farming</NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink tag={Link} className="text-light tw-uppercase" to="/mooncontrol" onClick={this.toggleNavbar}>Moon Control</NavLink>
+                </NavItem>
+              </ul>
+            </Collapse>
         </Navbar>
       </header>
     );
   }
 }
+
