@@ -3,8 +3,8 @@ const { Duration } = require("luxon");
 const humanizeDuration = require("humanize-duration");
 const bigInt = require("big-integer");
 
-let averageBlockTime = 0;
 let decimals = 0;
+let averageBlockTime = 0;
 
 export function scaleDownUnits(amount) {
   return bigInt(amount).divide(10 ** decimals).toJSNumber();
@@ -48,6 +48,6 @@ export function blocksDurationText(blocks) {
   return (blocks !== 0 ? 'Approximately ' : '') + humanizeDuration(Duration.fromObject({ seconds: blocks * averageBlockTime }), { largest: 2, round: true });
 }
 
-export function getPendingBlocks(deposit, blockNumber) {
-  return Math.max(0, parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks) - blockNumber);
+export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNumber) {
+  return Math.max(0, parseInt(startBlockNumber) + parseInt(vestingBlocks) - currentBlockNumber);
 }

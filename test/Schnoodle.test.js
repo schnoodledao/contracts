@@ -27,11 +27,12 @@ beforeEach(async function () {
   const SchnoodleFarming = contract.fromArtifact(testContracts.schnoodleFarming);
 
   schnoodle = await Schnoodle.new();
-  await schnoodle.methods['initialize(uint256,address)'](initialTokens, serviceAccount, { from: serviceAccount });
+  await schnoodle.methods['initialize(uint256,address)'](initialTokens, serviceAccount);
 
   schnoodleFarming = await SchnoodleFarming.new();
   await schnoodleFarming.initialize(schnoodle.address);
-  await schnoodle.configure(true, serviceAccount, schnoodleFarming.address, { from: serviceAccount });
+  await schnoodle.configure(true, serviceAccount, schnoodleFarming.address);
+  await schnoodleFarming.configure();
 });
 
 describe('Balance', () => {
@@ -61,7 +62,7 @@ describe('Burning', () => {
   it('should revert on attempt to burn more tokens than are available', async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
     await schnoodle.burn(1, data, { from: serviceAccount });
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), 'ERC777: burn amount exceeds balance');
+    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), 'ERC777: burn amount exceeds balance', 'Burning of more tokens than are available did not revert');
   });
 
   async function _testBurning(amount) {
@@ -92,9 +93,9 @@ describe('Transfer', () => {
     donationRate = chance.integer({ min: 10, max: 200 });
     sowRate = chance.integer({ min: 10, max: 200 });
 
-    await schnoodle.changeFeeRate(feeRate, { from: serviceAccount });
-    await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate, { from: serviceAccount });
-    await schnoodle.changeSowRate(sowRate, { from: serviceAccount });
+    await schnoodle.changeFeeRate(feeRate);
+    await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate);
+    await schnoodle.changeSowRate(sowRate);
     await _populateAccounts();
 
     amounts = {};
@@ -108,7 +109,7 @@ describe('Transfer', () => {
     recipient = chance.pickone(senderCandidates.filter(a => a != sender));
 
     // Class the test transfer as a sell to test the fee distribution algorithm
-    await schnoodle.grantRole(await schnoodle.LIQUIDITY(), recipient, { from: serviceAccount });
+    await schnoodle.grantRole(await schnoodle.LIQUIDITY(), recipient);
   });
 
   it('should transfer some ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
@@ -197,7 +198,7 @@ describe('Yield Farming', () => {
   let farmingFundStartBalance;
 
   beforeEach(async function () {
-    await schnoodle.changeSowRate(chance.integer({ min: 10, max: 200 }), { from: serviceAccount });
+    await schnoodle.changeSowRate(chance.integer({ min: 10, max: 200 }));
 
     await _populateAccounts();
     farmingFund = await schnoodle.getFarmingFund();
@@ -218,6 +219,26 @@ describe('Yield Farming', () => {
     assert.equal(BigInt(await schnoodle.balanceOf(farmingFund)), farmingFundStartBalance - grossReward, 'Farming fund wasn\'t reduced by the gross reward amount');
   });
 
+  it('should add a deposit when unbonding blocks is equal to the defined maximum', async() => {
+    const unbondingBlocks = await schnoodleFarming.getMaxUnbondingBlocks();
+    await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
+    const farmingSummary = await schnoodleFarming.getFarmingSummary(farmer);
+
+    assert.lengthOf(farmingSummary, 1, 'Deposit was not successfully added');
+    assert.equal(farmingSummary[0].deposit.unbondingBlocks, unbondingBlocks, 'Added deposit does not have correct unbonding blocks');
+  });
+
+  it('should unbond a deposit for longer than the unfactored unbonding blocks when unbonding blocks factor is additive', async() => {
+    const unbondingBlocksFactor = chance.integer({ min: 1 });
+    await schnoodleFarming.changeUnbondingBlocksFactor(unbondingBlocksFactor);
+    await addDepositAndWithdraw(vestingBlocks, unbondingBlocks);
+    const unbondingSummary = await schnoodleFarming.getUnbondingSummary(farmer);
+    const blockNumber = await web3.eth.getBlockNumber();
+
+    assert.lengthOf(unbondingSummary, 1, 'Deposit was not successfully placed into unbonding status');
+    assert.approximately(Number(unbondingSummary[0].expiryBlock), blockNumber + unbondingBlocks * unbondingBlocksFactor / 1000, 1, 'Unbonding period was not increased by an additive unbonding blocks factor');
+  });
+
   it('should increase the reward when the lock on a deposit is increased', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
     const rewardBlock = await web3.eth.getBlockNumber() + vestingBlocks;
@@ -227,43 +248,52 @@ describe('Yield Farming', () => {
     assert.isTrue(updatedReward > initialReward, 'Increasing lock on deposit did not increase the reward');
   });
 
+  it('should revert on attempt to withdraw after unfactored vesting blocks when vesting blocks factor is additive', async() => {
+    await schnoodleFarming.changeVestingBlocksFactor(2000);
+    await truffleAssert.reverts(addDepositAndWithdraw(vestingBlocks, unbondingBlocks), 'SchnoodleFarming: cannot withdraw during vesting blocks', 'Deposit was withdrawn during factored vesting blocks');
+  });
+
   it('should revert when the lock on a deposit is updated with no increase', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
-    await truffleAssert.reverts(schnoodleFarming.updateDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: no benefit to update deposit with supplied changes');
+    await truffleAssert.reverts(schnoodleFarming.updateDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: no benefit to update deposit with supplied changes', 'Deposit was updated despite no lock increase');
   });
 
-  it('should revert on attempt to deposit with zero deposit amount', async() => {
-    await truffleAssert.reverts(schnoodleFarming.addDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount must be greater than zero');
+  it('should revert on attempt to add deposit with zero deposit amount', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(0, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount must be greater than zero', 'Deposit was added with zero deposit amount');
   });
 
-  it('should revert on attempt to deposit with zero vesting blocks', async() => {
-    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, 0, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: vesting blocks must be greater than zero');
+  it('should revert on attempt to add deposit with zero vesting blocks', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, 0, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: vesting blocks must be greater than zero', 'Deposit was added with zero vesting blocks');
   });
 
-  it('should revert on attempt to deposit with zero unbonding blocks', async() => {
-    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, vestingBlocks, 0, { from: farmer }), 'SchnoodleFarming: unbonding blocks must be greater than zero');
+  it('should revert on attempt to add deposit with zero unbonding blocks', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, vestingBlocks, 0, { from: farmer }), 'SchnoodleFarming: unbonding blocks must be greater than zero', 'Deposit was added with zero unbonding blocks');
+  });
+
+  it('should revert on attempt to add deposit with unbonding blocks above the defined maximum', async() => {
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(depositAmount, vestingBlocks, await schnoodleFarming.getMaxUnbondingBlocks() + 1, { from: farmer }), 'SchnoodleFarming: unbonding blocks is greater than the defined maximum', 'Deposit was added with unbonding blocks above defined maximum');
   });
 
   it('should revert on attempt to withdraw during vesting blocks', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
-    await truffleAssert.reverts(schnoodleFarming.withdraw(0, depositAmount, { from: farmer }), 'SchnoodleFarming: cannot withdraw during vesting blocks');
+    await truffleAssert.reverts(schnoodleFarming.withdraw(0, depositAmount, { from: farmer }), 'SchnoodleFarming: cannot withdraw during vesting blocks', 'Deposit was withdrawn during vesting blocks');
   });
 
-  it('should revert on attempt to deposit more tokens than are unlocked', async() => {
+  it('should revert on attempt to add deposit more tokens than are unlocked', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
     const additionalDeposit = BigInt(bigInt.randBetween(farmerStartBalance - depositAmount + 1n, farmerStartBalance));
-    await truffleAssert.reverts(schnoodleFarming.addDeposit(additionalDeposit, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount exceeds unlocked balance');
+    await truffleAssert.reverts(schnoodleFarming.addDeposit(additionalDeposit, vestingBlocks, unbondingBlocks, { from: farmer }), 'SchnoodleFarming: deposit amount exceeds unlocked balance', 'Deposit was added with more tokens that are available');
   });
 
   it('should revert on attempt to transfer more tokens than are unlocked', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
     const transferAmount = BigInt(bigInt.randBetween(farmerStartBalance - depositAmount + 1n, farmerStartBalance));
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: farmer }), 'Schnoodle: transfer amount exceeds unlocked balance');
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, transferAmount, { from: farmer }), 'Schnoodle: transfer amount exceeds unlocked balance', 'Transfer of tokens that are not available for transfer due to being locked did not correctly revert');
   });
 
   it('should revert on attempt to transfer more tokens than are available including locked', async() => {
     await schnoodleFarming.addDeposit(depositAmount, vestingBlocks, unbondingBlocks, { from: farmer });
-    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(farmerStartBalance + 1n), { from: farmer }), 'ERC777: transfer amount exceeds balance');
+    await truffleAssert.reverts(schnoodle.transfer(serviceAccount, BigInt(farmerStartBalance + 1n), { from: farmer }), 'ERC777: transfer amount exceeds balance', 'Transfer of tokens that are not available for transfer due to insufficient total balance did not correctly revert');
   });
 
   async function addDepositAndWithdraw(vestingBlocks, unbondingBlocks) {
