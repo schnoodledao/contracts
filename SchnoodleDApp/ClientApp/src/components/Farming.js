@@ -753,7 +753,7 @@ export class Farming extends Component {
                             </div>
                           </div>
                           <div class="tw-mb-3 tw-form-control">
-                            <button type="button" className='keybtn maxbuttons' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                            <button type="button" className='keybtn maxbuttons' disabled={this.state.depositAmount < 1 || this.vestingBlocks() < 1 || this.unbondingBlocks() < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>
