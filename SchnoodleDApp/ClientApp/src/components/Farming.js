@@ -124,8 +124,8 @@ export class Farming extends Component {
       const availableAmount = balance.subtract(lockedBalance);
       const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
       const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
-      const factoredVestingBlocksMax = blocksPerDuration({ years: 1 }) * vestingBlocksFactor;
-      const factoredUnbondingBlocksMax = await schnoodleFarming.methods.getMaxUnbondingBlocks().call() * unbondingBlocksFactor;
+      const factoredVestingBlocksMax = Math.floor(blocksPerDuration({ years: 1 }) * vestingBlocksFactor);
+      const factoredUnbondingBlocksMax = Math.floor(await schnoodleFarming.methods.getMaxUnbondingBlocks().call() * unbondingBlocksFactor);
 
       // Fetch the farming summary while also calculating the APY for each deposit
       const farmingSummary = await Promise.all([].concat(await schnoodleFarming.methods.getFarmingSummary(selectedAddress).call()).sort((a, b) => a.deposit.blockNumber > b.deposit.blockNumber ? 1 : -1).map(async (depositReward) => {
@@ -474,8 +474,8 @@ export class Farming extends Component {
         <div role="rowgroup" class="tw-text-secondary">
           {farmingSummary.map((depositInfo, i) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
-            const pendingBlocks = getPendingBlocks(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor, depositInfo.deposit.blockNumber, this.state.blockNumber);
-            const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
+            const pendingBlocks = getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor), depositInfo.deposit.blockNumber, this.state.blockNumber);
+            const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor);
 
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>

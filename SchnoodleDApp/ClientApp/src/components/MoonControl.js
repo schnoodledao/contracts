@@ -87,8 +87,18 @@ export class MoonControl extends Component {
     const blockNumber = await web3.eth.getBlockNumber();
 
     this.setState({ blockNumber }, async () => {
-      const depositedEvents = await schnoodleFarming.getPastEvents('Deposited', { fromBlock: 0, toBlock: 'latest' });
-      const accounts = [...new Set(await depositedEvents.map((depositedEvent) => depositedEvent.returnValues.account))];
+      const depositedEvents = (await getPastLogs('Deposited(address,uint256,uint256)')).concat(await getPastLogs('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'));
+
+      async function getPastLogs(signature) {
+        return await web3.eth.getPastLogs({
+          fromBlock: 0,
+          toBlock: 'latest',
+          address: schnoodleFarming._address,
+          topics: [web3.utils.sha3(signature)]
+        })
+      }
+
+      const accounts = [...new Set(await depositedEvents.map((depositedEvent) => `0x${depositedEvent.topics[1].slice(26)}`))];
       const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
       const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
 
@@ -139,7 +149,7 @@ export class MoonControl extends Component {
   }
 
   getPendingBlocks(depositInfo) {
-    return getPendingBlocks(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor, depositInfo.deposit.blockNumber, this.state.blockNumber);
+    return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor), depositInfo.deposit.blockNumber, this.state.blockNumber);
   }
 
   //#region Error handling
@@ -218,7 +228,7 @@ export class MoonControl extends Component {
 
   farmInfo(depositInfo) {
     const pendingBlocks = this.getPendingBlocks(depositInfo);
-    const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
+    const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor);
 
     return ReactDOMServer.renderToString((
       <div class="moontip">
@@ -326,7 +336,7 @@ export class MoonControl extends Component {
           {farmingOverview.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = this.getPendingBlocks(depositInfo);
-            const unbondingBlocks = depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor;
+            const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor);
 
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
