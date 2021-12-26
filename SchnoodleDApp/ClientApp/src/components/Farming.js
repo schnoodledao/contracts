@@ -494,7 +494,7 @@ export class Farming extends Component {
                         <div class="tw-flex">
                           <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} class="withdrawinput" />
                           <button type="button" onClick={this.maxWithdraw.bind(this, i)} class="maxwithdraw">Max</button>
-                          <button type="button" class="tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
+                          <button type="button" class="withdrawbtn" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span class="">Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>
@@ -732,7 +732,7 @@ export class Farming extends Component {
                             <p class="approxLabel">{blocksDurationText(this.state.factoredUnbondingBlocks)}</p>
                           </div>
                           <div class="tw-mb-3 tw-form-control">
-                            <button type="button" className='keybtn maxbuttons' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                            <button type="button" className='keybtn maxbuttons maximise' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
                           </div>
                           <div class="tw-shadow-sm bottomstats tw-stats stats">
                             <div class="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">

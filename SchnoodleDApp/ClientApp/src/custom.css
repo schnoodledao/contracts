@@ -22,12 +22,12 @@ input[type=number] {
 fieldset:disabled input,
 fieldset:disabled label,
 fieldset:disabled button {
-  pointer-events: none;
-  cursor: not-allowed;
-  opacity: 0.35;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.35 !important;
   filter: alpha(opacity=35);
-  -webkit-box-shadow: none;
-  box-shadow: none;
+  -webkit-box-shadow: none !important;
+  box-shadow: none !important;
 }
 
 .mooncontrol {
@@ -189,6 +189,14 @@ input.withdrawinput {
 
 .keybtn {
   @apply maxbuttons tw-mt-5 tw-text-xl tw-font-black !important;
+}
+
+.maximise {
+  @apply tw-bg-purple-700 hover:tw-bg-purple-900 tw-text-white tw-border-purple-700 hover:tw-border-purple-900;
+}
+
+.withdrawbtn {
+  @apply tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2 !important; 
 }
 
 .keybtn:disabled {
