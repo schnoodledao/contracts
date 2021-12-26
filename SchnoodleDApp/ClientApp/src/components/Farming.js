@@ -732,7 +732,7 @@ export class Farming extends Component {
                             <p class="approxLabel">{blocksDurationText(this.state.factoredUnbondingBlocks)}</p>
                           </div>
                           <div class="tw-mb-3 tw-form-control">
-                            <button type="button" className='tw-btn tw-btn-accent tw-mt-5 tw-text-xl tw-font-black hover:tw-bg-yellow-200' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                            <button type="button" className='keybtn maxbuttons' disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
                           </div>
                           <div class="tw-shadow-sm bottomstats tw-stats stats">
                             <div class="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
@@ -753,7 +753,7 @@ export class Farming extends Component {
                             </div>
                           </div>
                           <div class="tw-mb-3 tw-form-control">
-                            <button type="button" className='tw-btn tw-btn-accent tw-mt-5 tw-text-xl tw-font-black hover:tw-bg-yellow-200' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                            <button type="button" className='keybtn maxbuttons' disabled={this.state.depositAmount < 1 || this.state.vestingBlocks < 1 || this.state.unbondingBlocks < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>

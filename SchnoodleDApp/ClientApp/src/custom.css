@@ -90,11 +90,11 @@ fieldset:disabled button {
   height: 37px;
 }
 
-.btn-accent:hover {
+.tw-btn-accent:hover {
   background-color: #fde68a !important
 }
 
-.btn-secondary:hover {
+.tw-btn-secondary:hover {
   background-color: #88d8f7 !important
 }
 
@@ -108,28 +108,28 @@ fieldset:disabled button {
   margin-top: -3px;
 }
 
-.stats {
+.tw-stats {
   @apply tw-w-full tw-grid-flow-row lg:tw-grid-flow-col tw-my-6 md:tw-my-5;
 }
 
-.stat {
+.tw-stat {
   @apply tw-place-items-center tw-place-content-center;
 }
 
-.stats.stats .stat+.stat {
+.tw-stats.tw-stats .tw-stat+.tw-stat {
   @apply tw-border-t-2 lg:tw-border-base-200;
 }
 
-.stat-value {
+.tw-stat-value {
   @apply tw-text-3xl xl:tw-text-5xl;
 }
 
-.stat-title,
-.card-title {
+.tw-stat-title,
+.tw-card-title {
   @apply tw-uppercase;
 }
 
-.card-body {
+.tw-card-body {
   @apply tw-px-4 lg:tw-px-8;
 }
 
@@ -137,25 +137,25 @@ fieldset:disabled button {
   @apply tw-uppercase;
 }
 
-.topstats .stat-title,
+.topstats .tw-stat-title,
 .sectiontitle {
   @apply tw-text-secondary tw-font-bold;
 }
 
-.bottomstats .stat-title {
+.bottomstats .tw-stat-title {
   @apply tw-font-bold;
 }
 
-.stat-title,
-.stat-desc {
+.tw-stat-title,
+.tw-stat-desc {
   @apply tw-opacity-80;
 }
 
-.topstats .stat {
+.topstats .tw-stat {
   @apply tw-bg-base-100;
 }
 
-.bottomstats .stat {
+.bottomstats .tw-stat {
   @apply tw-bg-base-200;
 }
 
@@ -187,6 +187,14 @@ input.withdrawinput {
   @apply tw-text-base-300 md:tw-text-lg tw-uppercase tw-ml-1 tw-opacity-80 tw-bordered;
 }
 
+.keybtn {
+  @apply maxbuttons tw-mt-5 tw-text-xl tw-font-black !important;
+}
+
+.keybtn:disabled {
+  @apply tw-opacity-20 !important;
+}
+
 .withbutton .depositinput {
   @apply sm:tw-pr-11 md:tw-pr-16 !important;
 }
@@ -199,12 +207,12 @@ input.withdrawinput {
   @apply tw-w-full md:tw-w-1/2;
 }
 
-.label-text {
+.tw-label-text {
   @apply tw-text-lg tw-text-white tw-text-left tw-mt-5 tw-mb-2 tw-uppercase tw-font-bold;
 }
 
 fieldset:disabled p.approxLabel {
-  @apply tw-opacity-20;
+  @apply tw-opacity-20 !important;
 }
 
 p.approxLabel {
@@ -286,7 +294,7 @@ TABLE
 [role="table"] [role="cell"] {
   overflow: hidden;
   white-space: nowrap;
-  tw-text-overflow: ellipsis;
+  text-overflow: ellipsis;
   /* Minimum single cell width (cell padding and border deducted) */
   flex: 1 1 calc(10% - 20px - 2px);
   -webkit-flex: calc(10% - 20px - 2px);
@@ -468,7 +476,6 @@ TABLE
   }
 }
 
-
 /* Modal */
 .customOverlay {
   background: rgba(36, 123, 160, 0.7);
@@ -478,7 +485,8 @@ TABLE
   max-width: calc(50vw - 2rem) !important;
   width: 100%; 
   border-radius: 1rem;
-  padding:2rem !important;
+  padding: 2rem !important;
+  color: #fff !important;
 }
 @media only screen and (max-width: 1023px) {
   .customModal {
@@ -491,15 +499,17 @@ TABLE
   font-weight: 900;
   text-transform: uppercase;
   color: #f000b8;
+  margin-bottom:1em;
 }
+
 .customModal svg {
   color: #f000b8;
   fill: #f000b8;
 }
+
 .react-responsive-modal-closeButton {
   outline: none;
   border: 0;
-
 }
 
 @keyframes react-responsive-modal-overlay-in {
