@@ -19,14 +19,14 @@ contract MoontronV1 is ERC721TradableUpgradeable {
     }
 
     /// Override to whitelist user's OpenSea proxy accounts to enable gasless listings
-    function isApprovedForAll(address owner, address operator) override public view returns (bool)
+    function isApprovedForAll(address owner, address operatorAddress) public view override returns (bool)
     {
         // Whitelist OpenSea proxy contract for easy trading
         ProxyRegistry proxyRegistry = ProxyRegistry(_proxyRegistryAddress);
-        if (address(proxyRegistry.proxies(owner)) == operator) {
+        if (address(proxyRegistry.proxies(owner)) == operatorAddress) {
             return true;
         }
 
-        return super.isApprovedForAll(owner, operator);
+        return super.isApprovedForAll(owner, operatorAddress);
     }
 }

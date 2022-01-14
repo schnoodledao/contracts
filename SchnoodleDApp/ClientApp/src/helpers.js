@@ -25,13 +25,13 @@ export async function setAverageBlockTime() {
 
   if (blockNumber > 0) {
     const blocksDenominator = Math.min(500, blockNumber);
-    const currentBlocktTimestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
+    const currentBlockTimestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
     const compareBlockTimestamp = (await web3.eth.getBlock(blockNumber - blocksDenominator)).timestamp;
 
-    if (currentBlocktTimestamp === undefined || compareBlockTimestamp === undefined) {
+    if (currentBlockTimestamp === undefined || compareBlockTimestamp === undefined) {
       alert('Block timestamp unable to be obtained at this time. This may only be a temporary issue.');
     } else {
-      averageBlockTime = (currentBlocktTimestamp - compareBlockTimestamp) / blocksDenominator;
+      averageBlockTime = (currentBlockTimestamp - compareBlockTimestamp) / blocksDenominator;
     }
   }
 }

@@ -1,4 +1,4 @@
-// migrations/13_upgrade_schnoodlev7.js
+// migrations/13_upgrade_schnoodlev8.js
 
 module.exports = async function (deployer, network, accounts) {
   const contract = require('../scripts/contract.js');

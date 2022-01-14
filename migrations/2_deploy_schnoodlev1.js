@@ -18,11 +18,11 @@ module.exports = async function (deployer, network, accounts) {
     await singletons.ERC1820Registry(serviceAccount);
   }
 
-  const Schnoodle = artifacts.require(contractName);
-  const schnoodle = await deployProxy(Schnoodle, [initialization.initialTokens, serviceAccount], { deployer });
-  schnoodle.changeFeePercent(initialization.feePercent);
-  schnoodle.changeEleemosynary(eleemosynary, initialization.donationPercent);
+  const Contract = artifacts.require(contractName);
+  const proxy = await deployProxy(Contract, [initialization.initialTokens, serviceAccount], { deployer });
+  proxy.changeFeePercent(initialization.feePercent);
+  proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
 
   const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(schnoodle.address)}`);
+  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
 };

@@ -192,7 +192,7 @@ export class MoonControl extends Component {
 
   renderMoonFarms() {
     return (
-      <div ref={this.globeRef} class="tw-justify-center tw-flex">
+      <div ref={this.globeRef} className="tw-justify-center tw-flex">
         <Globe
           ref={this.globeEl}
           globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
@@ -231,7 +231,7 @@ export class MoonControl extends Component {
     const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * this.state.unbondingBlocksFactor);
 
     return ReactDOMServer.renderToString((
-      <div class="moontip">
+      <div className="moontip">
         <span>{`${resources.MOON_FARM_DATA}`}</span>
         <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
         <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
@@ -291,48 +291,48 @@ export class MoonControl extends Component {
     const currentRewardTitleParts = resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE.split(space);
 
     return (
-      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} class="tw-border-secondary tw-border-4 tw-rounded-2xl tw-text-accent-content">
-        <div role="rowgroup" class="columnheader-group">
+      <div role="table" aria-label={resources.FARMING_SUMMARY.TITLE} className="tw-border-secondary tw-border-4 tw-rounded-2xl tw-text-accent-content">
+        <div role="rowgroup" className="columnheader-group">
           <div role="row">
-            <span role="columnheader" class="wider">
+            <span role="columnheader" className="wider">
               {resources.FARMING_OVERVIEW.ACCOUNT.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_OVERVIEW.ACCOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_OVERVIEW.ACCOUNT)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {blockNumberTitleParts[0]}<br />{blockNumberTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.BLOCK_NUMBER)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {resources.FARMING_SUMMARY.CREATED.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CREATED)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
             <span role="columnheader">
               {depositAmountTitleParts[0]}<br />{depositAmountTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.DEPOSIT_AMOUNT)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {pendingBlocksTitleParts[0]}<br />{pendingBlocksTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.PENDING_BLOCKS)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {unbondingBlocksTitleParts[0]}<br />{unbondingBlocksTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.UNBONDING_BLOCKS)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {vestimatedApyTitleParts[0]}<br />{vestimatedApyTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.VESTIMATED_APY)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="narrow">
+            <span role="columnheader" className="narrow">
               {resources.FARMING_SUMMARY.MULTIPLIER.TITLE}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.MULTIPLIER)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
-            <span role="columnheader" class="wide">
+            <span role="columnheader" className="wide">
               {currentRewardTitleParts[0]}<br />{currentRewardTitleParts[1]}
-              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} class="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
+              <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.FARMING_SUMMARY.CURRENT_REWARD)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />
             </span>
           </div>
         </div>
-        <div role="rowgroup" class="text-secondary">
+        <div role="rowgroup" className="text-secondary">
           {farmingOverview.map((depositInfo) => {
             const amount = scaleDownUnits(depositInfo.deposit.amount);
             const pendingBlocks = this.getPendingBlocks(depositInfo);
@@ -340,15 +340,15 @@ export class MoonControl extends Component {
 
             return (
               <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} class="tw-border-l-0 tw-cursor-pointer wider" onClick={() => this.showMoonFarm(depositInfo.account)}>{depositInfo.account}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} class="tw-border-l-0 narrow">{depositInfo.deposit.blockNumber}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"}  class="narrow" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} className="tw-border-l-0 tw-cursor-pointer wider" onClick={() => this.showMoonFarm(depositInfo.account)}>{depositInfo.account}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} className="tw-border-l-0 narrow">{depositInfo.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"} className="narrow" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"} >{amount.toLocaleString()}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} class="narrow" title={blocksDurationText(unbondingBlocks)}>{unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} class="narrow">{depositInfo.vestimatedApy}%</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} class="narrow">{depositInfo.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} class="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} className="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} className="narrow" title={blocksDurationText(unbondingBlocks)}>{unbondingBlocks}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} className="narrow">{depositInfo.vestimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} className="narrow">{depositInfo.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} className="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
               </div>
             );
           })}
@@ -363,15 +363,15 @@ export class MoonControl extends Component {
 
     if (!this.state.web3) {
       return (
-        <div class="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
-          <div class="tw-h-noheader md:tw-flex">
-            <div class="tw-flex tw-items-center tw-justify-center tw-w-full">
-              <div class="tw-px-4">
-                <img class="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
-                <div class="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
-                <div class="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-                <p class="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div class="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+        <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
+          <div className="tw-h-noheader md:tw-flex">
+            <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
+              <div className="tw-px-4">
+                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <div className="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
+                <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -379,29 +379,29 @@ export class MoonControl extends Component {
       );
     }
     return (
-      <div class="mooncontrol tw-w-100">
-        <div class="tw-m-auto tw-px-4 tw-max-w-screen-2xl">
-          <div class="tw-h-noheader tw-overflow-hidden tw-mx-2 md:tw-m-auto tw-font-roboto">
-            <div class="tw-text-center tw-px-1 md:tw-px-4">
-              <div class="tw-text-base-200 tw-w-full">
-                <h1 class="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_CONTROL}</h1>
-                <p class="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
-                  <span class="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
-                  <span class="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
+      <div className="mooncontrol tw-w-100">
+        <div className="tw-m-auto tw-px-4 tw-max-w-screen-2xl">
+          <div className="tw-h-noheader tw-overflow-hidden tw-mx-2 md:tw-m-auto tw-font-roboto">
+            <div className="tw-text-center tw-px-1 md:tw-px-4">
+              <div className="tw-text-base-200 tw-w-full">
+                <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_CONTROL}</h1>
+                <p className="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
+                  <span className="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
+                  <span className="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
                 </p>
 
                 {this.renderMoonFarms()}
 
                 {this.state.farmingOverview.length > 0 && (
-                  <div class="summarytable">
-                    <h3 class="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
-                    <div class="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
+                  <div className="summarytable">
+                    <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
+                    <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
                       {this.renderFarmingOverviewTable(this.state.farmingOverview)}
                     </div>
                   </div>
                 )}
 
-                <div class="tw-my-5">
+                <div className="tw-my-5">
                   <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>
                 </div>
               </div>

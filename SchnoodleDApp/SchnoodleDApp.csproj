@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -11,10 +11,15 @@
     <SpaProxyServerUrl>https://localhost:44495</SpaProxyServerUrl>
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>eac86efe-9656-4983-8419-8df7682aed50</UserSecretsId>
+	<NethereumGenerateCode>false</NethereumGenerateCode>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="6.0.0-rc.2.21480.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="6.0.1" />
+    <PackageReference Include="Nethereum.Autogen.ContractApi" Version="3.6.2" />
+    <PackageReference Include="Nethereum.Web3" Version="4.1.1" />
+    <PackageReference Include="Scrutor.AspNetCore" Version="3.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,4 +54,37 @@
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
+
+  <UsingTask TaskName="ReplaceFileText" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <FilePath ParameterType="System.String" Required="true" />
+      <MatchExpression ParameterType="System.String" Required="true" />
+      <ReplacementText ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[File.WriteAllText(FilePath, Regex.Replace(File.ReadAllText(FilePath), MatchExpression, ReplacementText));]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="AfterBuildStep" AfterTargets="PreBuild" Condition="'$(NethereumGenerateCode)' == 'true'">
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;SafeTransferFromFunction : SafeTransferFromFunctionBase).*?)\k&lt;x&gt;" ReplacementText="SafeTransferFromFunction1 : SafeTransferFromFunctionBase1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;class SafeTransferFromFunctionBase).*?)\k&lt;x&gt;" ReplacementText="class SafeTransferFromFunctionBase1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;InitializeFunction : InitializeFunctionBase).*?)\k&lt;x&gt;" ReplacementText="InitializeFunction1 : InitializeFunctionBase1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;class InitializeFunctionBase).*?)\k&lt;x&gt;" ReplacementText="class InitializeFunctionBase1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;SafeTransferFromRequestAsync\(SafeTransferFromFunction).*?)\k&lt;x&gt;" ReplacementText="SafeTransferFromRequestAsync(SafeTransferFromFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;SafeTransferFromRequestAndWaitForReceiptAsync\(SafeTransferFromFunction).*?)\k&lt;x&gt;" ReplacementText="SafeTransferFromRequestAndWaitForReceiptAsync(SafeTransferFromFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;new SafeTransferFromFunction).*?new SafeTransferFromFunction.*?)\k&lt;x&gt;" ReplacementText="new SafeTransferFromFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;InitializeRequestAsync\(InitializeFunction).*?)\k&lt;x&gt;" ReplacementText="InitializeRequestAsync(InitializeFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;InitializeRequestAndWaitForReceiptAsync\(InitializeFunction).*?)\k&lt;x&gt;" ReplacementText="InitializeRequestAndWaitForReceiptAsync(InitializeFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="(?s)(?&lt;=(?&lt;x&gt;new InitializeFunction).*?new InitializeFunction.*?)\k&lt;x&gt;" ReplacementText="new InitializeFunction1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="operator" ReplacementText="operator1" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8618&#xD;&#xA;using System;" />
+	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8625&#xD;&#xA;using System;" />
+  </Target>
+
 </Project>

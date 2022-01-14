@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/presets/ERC721PresetMinterPauserAutoIdUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 abstract contract ERC721TradableUpgradeable is ERC721PresetMinterPauserAutoIdUpgradeable, ERC721URIStorageUpgradeable {
@@ -39,7 +38,7 @@ abstract contract ERC721TradableUpgradeable is ERC721PresetMinterPauserAutoIdUpg
         return ERC721URIStorageUpgradeable.tokenURI(tokenId);
     }
 
-    function mint(address to, string memory hash) public virtual {
+    function mintIpfs(address to, string memory hash) public virtual {
         uint256 id = _tokenIdTracker.current();
         mint(to);
         ERC721URIStorageUpgradeable._setTokenURI(id, hash);

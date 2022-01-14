@@ -39,6 +39,9 @@ export class NavMenu extends Component {
                 <NavItem>
                   <NavLink tag={Link} className="text-light tw-uppercase" to="/mooncontrol" onClick={this.toggleNavbar}>{resources.MOON_CONTROL}</NavLink>
                 </NavItem>
+                <NavItem>
+                  <NavLink tag={Link} className="text-light tw-uppercase" to="/moontron" onClick={this.toggleNavbar}>{resources.MOONTRON}</NavLink>
+                </NavItem>
               </ul>
             </Collapse>
         </Navbar>

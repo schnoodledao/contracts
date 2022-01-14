@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { Home } from './components/Home';
 import { Farming } from './components/Farming';
 import { MoonControl } from './components/MoonControl';
+import { Moontron } from './components/Moontron';
 
 import './custom.css'
 
@@ -16,6 +17,7 @@ export default class App extends Component {
         <Route exact path='/' component={Home} />
         <Route path='/farming' component={Farming} />
         <Route path='/mooncontrol' component={MoonControl} />
+        <Route path='/moontron' component={Moontron} />
       </Layout>
     );
   }
