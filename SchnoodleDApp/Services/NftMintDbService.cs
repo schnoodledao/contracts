@@ -1,47 +1,35 @@
-﻿using System.Net;
-using Microsoft.Azure.Cosmos;
+﻿using Microsoft.Azure.Cosmos;
 using SchnoodleDApp.Models;
 
-namespace SchnoodleDApp.Services
+namespace SchnoodleDApp.Services;
+
+public class NftMintDbService
 {
-    public class NftMintDbService
+    private readonly Container _container;
+
+    public NftMintDbService(Container container)
     {
-        private readonly Container _container;
+        _container = container;
+    }
 
-        public NftMintDbService(Container container)
+    public async Task AddItemAsync(NftMintItem item) => await _container.CreateItemAsync(item);
+
+    public async Task DeleteItemAsync(string id) => await _container.DeleteItemAsync<NftMintItem>(id, new PartitionKey(id));
+
+    public async Task UpdateItemAsync(NftMintItem item) => await _container.UpsertItemAsync(item);
+
+    public async Task<NftMintItem> GetItemAsync(string id) => (await _container.ReadItemAsync<NftMintItem>(id, new PartitionKey(id))).Resource;
+
+    public async Task<IEnumerable<NftMintItem>> GetItemsAsync(string queryString)
+    {
+        var query = _container.GetItemQueryIterator<NftMintItem>(new QueryDefinition(queryString));
+        List<NftMintItem> results = new();
+
+        while (query.HasMoreResults)
         {
-            _container = container;
+            results.AddRange((await query.ReadNextAsync()).AsEnumerable());
         }
 
-        public async Task AddItemAsync(NftMintItem item) => await _container.CreateItemAsync(item);
-
-        public async Task DeleteItemAsync(string id) => await _container.DeleteItemAsync<NftMintItem>(id, new PartitionKey(id));
-
-        public async Task UpdateItemAsync(NftMintItem item) => await _container.UpsertItemAsync(item);
-
-        public async Task<NftMintItem?> GetItemAsync(string id)
-        {
-            try
-            {
-                return (await _container.ReadItemAsync<NftMintItem>(id, new PartitionKey(id))).Resource;
-            }
-            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                return null;
-            }
-        }
-
-        public async Task<IEnumerable<NftMintItem>> GetItemsAsync(string queryString)
-        {
-            var query = _container.GetItemQueryIterator<NftMintItem>(new QueryDefinition(queryString));
-            List<NftMintItem> results = new();
-
-            while (query.HasMoreResults)
-            {
-                results.AddRange((await query.ReadNextAsync()).AsEnumerable());
-            }
-
-            return results;
-        }
+        return results;
     }
 }

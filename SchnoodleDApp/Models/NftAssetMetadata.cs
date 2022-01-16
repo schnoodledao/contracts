@@ -1,23 +1,22 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace SchnoodleDApp.Models
+namespace SchnoodleDApp.Models;
+
+public class NftAssetMetadata
 {
-    public class NftAssetMetadata
+    public NftAssetMetadata(string image, string name, string description)
     {
-        public NftAssetMetadata(string image, string name, string description)
-        {
-            Image = image;
-            Name = name;
-            Description = description;
-        }
-
-        [JsonPropertyName("image")]
-        public string Image { get; }
-
-        [JsonPropertyName("name")]
-        public string Name { get; }
-
-        [JsonPropertyName("description")]
-        public string Description { get; }
+        Image = image;
+        Name = name;
+        Description = description;
     }
+
+    [JsonPropertyName("image")]
+    public string Image { get; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; }
+
+    [JsonPropertyName("description")]
+    public string Description { get; }
 }
