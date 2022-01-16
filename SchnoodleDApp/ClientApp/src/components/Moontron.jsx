@@ -60,8 +60,12 @@ export class Moontron extends Component {
   }
 
   async mint() {
-    const { selectedAddress } = this.state;
-    const response = await fetch(`nft/mint/${selectedAddress}`);
+    const { web3, selectedAddress } = this.state;
+
+    const nftMintItem = await (await fetch(`nft/preparemint/${selectedAddress}`)).json();
+    const to = await (await fetch('nft/serviceaccount')).text();
+    const txn = await web3.eth.sendTransaction({ from: selectedAddress, to, value: nftMintItem.gas * nftMintItem.gasPrice });
+    const response = await fetch(`nft/mint/${nftMintItem.id}/${txn.transactionHash}`);
   }
 
   //#region Error handling

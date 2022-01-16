@@ -334,8 +334,8 @@ export class Farming extends Component {
     this.setState({ optimumVestingBlocks, optimumUnbondingBlocks });
 
     if (depositAmount > 0) {
+      const steps = vestingBlocksList.length * unbondingBlocksList.length;
       let maxVestimatedApy = 0;
-      let steps = vestingBlocksList.length * unbondingBlocksList.length;
       let vestiplotProgress = 0;
 
       for (const vestingBlocksItem of vestingBlocksList) {

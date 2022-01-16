@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SchnoodleDApp.Models;
 using SchnoodleDApp.Services;
 
 namespace SchnoodleDApp.Controllers
@@ -19,16 +20,28 @@ namespace SchnoodleDApp.Controllers
             _nftMintingService = nftMintingService;
         }
 
-        [HttpPost("mint")]
-        [Route("mint/{to}")]
-        public async Task<IActionResult> Mint(string to)
+        [HttpGet("serviceaccount")]
+        public ActionResult<string> GetServiceAccount()
+        {
+            return Ok(_nftMintingService.GetServiceAccount());
+        }
+
+        [HttpPost("preparemint")]
+        [Route("preparemint/{to}")]
+        public async Task<ActionResult<NftMintItem>> PrepareMint(string to)
         {
             Reset();
-            await using var fs = System.IO.File.Create(@"C:\Snood.jpg");
-            var hash = await _filePinningService.CreateNftAsset(fs, "Snood.jpg", "image/jpg", "Test Name", "Test Description", s_cts.Token);
-            await _nftMintingService.MintNft(to, hash);
+            await using var fs = System.IO.File.Create(@"C:\Users\micro\OneDrive\Downloads\DarkSnood.jpg");
+            var hash = await _filePinningService.CreateNftAsset(fs, "DarkSnood.jpg", "image/jpg", "Test Name", "Test Description", s_cts.Token);
 
-            return Ok();
+            return Ok(await _nftMintingService.PrepareMintNft(to, hash));
+        }
+
+        [HttpPost("mint")]
+        [Route("mint/{id}/{paymentTxHash}")]
+        public async Task<IActionResult> Mint(string id, string paymentTxHash)
+        {
+            return Ok(await _nftMintingService.MintNft(id, paymentTxHash));
         }
 
         private static void Reset()
