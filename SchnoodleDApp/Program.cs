@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using SchnoodleDApp.Models;
 using SchnoodleDApp.Services;
@@ -7,6 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddAzureKeyVault(new UriBuilder("https", $"{builder.Configuration["KeyVaultName"]}.vault.azure.net/").Uri, new DefaultAzureCredential());
+}
 
 builder.Services.Configure<PinataOptions>(builder.Configuration.GetSection(PinataOptions.SectionName));
 builder.Services.Configure<BlockchainOptions>(builder.Configuration.GetSection(BlockchainOptions.SectionName));
@@ -29,9 +35,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAdvancedDependencyInjection();
 
-
 app.MapControllerRoute("default", "{controller}/{action=Index}/{id?}");
-
 app.MapFallbackToFile("index.html");
 
 app.Run();

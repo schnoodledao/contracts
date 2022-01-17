@@ -48,7 +48,6 @@ public sealed class NftMintingService : ISelfScopedLifetime
 
         try
         {
-            Thread.Sleep(10000);
             var nftMintItem = await _nftMintDbService.GetItemAsync(id);
             var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
 
