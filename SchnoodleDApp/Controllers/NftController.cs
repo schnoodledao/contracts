@@ -9,13 +9,15 @@ namespace SchnoodleDApp.Controllers;
 public class NftController : ControllerBase
 {
     private readonly ILogger<NftController> _logger;
+    private readonly AssetService _assetService;
     private readonly FilePinningService _filePinningService;
     private readonly NftMintingService _nftMintingService;
     private static CancellationTokenSource s_cts = new();
 
-    public NftController(ILogger<NftController> logger, FilePinningService filePinningService, NftMintingService nftMintingService)
+    public NftController(ILogger<NftController> logger, AssetService assetService, FilePinningService filePinningService, NftMintingService nftMintingService)
     {
         _logger = logger;
+        _assetService = assetService;
         _filePinningService = filePinningService;
         _nftMintingService = nftMintingService;
     }
@@ -30,18 +32,32 @@ public class NftController : ControllerBase
     [Route("preparemint/{to}")]
     public async Task<ActionResult<NftMintItem>> PrepareMint(string to)
     {
-        Reset();
-        await using var fs = System.IO.File.Create(@"C:\Users\micro\OneDrive\Downloads\DarkSnood.jpg");
-        var hash = await _filePinningService.CreateNftAsset(fs, "DarkSnood.jpg", "image/jpg", "Test Name", "Test Description", s_cts.Token);
+        try
+        {
+            Reset();
+            await using var stream = await _assetService.Create3DAsset("Test");
+            var hash = await _filePinningService.CreateNftAsset(stream, "Test.glb", "model/gltf-binary", "Test Name", "Test Description", s_cts.Token);
 
-        return Ok(await _nftMintingService.PrepareMintNft(to, hash));
+            return Ok(await _nftMintingService.PrepareMintNft(to, hash));
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     [HttpPost("mint")]
     [Route("mint/{id}/{paymentTxHash}")]
     public async Task<IActionResult> Mint(string id, string paymentTxHash)
     {
-        return Ok(await _nftMintingService.MintNft(id, paymentTxHash));
+        try
+        {
+            return Ok(await _nftMintingService.MintNft(id, paymentTxHash));
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     private static void Reset()

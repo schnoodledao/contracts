@@ -17,6 +17,7 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.Configure<PinataOptions>(builder.Configuration.GetSection(PinataOptions.SectionName));
 builder.Services.Configure<BlockchainOptions>(builder.Configuration.GetSection(BlockchainOptions.SectionName));
 builder.Services.Configure<DataOptions>(builder.Configuration.GetSection(DataOptions.SectionName));
+builder.Services.Configure<FilesOptions>(builder.Configuration.GetSection(FilesOptions.SectionName));
 
 builder.Services.AddSingleton(InitializeCosmosClientInstance(builder.Configuration.GetSection(DataOptions.SectionName)).GetAwaiter().GetResult());
 builder.Services.AddAdvancedDependencyInjection();
@@ -42,12 +43,12 @@ app.Run();
 
 static async Task<NftMintDbService> InitializeCosmosClientInstance(IConfiguration configurationSection)
 {
-    var options = new DataOptions();
-    configurationSection.Bind(options);
+    var dataOptions = new DataOptions();
+    configurationSection.Bind(dataOptions);
 
-    var client = new CosmosClient(options.Account, options.Key);
-    var database = await client.CreateDatabaseIfNotExistsAsync(options.DatabaseName);
-    await database.Database.CreateContainerIfNotExistsAsync(options.ContainerName, "/id");
+    var client = new CosmosClient(dataOptions.Account, dataOptions.Key);
+    var database = await client.CreateDatabaseIfNotExistsAsync(dataOptions.DatabaseName);
+    await database.Database.CreateContainerIfNotExistsAsync(dataOptions.ContainerName, "/id");
 
-    return new NftMintDbService(client.GetContainer(options.DatabaseName, options.ContainerName));
+    return new NftMintDbService(client.GetContainer(dataOptions.DatabaseName, dataOptions.ContainerName));
 }

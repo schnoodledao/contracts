@@ -29,5 +29,6 @@ Execute the following commands in a `truffle develop` console in the root folder
 
 ## Secrets
 1. For `Pinata:Jwt`, open a [Pinata](https://app.pinata.cloud) account then create an API key.
-1. For `Blockchain:PrivateKey`, use any Ethereum account that has some test ETH on Rinkeby.
+1. For `Blockchain:PrivateKey`, use any Ethereum account that has some test ETH on Rinkeby. Ensure this account has the `MINTER_ROLE` on the smart contract using `hasRole`. If not, the contract owner must grant it using `grantRole`.
 1. For `Data:Key`, create an Azure Cosmos DB account with SQL API [here](https://azure.microsoft.com/en-gb/try/cosmosdb), then get the read-write primary key.
+1. For `Files:Key`, obtain the key for `stschnoodletest` from the administrator of that account.

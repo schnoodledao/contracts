@@ -60,34 +60,36 @@ export class Moontron extends Component {
   }
 
   async mint() {
-    const { web3, selectedAddress } = this.state;
+    try {
+      const { web3, selectedAddress } = this.state;
 
-    const nftMintItem = await (await fetch(`nft/preparemint/${selectedAddress}`)).json();
-    const to = await (await fetch('nft/serviceaccount')).text();
-    const txn = await web3.eth.sendTransaction({ from: selectedAddress, to, value: nftMintItem.gas * nftMintItem.gasPrice });
-    const response = await fetch(`nft/mint/${nftMintItem.id}/${txn.transactionHash}`);
+      const nftMintItem = await (await this.fetch(`nft/preparemint/${selectedAddress}`)).json();
+      const to = await (await this.fetch('nft/serviceaccount')).text();
+      const txn = await web3.eth.sendTransaction({ from: selectedAddress, to, value: nftMintItem.gas * nftMintItem.gasPrice });
+      const response = await this.fetch(`nft/mint/${nftMintItem.id}/${txn.transactionHash}`);
+    } catch (err) {
+      await this.handleError(err);
+    }
   }
 
   //#region Error handling
 
-  async handleResponse(response) {
-    if (response.status) {
-      this.setState({ success: true, message: response.transactionHash });
+  async fetch(input) {
+    const result = await fetch(input);
+    
+    if (result.ok) {
+      this.setState({ success: true, message: 'Operation successful' });
+      return result;
     }
 
-    await this.getInfo();
+    throw new Error(result.statusText);
   }
 
   handleError(err) {
     console.error(err);
-    let message = err.message;
 
-    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
-    }
-
-    this.setState({ success: false, message });
-    alert(message);
+    this.setState({ success: false, message: err.message });
+    alert(err.message);
   }
 
   //#endregion
