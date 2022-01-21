@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { resources } from '../resources';
 import MoontronV1 from "../contracts/MoontronV1.json";
 import getWeb3 from "../getWeb3";
+import { Viewer } from '../viewer';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
@@ -9,7 +10,7 @@ import 'react-responsive-modal/styles.css';
 
 export class Moontron extends Component {
   static displayName = Moontron.name;
-  
+
   constructor(props) {
     super(props);
 
@@ -24,11 +25,19 @@ export class Moontron extends Component {
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
-      helpDetails: ''
+      helpDetails: '',
+      serviceAccount: null,
+      gatewayBaseUrl: null,
+      mintFee: null,
+      nftAssetItem: null
     };
 
+    this.prepare = this.prepare.bind(this);
     this.mint = this.mint.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
+
+    this.viewer = null;
+    this.viewerEl = null;
   }
 
   async componentDidMount() {
@@ -36,8 +45,11 @@ export class Moontron extends Component {
       const web3 = await getWeb3();
       const moontronDeployedNetwork = MoontronV1.networks[await web3.eth.net.getId()];
       const moontron = new web3.eth.Contract(MoontronV1.abi, moontronDeployedNetwork && moontronDeployedNetwork.address);
+      const serviceAccount = await (await this.fetch('nft/serviceaccount')).text();
+      const gatewayBaseUrl = await (await this.fetch('nft/gatewaybaseurl')).text();
+      const mintFee = await (await this.fetch('nft/mintfee')).text();
 
-      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
+      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee }, async () => {
         await this.getInfo();
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
@@ -59,23 +71,31 @@ export class Moontron extends Component {
     this.setState({ blockNumber });
   }
 
-  async mint() {
+  async prepare() {
     try {
-      const { web3, selectedAddress } = this.state;
+      const { web3, selectedAddress, serviceAccount, gatewayBaseUrl, mintFee } = this.state;
 
-      const nftMintItem = await (await this.fetch(`nft/preparemint/${selectedAddress}`)).json();
-      const to = await (await this.fetch('nft/serviceaccount')).text();
-      const txn = await web3.eth.sendTransaction({ from: selectedAddress, to, value: nftMintItem.gas * nftMintItem.gasPrice });
-      const response = await this.fetch(`nft/mint/${nftMintItem.id}/${txn.transactionHash}`);
+      const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
+      const nftAssetItem = await (await this.fetch(`nft/preparemint/${selectedAddress}/${txn.transactionHash}`)).json();
+
+      this.setState({ nftAssetItem });
     } catch (err) {
       await this.handleError(err);
     }
   }
 
+  async mint() {
+    const { nftAssetItem } = this.state;
+
+    const data = new FormData();
+    data.append('image', new File(['test'], 'Test.png', { type: 'image/png' }));
+    const response = await this.fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
+  }
+
   //#region Error handling
 
-  async fetch(input) {
-    const result = await fetch(input);
+  async fetch(input, init) {
+    const result = await fetch(input, init);
     
     if (result.ok) {
       this.setState({ success: true, message: 'Operation successful' });
@@ -97,11 +117,11 @@ export class Moontron extends Component {
   //#region Help functions
 
   openHelpModal(content) {
-    this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true })
+    this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true });
   }
 
   closeHelpModal() {
-    this.setState({ openHelpModal: false })
+    this.setState({ openHelpModal: false });
   }
 
   //#endregion
@@ -162,6 +182,9 @@ export class Moontron extends Component {
                                 <input type="text" onChange={this.updateName} className="depositinput" />
                               </div>
                             </div>
+                          </div>
+                          <div className="tw-mb-3 tw-form-control">
+                            <button type="button" className='keybtn maxbuttons' disabled={false} onClick={this.prepare}>Prepare</button>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
                             <button type="button" className='keybtn maxbuttons' disabled={false} onClick={this.mint}>Mint</button>

@@ -4,11 +4,12 @@ namespace SchnoodleDApp.Models;
 
 public class NftAssetMetadata
 {
-    public NftAssetMetadata(string image, string name, string description)
+    public NftAssetMetadata(string name, string description, string image, string animationUrl)
     {
-        Image = image;
         Name = name;
         Description = description;
+        Image = image;
+        AnimationUrl = animationUrl;
     }
 
     [JsonPropertyName("image")]
@@ -19,4 +20,7 @@ public class NftAssetMetadata
 
     [JsonPropertyName("description")]
     public string Description { get; }
+
+    [JsonPropertyName("animation_url")]
+    public string AnimationUrl { get; }
 }

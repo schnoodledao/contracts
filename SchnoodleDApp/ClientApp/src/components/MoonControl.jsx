@@ -95,7 +95,7 @@ export class MoonControl extends Component {
           toBlock: 'latest',
           address: schnoodleFarming._address,
           topics: [web3.utils.sha3(signature)]
-        })
+        });
       }
 
       const accounts = [...new Set(await depositedEvents.map((depositedEvent) => `0x${depositedEvent.topics[1].slice(26)}`))];
@@ -119,7 +119,7 @@ export class MoonControl extends Component {
         }))).filter(depositInfo => depositInfo != null);
       }))).flat();
 
-      let farmCounts = {};
+      const farmCounts = {};
       const farmData = farmingOverview.map((depositInfo) => {
         // Track the number of farms for each account so that they can be clustered around each other on the Metamoon
         if (!(depositInfo.account in farmCounts)) {
@@ -179,11 +179,11 @@ export class MoonControl extends Component {
   //#region Help functions
 
   openHelpModal(content) {
-    this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true })
+    this.setState({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS, openHelpModal: true });
   }
 
   closeHelpModal() {
-    this.setState({ openHelpModal: false })
+    this.setState({ openHelpModal: false });
   }
 
   //#endregion

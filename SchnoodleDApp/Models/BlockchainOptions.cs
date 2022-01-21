@@ -9,4 +9,6 @@ public class BlockchainOptions
     public string Web3Url { get; set; } = string.Empty;
 
     public string ContractAddress { get; set; } = string.Empty;
+
+    public long MintFee { get; set; }
 }

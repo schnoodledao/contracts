@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Nethereum.Signer;
 using Nethereum.Web3;
@@ -13,69 +12,68 @@ namespace SchnoodleDApp.Services;
 public sealed class NftMintingService : ISelfScopedLifetime
 {
     private readonly BlockchainOptions _blockchainOptions;
+    private readonly AssetService _assetService;
+    private readonly FilePinningService _filePinningService;
     private readonly NftMintDbService _nftMintDbService;
     private readonly Web3 _web3;
     private readonly MoontronService _moontronService;
 
-    private static readonly ConcurrentDictionary<string, Mutex> MintingIds = new();
-
-    public NftMintingService(IOptions<BlockchainOptions> blockchainOptions, NftMintDbService nftMintDbService)
+    public NftMintingService(IOptions<BlockchainOptions> blockchainOptions, AssetService assetService, FilePinningService filePinningService, NftMintDbService nftMintDbService)
     {
         _blockchainOptions = blockchainOptions.Value;
+        _assetService = assetService;
+        _filePinningService = filePinningService;
         _nftMintDbService = nftMintDbService;
+
         _web3 = new Web3(new Account(_blockchainOptions.PrivateKey, Chain.Rinkeby), _blockchainOptions.Web3Url);
         _moontronService = new MoontronService(_web3, _blockchainOptions.ContractAddress);
+        ServiceAccount = new EthECKey(_blockchainOptions.PrivateKey.HexToByteArray(), true).GetPublicAddress();
+        MintFee = _blockchainOptions.MintFee;
     }
 
-    public string GetServiceAccount()
-    {
-        return new EthECKey(_blockchainOptions.PrivateKey.HexToByteArray(), true).GetPublicAddress();
-    }
+    public string ServiceAccount { get; }
 
-    public async Task<NftMintItem> PrepareMintNft(string to, string hash)
-    {
-        var gas = (long)(await _moontronService.ContractHandler.EstimateGasAsync(new MintIpfsFunction {To = to, Hash = hash})).Value;
-        var gasPrice = (long)(await _web3.Eth.GasPrice.SendRequestAsync()).Value;
-        var nftMintItem = new NftMintItem {To = to, IpfsHash = hash, Gas = gas, GasPrice = gasPrice, Id = Guid.NewGuid().ToString()};
-        await _nftMintDbService.AddItemAsync(nftMintItem);
-        return nftMintItem;
-    }
+    public long MintFee { get; }
 
-    public async Task<string> MintNft(string id, string paymentTxHash)
+    public async Task<NftAssetItem> PrepareMintNft(string to, string paymentTxHash, CancellationToken cancellationToken = default)
     {
-        var idMutex = MintingIds.GetOrAdd(id, _ => new Mutex());
-        idMutex.WaitOne();
+        // Validate the payment transaction.
+        var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
+        ValidateAddresses(transaction.To, ServiceAccount, $"Payment transaction recipient (${transaction.To}) does not match the service account (${ServiceAccount}).");
+        ValidateAddresses(transaction.From, to, $"Payment transaction sender (${transaction.From}) does not match the address being minted to (${to}).");
 
-        try
+        static void ValidateAddresses(string addressA, string addressB, string errorMessage)
         {
-            var nftMintItem = await _nftMintDbService.GetItemAsync(id);
-            var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
-
-            if (transaction.From != nftMintItem.To)
-            {
-                throw new InvalidOperationException($"Payment transaction sender (${transaction.From}) does not match the address being minted to (${nftMintItem.To}).");
-            }
-
-            var amount = (long)transaction.Value.Value;
-            var fee = nftMintItem.Gas * nftMintItem.GasPrice;
-            if (amount < fee)
-            {
-                throw new InvalidOperationException($"Payment transaction amount (${amount}) is less than the required fee to mint (${fee}).");
-            }
-
-            var mintTxHash = await _moontronService.MintIpfsRequestAsync(nftMintItem.To, nftMintItem.IpfsHash);
-
-            // Delete the item from the database so it can no longer be minted against.
-            await _nftMintDbService.DeleteItemAsync(id);
-
-            return mintTxHash;
+            if (string.Compare(addressA, addressB, StringComparison.InvariantCultureIgnoreCase) != 0) throw new InvalidOperationException(errorMessage);
         }
-        finally
-        {
-            if (MintingIds.TryRemove(id, out var mutex))
-            {
-                mutex.ReleaseMutex();
-            }
-        }
+
+        var amount = (long)transaction.Value.Value;
+        if (amount < _blockchainOptions.MintFee) throw new InvalidOperationException($"Payment transaction amount (${amount}) is less than the required fee to mint (${_blockchainOptions.MintFee}).");
+
+        // Generate the NFT asset.
+        await using var stream = await _assetService.Create3DAsset("Test", cancellationToken);
+        var hash = await _filePinningService.CreateNftAsset(stream, "Test.glb", "model/gltf-binary", cancellationToken);
+
+        var nftAssetItem = new NftAssetItem {Id = Guid.NewGuid().ToString(), To = to, AssetHash = hash};
+        await _nftMintDbService.AddItemAsync(nftAssetItem);
+        return nftAssetItem;
+    }
+
+    public async Task<string> MintNft(string id, Stream imageStream, CancellationToken cancellationToken = default)
+    {
+        using var mutex = new Mutex(false, id, out var createdNew);
+        if (!createdNew) throw new InvalidOperationException($"Minting is already is progress for ID {id}.");
+
+        var nftMintItem = await _nftMintDbService.GetItemAsync(id);
+        var imageHash = await _filePinningService.CreateNftAsset(imageStream, "Test.png", "image/png", cancellationToken);
+        var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Test Name", "Test Description", cancellationToken);
+
+        // Mint the NFT
+        var mintTxHash = await _moontronService.MintIpfsRequestAsync(nftMintItem.To, metadataHash);
+
+        // Delete the item from the database so it can no longer be minted against.
+        await _nftMintDbService.DeleteItemAsync(id);
+
+        return mintTxHash;
     }
 }

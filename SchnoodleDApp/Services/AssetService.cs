@@ -15,14 +15,14 @@ public sealed class AssetService : ISelfScopedLifetime
         _filesOptions = filesOptions.Value;
     }
 
-    public async Task<Stream> Create3DAsset(string directoryName)
+    public async Task<Stream> Create3DAsset(string directoryName, CancellationToken cancellationToken = default)
     {
         try
         {
             var share = new ShareClient($"DefaultEndpointsProtocol=https;AccountName={_filesOptions.AccountName};AccountKey={_filesOptions.Key};EndpointSuffix=core.windows.net", "assets");
             var mainDirectory = share.GetDirectoryClient(directoryName);
 
-            if (!(await mainDirectory.ExistsAsync()))
+            if (!await mainDirectory.ExistsAsync(cancellationToken))
             {
                 throw new DirectoryNotFoundException($"The directory '{directoryName}' does not exist on the file share.");
             }
@@ -34,7 +34,7 @@ public sealed class AssetService : ISelfScopedLifetime
 
             async Task DownloadFiles(ShareDirectoryClient directory)
             {
-                await foreach (var item in directory.GetFilesAndDirectoriesAsync())
+                await foreach (var item in directory.GetFilesAndDirectoriesAsync(cancellationToken: cancellationToken))
                 {
                     if (item.IsDirectory)
                     {
@@ -47,7 +47,7 @@ public sealed class AssetService : ISelfScopedLifetime
                         Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
 
                         await using var stream = File.OpenWrite(localFilePath);
-                        await (await file.DownloadAsync()).Value.Content.CopyToAsync(stream);
+                        await (await file.DownloadAsync(cancellationToken: cancellationToken)).Value.Content.CopyToAsync(stream, cancellationToken);
 
                         if (Path.GetExtension(localFilePath) == mainFileExtension)
                         {
@@ -65,6 +65,7 @@ public sealed class AssetService : ISelfScopedLifetime
             var model = ModelRoot.Load(mainFilePath);
             var glbStream = new MemoryStream();
             model.WriteGLB(glbStream);
+            glbStream.Position = 0;
             return glbStream;
         }
         catch (Exception e)

@@ -9,15 +9,13 @@ namespace SchnoodleDApp.Controllers;
 public class NftController : ControllerBase
 {
     private readonly ILogger<NftController> _logger;
-    private readonly AssetService _assetService;
     private readonly FilePinningService _filePinningService;
     private readonly NftMintingService _nftMintingService;
     private static CancellationTokenSource s_cts = new();
 
-    public NftController(ILogger<NftController> logger, AssetService assetService, FilePinningService filePinningService, NftMintingService nftMintingService)
+    public NftController(ILogger<NftController> logger, FilePinningService filePinningService, NftMintingService nftMintingService)
     {
         _logger = logger;
-        _assetService = assetService;
         _filePinningService = filePinningService;
         _nftMintingService = nftMintingService;
     }
@@ -25,20 +23,29 @@ public class NftController : ControllerBase
     [HttpGet("serviceaccount")]
     public ActionResult<string> GetServiceAccount()
     {
-        return Ok(_nftMintingService.GetServiceAccount());
+        return Ok(_nftMintingService.ServiceAccount);
+    }
+
+    [HttpGet("gatewaybaseurl")]
+    public ActionResult<string> GetGatewayBaseUrl()
+    {
+        return Ok(_filePinningService.GatewayBaseUrl);
+    }
+
+    [HttpGet("mintfee")]
+    public ActionResult<long> GetMintFee()
+    {
+        return Ok(_nftMintingService.MintFee);
     }
 
     [HttpPost("preparemint")]
-    [Route("preparemint/{to}")]
-    public async Task<ActionResult<NftMintItem>> PrepareMint(string to)
+    [Route("preparemint/{to}/{paymentTxHash}")]
+    public async Task<ActionResult<NftAssetItem>> PrepareMint(string to, string paymentTxHash)
     {
         try
         {
             Reset();
-            await using var stream = await _assetService.Create3DAsset("Test");
-            var hash = await _filePinningService.CreateNftAsset(stream, "Test.glb", "model/gltf-binary", "Test Name", "Test Description", s_cts.Token);
-
-            return Ok(await _nftMintingService.PrepareMintNft(to, hash));
+            return Ok(await _nftMintingService.PrepareMintNft(to, paymentTxHash, s_cts.Token));
         }
         catch (Exception e)
         {
@@ -47,12 +54,13 @@ public class NftController : ControllerBase
     }
 
     [HttpPost("mint")]
-    [Route("mint/{id}/{paymentTxHash}")]
-    public async Task<IActionResult> Mint(string id, string paymentTxHash)
+    [Route("mint/{id}")]
+    public async Task<IActionResult> Mint([FromForm] IFormFile image, string id)
     {
         try
         {
-            return Ok(await _nftMintingService.MintNft(id, paymentTxHash));
+            Reset();
+            return Ok(await _nftMintingService.MintNft(id, image.OpenReadStream(), s_cts.Token));
         }
         catch (Exception e)
         {

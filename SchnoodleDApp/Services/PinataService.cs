@@ -13,9 +13,12 @@ public sealed class PinataService : ISelfScopedLifetime
     public PinataService(IOptions<PinataOptions> pinataOptions)
     {
         _pinataOptions = pinataOptions.Value;
+        GatewayBaseUrl = _pinataOptions.GatewayBaseUrl;
     }
 
-    public async Task<PinToIpfsResponse> PinFile(Stream stream, string fileName, string contentType, CancellationToken cancellationToken)
+    public string GatewayBaseUrl { get; set; }
+
+    public async Task<PinToIpfsResponse> PinFile(Stream stream, string fileName, string contentType, CancellationToken cancellationToken = default)
     {
         using var streamContent = new StreamContent(stream)
         {
@@ -30,7 +33,7 @@ public sealed class PinataService : ISelfScopedLifetime
         return (await response.Content.ReadFromJsonAsync<PinToIpfsResponse>(cancellationToken: cancellationToken))!;
     }
 
-    public async Task<PinToIpfsResponse> PinJson<T>(T json, CancellationToken cancellationToken)
+    public async Task<PinToIpfsResponse> PinJson<T>(T json, CancellationToken cancellationToken = default)
     {
         using var client = GetClient();
         var response = await client.PostAsJsonAsync("pinning/pinJSONToIPFS", json, cancellationToken);
@@ -40,7 +43,7 @@ public sealed class PinataService : ISelfScopedLifetime
 
     private HttpClient GetClient()
     {
-        var client = new HttpClient { BaseAddress = new Uri(_pinataOptions.ApiUrl) };
+        var client = new HttpClient { BaseAddress = new Uri(_pinataOptions.ApiBaseUrl) };
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _pinataOptions.Jwt);
         return client;
     }
