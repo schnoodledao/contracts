@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import { resources } from '../resources';
-import MoontronV1 from "../contracts/MoontronV1.json";
-import getWeb3 from "../getWeb3";
-import { Viewer } from '../viewer';
+import MoontronV1 from '../contracts/MoontronV1.json';
+import getWeb3 from '../getWeb3';
+import { Viewer } from '../viewer/viewer';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
+import queryString from 'query-string';
 
 export class Moontron extends Component {
   static displayName = Moontron.name;
@@ -36,8 +37,17 @@ export class Moontron extends Component {
     this.mint = this.mint.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
 
+    this.viewerRef = React.createRef();
     this.viewer = null;
     this.viewerEl = null;
+
+    const hash = window.location.hash ? queryString.parse(window.location.hash) : {};
+    this.options = {
+      kiosk: Boolean(hash.kiosk),
+      model: hash.model || '',
+      preset: hash.preset || '',
+      cameraPosition: hash.cameraPosition ? hash.cameraPosition.split(',').map(Number) : null
+    };
   }
 
   async componentDidMount() {
@@ -54,7 +64,9 @@ export class Moontron extends Component {
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
-    
+
+      this.viewer = new Viewer(this.viewerRef.current, this.options);
+
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
@@ -77,6 +89,16 @@ export class Moontron extends Component {
 
       const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
       const nftAssetItem = await (await this.fetch(`nft/preparemint/${selectedAddress}/${txn.transactionHash}`)).json();
+
+      const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
+      const file = new File([(await (await fetch(assetUrl)).blob())], 'Test.glb', { type: 'model/gltf-binary' });
+
+      const assetMap = new Map();
+      assetMap.set(assetUrl, file);
+      const gltf = await this.viewer.load(nftAssetItem.assetHash, gatewayBaseUrl, assetMap);
+      //if (!this.options.kiosk) {
+      //  this.validationCtrl.validate(fileUrl, rootPath, fileMap, gltf);
+      //}
 
       this.setState({ nftAssetItem });
     } catch (err) {
@@ -183,11 +205,12 @@ export class Moontron extends Component {
                               </div>
                             </div>
                           </div>
+                          <div ref={this.viewerRef} className="viewer" />
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className='keybtn maxbuttons' disabled={false} onClick={this.prepare}>Prepare</button>
+                            <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.prepare}>Prepare</button>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className='keybtn maxbuttons' disabled={false} onClick={this.mint}>Mint</button>
+                            <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.mint}>Mint</button>
                           </div>
                         </fieldset>
                       </form>
