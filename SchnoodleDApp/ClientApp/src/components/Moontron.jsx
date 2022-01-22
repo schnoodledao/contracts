@@ -7,6 +7,7 @@ import { Viewer } from '../viewer/viewer';
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
+import Loader from "react-loader-spinner";
 import queryString from 'query-string';
 
 export class Moontron extends Component {
@@ -27,6 +28,7 @@ export class Moontron extends Component {
       helpTitle: '',
       helpInfo: '',
       helpDetails: '',
+      busy: false,
       serviceAccount: null,
       gatewayBaseUrl: null,
       mintFee: null,
@@ -87,6 +89,7 @@ export class Moontron extends Component {
     try {
       const { web3, selectedAddress, serviceAccount, gatewayBaseUrl, mintFee } = this.state;
 
+      this.setState({ busy: true });
       const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
       const nftAssetItem = await (await this.fetch(`nft/preparemint/${selectedAddress}/${txn.transactionHash}`)).json();
 
@@ -95,23 +98,33 @@ export class Moontron extends Component {
 
       const assetMap = new Map();
       assetMap.set(assetUrl, file);
-      const gltf = await this.viewer.load(nftAssetItem.assetHash, gatewayBaseUrl, assetMap);
-      //if (!this.options.kiosk) {
-      //  this.validationCtrl.validate(fileUrl, rootPath, fileMap, gltf);
-      //}
+      await this.viewer.load(nftAssetItem.assetHash, gatewayBaseUrl, assetMap);
 
       this.setState({ nftAssetItem });
     } catch (err) {
       await this.handleError(err);
     }
+    this.setState({ busy: false });
   }
 
   async mint() {
-    const { nftAssetItem } = this.state;
+    try {
+      const { nftAssetItem } = this.state;
 
-    const data = new FormData();
-    data.append('image', new File(['test'], 'Test.png', { type: 'image/png' }));
-    const response = await this.fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
+      this.setState({ busy: true });
+
+      // Build a preview image of the 3D asset to include in the NFT metadata
+      const data = new FormData();
+      const type = 'image/png';
+      data.append('image', new File([await (await fetch(this.viewer.encode(type))).arrayBuffer()], 'Preview.png', { type }));
+      await this.fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
+
+      // Nullify the prepared asset item on a successful mint
+      this.setState({ nftAssetItem: null });
+    } catch (err) {
+      await this.handleError(err);
+    }
+    this.setState({ busy: false });
   }
 
   //#region Error handling
@@ -190,30 +203,42 @@ export class Moontron extends Component {
                       <h3 className="sectiontitle tw-text-2xl md:tw-text-3xl tw-leading-tight">Mint NFT</h3>
                     </div>
 
-                    <div className="tw-card-actions tw-text-center tw-mx-auto tw-w-full">
-                      <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
-                        <fieldset>
-                          <div className="tw-form-control">
+                    <div className="tw-grid tw-mt-4">
+                      {this.state.busy && (
+                        <div className="tw-overlay tw-z-20">
+                          <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
-                              <label className="tw-label">
-                                <span className="tw-label-text">
-                                  Name
-                                </span>
-                              </label>
-                              <div className="tw-relative tw-flex">
-                                <input type="text" onChange={this.updateName} className="depositinput" />
-                              </div>
+                              <Loader type="Puff" color="#00BFFF" />
                             </div>
                           </div>
-                          <div ref={this.viewerRef} className="viewer" />
-                          <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.prepare}>Prepare</button>
-                          </div>
-                          <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.mint}>Mint</button>
-                          </div>
-                        </fieldset>
-                      </form>
+                        </div>
+                      )}
+
+                      <div className="tw-card-actions tw-text-center tw-mx-auto tw-w-full">
+                        <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
+                          <fieldset>
+                            <div className="tw-form-control">
+                              <div>
+                                <label className="tw-label">
+                                  <span className="tw-label-text">
+                                    Name
+                                  </span>
+                                </label>
+                                <div className="tw-relative tw-flex">
+                                  <input type="text" onChange={this.updateName} className="depositinput" />
+                                </div>
+                              </div>
+                            </div>
+                            <div ref={this.viewerRef} className="viewer" />
+                            <div className="tw-mb-3 tw-form-control">
+                              <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.prepare}>Prepare</button>
+                            </div>
+                            <div className="tw-mb-3 tw-form-control">
+                              <button type="button" className="keybtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
+                            </div>
+                          </fieldset>
+                        </form>
+                      </div>
                     </div>
                   </div>
                 </div>

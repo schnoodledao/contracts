@@ -65,7 +65,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
         if (!createdNew) throw new InvalidOperationException($"Minting is already is progress for ID {id}.");
 
         var nftMintItem = await _nftMintDbService.GetItemAsync(id);
-        var imageHash = await _filePinningService.CreateNftAsset(imageStream, "Test.png", "image/png", cancellationToken);
+        var imageHash = await _filePinningService.CreateNftAsset(imageStream, "Preview.png", "image/png", cancellationToken);
         var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Test Name", "Test Description", cancellationToken);
 
         // Mint the NFT

@@ -1,3 +1,7 @@
+// ReSharper disable IdentifierTypo
+// ReSharper disable InconsistentNaming
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
 import {
   AmbientLight,
   AnimationMixer,
@@ -36,7 +40,7 @@ import { createBackground } from './lib/three-vignette.js';
 const DEFAULT_CAMERA = '[default]';
 
 const MANAGER = new LoadingManager();
-const THREE_PATH = `https://unpkg.com/three@0.${REVISION}.x`
+const THREE_PATH = `https://unpkg.com/three@0.${REVISION}.x`;
 const DRACO_LOADER = new DRACOLoader( MANAGER ).setDecoderPath( `${THREE_PATH}/examples/js/libs/draco/gltf/` );
 const KTX2_LOADER = new KTX2Loader( MANAGER ).setTranscoderPath( `${THREE_PATH}/examples/js/libs/basis/` );
 
@@ -52,7 +56,7 @@ const MAP_NAMES = [
   'metalnessMap',
   'normalMap',
   'roughnessMap',
-  'specularMap',
+  'specularMap'
 ];
 
 const Preset = {ASSET_GENERATOR: 'assetgenerator'};
@@ -110,7 +114,7 @@ export class Viewer {
     this.activeCamera = this.defaultCamera;
     this.scene.add( this.defaultCamera );
 
-    this.renderer = window.renderer = new WebGLRenderer({antialias: true});
+    this.renderer = window.renderer = new WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = sRGBEncoding;
     this.renderer.setClearColor( 0xcccccc );
@@ -173,10 +177,15 @@ export class Viewer {
 
     this.renderer.render( this.scene, this.activeCamera );
     if (this.state.grid) {
-      this.axesCamera.position.copy(this.defaultCamera.position)
-      this.axesCamera.lookAt(this.axesScene.position)
+      this.axesCamera.position.copy(this.defaultCamera.position);
+      this.axesCamera.lookAt(this.axesScene.position);
       this.axesRenderer.render( this.axesScene, this.axesCamera );
     }
+  }
+
+  encode (type) {
+
+    return this.renderer.domElement.toDataURL(type);
   }
 
   resize () {
@@ -199,6 +208,8 @@ export class Viewer {
 
     // Load.
     return new Promise((resolve, reject) => {
+
+      const blobURLs = [];
 
       // Intercept and override relative URLs.
       MANAGER.setURLModifier((url, path) => {
@@ -226,8 +237,6 @@ export class Viewer {
         .setDRACOLoader( DRACO_LOADER )
         .setKTX2Loader( KTX2_LOADER.detectSupport( this.renderer ) )
         .setMeshoptDecoder( MeshoptDecoder );
-
-      const blobURLs = [];
 
       loader.load(url, (gltf) => {
 
@@ -296,8 +305,8 @@ export class Viewer {
 
     this.setCamera(DEFAULT_CAMERA);
 
-    this.axesCamera.position.copy(this.defaultCamera.position)
-    this.axesCamera.lookAt(this.axesScene.position)
+    this.axesCamera.position.copy(this.defaultCamera.position);
+    this.axesCamera.lookAt(this.axesScene.position);
     this.axesCamera.near = size / 100;
     this.axesCamera.far = size * 100;
     this.axesCamera.updateProjectionMatrix();
@@ -668,7 +677,8 @@ export class Viewer {
         for (let i = 0; i < mesh.morphTargetInfluences.length; i++) {
           const ctrl = this.morphFolder.add(mesh.morphTargetInfluences, i, 0, 1, 0.01).listen();
           Object.keys(mesh.morphTargetDictionary).forEach((key) => {
-            if (key && mesh.morphTargetDictionary[key] === i) ctrl.name(key);
+            const j = 1;
+            if (key && mesh.morphTargetDictionary[key] === j) ctrl.name(key);
           });
           this.morphCtrls.push(ctrl);
         }
@@ -756,3 +766,7 @@ function isIOS() {
   // iPad on iOS 13 detection
   || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
 }
+// ReSharper restore IdentifierTypo
+// ReSharper restore InconsistentNaming
+// ReSharper restore StringLiteralTypo
+// ReSharper restore CommentTypo
