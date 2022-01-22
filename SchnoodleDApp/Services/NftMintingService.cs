@@ -35,7 +35,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
 
     public long MintFee { get; }
 
-    public async Task<NftAssetItem> PrepareMintNft(string to, string paymentTxHash, CancellationToken cancellationToken = default)
+    public async Task<NftAssetItem> GenerateAsset(string to, string paymentTxHash, CancellationToken cancellationToken = default)
     {
         // Validate the payment transaction.
         var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
@@ -59,10 +59,10 @@ public sealed class NftMintingService : ISelfScopedLifetime
         return nftAssetItem;
     }
 
-    public async Task<string> MintNft(string id, Stream imageStream, CancellationToken cancellationToken = default)
+    public async Task<string> Mint(string id, Stream imageStream, CancellationToken cancellationToken = default)
     {
         using var mutex = new Mutex(false, id, out var createdNew);
-        if (!createdNew) throw new InvalidOperationException($"Minting is already is progress for ID {id}.");
+        if (!createdNew) throw new InvalidOperationException($"Minting is already in progress for ID {id}.");
 
         var nftMintItem = await _nftMintDbService.GetItemAsync(id);
         var imageHash = await _filePinningService.CreateNftAsset(imageStream, "Preview.png", "image/png", cancellationToken);

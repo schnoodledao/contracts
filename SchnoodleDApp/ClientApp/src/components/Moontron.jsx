@@ -7,7 +7,7 @@ import { Viewer } from '../viewer/viewer';
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import Loader from "react-loader-spinner";
+import Loader from 'react-loader-spinner';
 import queryString from 'query-string';
 
 export class Moontron extends Component {
@@ -35,7 +35,7 @@ export class Moontron extends Component {
       nftAssetItem: null
     };
 
-    this.prepare = this.prepare.bind(this);
+    this.generateAsset = this.generateAsset.bind(this);
     this.mint = this.mint.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
 
@@ -85,13 +85,13 @@ export class Moontron extends Component {
     this.setState({ blockNumber });
   }
 
-  async prepare() {
+  async generateAsset() {
     try {
       const { web3, selectedAddress, serviceAccount, gatewayBaseUrl, mintFee } = this.state;
 
       this.setState({ busy: true });
       const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
-      const nftAssetItem = await (await this.fetch(`nft/preparemint/${selectedAddress}/${txn.transactionHash}`)).json();
+      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAddress}/${txn.transactionHash}`)).json();
 
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
       const file = new File([(await (await fetch(assetUrl)).blob())], 'Test.glb', { type: 'model/gltf-binary' });
@@ -119,7 +119,7 @@ export class Moontron extends Component {
       data.append('image', new File([await (await fetch(this.viewer.encode(type))).arrayBuffer()], 'Preview.png', { type }));
       await this.fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
 
-      // Nullify the prepared asset item on a successful mint
+      // Nullify the generated asset item on a successful mint
       this.setState({ nftAssetItem: null });
     } catch (err) {
       await this.handleError(err);
@@ -231,7 +231,7 @@ export class Moontron extends Component {
                             </div>
                             <div ref={this.viewerRef} className="viewer" />
                             <div className="tw-mb-3 tw-form-control">
-                              <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.prepare}>Prepare</button>
+                              <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.generateAsset}>Generate</button>
                             </div>
                             <div className="tw-mb-3 tw-form-control">
                               <button type="button" className="keybtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>

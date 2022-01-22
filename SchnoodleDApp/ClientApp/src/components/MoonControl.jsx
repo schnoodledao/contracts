@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { resources } from '../resources';
-import SchnoodleV1 from "../contracts/SchnoodleV1.json";
-import SchnoodleV8 from "../contracts/SchnoodleV8.json";
-import SchnoodleFarmingV1 from "../contracts/SchnoodleFarmingV1.json";
-import SchnoodleFarmingV2 from "../contracts/SchnoodleFarmingV2.json";
-import getWeb3 from "../getWeb3";
+import SchnoodleV1 from '../contracts/SchnoodleV1.json';
+import SchnoodleV8 from '../contracts/SchnoodleV8.json';
+import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
+import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
+import getWeb3 from '../getWeb3';
 import { initializeHelpers, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import chroma from 'chroma-js';
-import Globe from "react-globe.gl";
-const bigInt = require("big-integer");
+import Globe from 'react-globe.gl';
+const bigInt = require('big-integer');
 
 export class MoonControl extends Component {
   static displayName = MoonControl.name;

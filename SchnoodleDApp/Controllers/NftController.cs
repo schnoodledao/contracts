@@ -38,14 +38,14 @@ public class NftController : ControllerBase
         return Ok(_nftMintingService.MintFee);
     }
 
-    [HttpPost("preparemint")]
-    [Route("preparemint/{to}/{paymentTxHash}")]
-    public async Task<ActionResult<NftAssetItem>> PrepareMint(string to, string paymentTxHash)
+    [HttpPost("generateasset")]
+    [Route("generateasset/{to}/{paymentTxHash}")]
+    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string to, string paymentTxHash)
     {
         try
         {
             Reset();
-            return Ok(await _nftMintingService.PrepareMintNft(to, paymentTxHash, s_cts.Token));
+            return Ok(await _nftMintingService.GenerateAsset(to, paymentTxHash, s_cts.Token));
         }
         catch (Exception e)
         {
@@ -60,7 +60,7 @@ public class NftController : ControllerBase
         try
         {
             Reset();
-            return Ok(await _nftMintingService.MintNft(id, image.OpenReadStream(), s_cts.Token));
+            return Ok(await _nftMintingService.Mint(id, image.OpenReadStream(), s_cts.Token));
         }
         catch (Exception e)
         {

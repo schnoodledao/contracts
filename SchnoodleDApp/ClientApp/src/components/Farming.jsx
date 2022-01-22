@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { resources } from '../resources';
-import SchnoodleV1 from "../contracts/SchnoodleV1.json";
-import SchnoodleV8 from "../contracts/SchnoodleV8.json";
-import SchnoodleFarmingV1 from "../contracts/SchnoodleFarmingV1.json";
-import SchnoodleFarmingV2 from "../contracts/SchnoodleFarmingV2.json";
-import getWeb3 from "../getWeb3";
+import SchnoodleV1 from '../contracts/SchnoodleV1.json';
+import SchnoodleV8 from '../contracts/SchnoodleV8.json';
+import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
+import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
+import getWeb3 from '../getWeb3';
 import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
@@ -12,8 +12,8 @@ import { debounce, range } from 'lodash';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import Plot from 'react-plotly.js';
-import Loader from "react-loader-spinner";
-const bigInt = require("big-integer");
+import Loader from 'react-loader-spinner';
+const bigInt = require('big-integer');
 
 export class Farming extends Component {
   static displayName = Farming.name;
