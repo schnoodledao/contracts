@@ -28,17 +28,17 @@ public sealed class AssetService : ISelfScopedLifetime
             }
 
             var tempPath = Path.GetTempPath();
-            string? mainFilePath = null;
-            const string mainFileExtension = ".gltf";
-            await DownloadFiles(mainDirectory);
+            const string gltfFileExtension = ".gltf";
+            var mainFilePath = await DownloadFiles(mainDirectory);
 
-            async Task DownloadFiles(ShareDirectoryClient directory)
+            async Task<string?> DownloadFiles(ShareDirectoryClient directory)
             {
+                string? gltfFilePath = null;
                 await foreach (var item in directory.GetFilesAndDirectoriesAsync(cancellationToken: cancellationToken))
                 {
                     if (item.IsDirectory)
                     {
-                        await DownloadFiles(directory.GetSubdirectoryClient(item.Name));
+                        gltfFilePath = await DownloadFiles(directory.GetSubdirectoryClient(item.Name)) ?? gltfFilePath;
                     }
                     else
                     {
@@ -49,17 +49,19 @@ public sealed class AssetService : ISelfScopedLifetime
                         await using var stream = File.OpenWrite(localFilePath);
                         await (await file.DownloadAsync(cancellationToken: cancellationToken)).Value.Content.CopyToAsync(stream, cancellationToken);
 
-                        if (Path.GetExtension(localFilePath) == mainFileExtension)
+                        if (Path.GetExtension(localFilePath) == gltfFileExtension)
                         {
-                            mainFilePath = localFilePath;
+                            gltfFilePath = localFilePath;
                         }
                     }
                 }
+
+                return gltfFilePath;
             }
 
             if (mainFilePath is null)
             {
-                throw new FileNotFoundException($"No file with extension '{mainFileExtension}' exists in the directory.");
+                throw new FileNotFoundException($"No file with extension '{gltfFileExtension}' exists in the directory.");
             }
 
             var model = ModelRoot.Load(mainFilePath);
