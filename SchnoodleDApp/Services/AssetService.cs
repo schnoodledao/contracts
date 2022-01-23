@@ -63,7 +63,7 @@ public sealed class AssetService : ISelfScopedLifetime
 
                 if (!string.IsNullOrEmpty(gltfFilePath))
                 {
-                    sceneBuilder.AddScene(SceneBuilder.Load(gltfFilePath), Matrix4x4.CreateTranslation(0, 0, 0));
+                    sceneBuilder.AddScene(SceneBuilder.Load(gltfFilePath), Matrix4x4.Identity);
                 }
             }
 

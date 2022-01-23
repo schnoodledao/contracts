@@ -66,7 +66,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
 
         var nftMintItem = await _nftMintDbService.GetItemAsync(id);
         var imageHash = await _filePinningService.CreateNftAsset(imageStream, "Preview.png", "image/png", cancellationToken);
-        var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Test Name", "Test Description", cancellationToken);
+        var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Krypto", "This is Krypto, Schnoodle's venerable mascot.", cancellationToken);
 
         // Mint the NFT
         var mintTxHash = await _moontronService.MintIpfsRequestAsync(nftMintItem.To, metadataHash);
