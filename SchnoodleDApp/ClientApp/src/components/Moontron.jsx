@@ -22,13 +22,12 @@ export class Moontron extends Component {
       web3: null,
       moontron: null,
       selectedAddress: null,
-      getInfoIntervalId: 0,
-      blockNumber: 0,
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
       helpDetails: '',
       busy: false,
+      assetName: 'Krypto',
       serviceAccount: null,
       gatewayBaseUrl: null,
       mintFee: null,
@@ -61,11 +60,7 @@ export class Moontron extends Component {
       const gatewayBaseUrl = await (await this.fetch('nft/gatewaybaseurl')).text();
       const mintFee = await (await this.fetch('nft/mintfee')).text();
 
-      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee }, async () => {
-        await this.getInfo();
-        const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
-        this.setState({ getInfoIntervalId });
-      });
+      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee });
 
       this.viewer = new Viewer(this.viewerRef.current, this.options);
 
@@ -77,24 +72,20 @@ export class Moontron extends Component {
     }
   }
 
-  async getInfo() {
-    const { web3 } = this.state;
-
-    const blockNumber = await web3.eth.getBlockNumber();
-
-    this.setState({ blockNumber });
+  async updateAssetName(e) {
+    this.setState({ assetName: e.target.value });
   }
 
   async generateAsset() {
     try {
-      const { web3, selectedAddress, serviceAccount, gatewayBaseUrl, mintFee } = this.state;
+      const { web3, selectedAddress, serviceAccount, assetName, gatewayBaseUrl, mintFee } = this.state;
 
       this.setState({ busy: true });
       const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
-      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAddress}/${txn.transactionHash}`)).json();
+      const nftAssetItem = await (await this.fetch(`nft/generateasset/${assetName}/${selectedAddress}/${txn.transactionHash}`)).json();
 
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
-      const file = new File([(await (await fetch(assetUrl)).blob())], 'Test.glb', { type: 'model/gltf-binary' });
+      const file = new File([(await (await fetch(assetUrl)).blob())], `${assetName}.glb`, { type: 'model/gltf-binary' });
 
       const assetMap = new Map();
       assetMap.set(assetUrl, file);
@@ -217,19 +208,21 @@ export class Moontron extends Component {
                       <div className="tw-card-actions tw-text-center tw-mx-auto tw-w-full">
                         <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
                           <fieldset>
+                            <div ref={this.viewerRef} className="viewer" />
                             <div className="tw-form-control">
                               <div>
                                 <label className="tw-label">
                                   <span className="tw-label-text">
-                                    Name
+                                    Asset
                                   </span>
                                 </label>
                                 <div className="tw-relative tw-flex">
-                                  <input type="text" onChange={this.updateName} className="depositinput" />
+                                  <select value={this.state.assetName} onChange={this.updateAssetName}>
+                                    <option value="Krypto">Krypto</option>
+                                  </select>
                                 </div>
                               </div>
                             </div>
-                            <div ref={this.viewerRef} className="viewer" />
                             <div className="tw-mb-3 tw-form-control">
                               <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.generateAsset}>Generate</button>
                             </div>

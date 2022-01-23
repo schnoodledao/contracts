@@ -39,13 +39,13 @@ public class NftController : ControllerBase
     }
 
     [HttpPost("generateasset")]
-    [Route("generateasset/{to}/{paymentTxHash}")]
-    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string to, string paymentTxHash)
+    [Route("generateasset/{assetName}/{to}/{paymentTxHash}")]
+    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string assetName, string to, string paymentTxHash)
     {
         try
         {
             Reset();
-            return Ok(await _nftMintingService.GenerateAsset(to, paymentTxHash, s_cts.Token));
+            return Ok(await _nftMintingService.GenerateAsset(assetName, to, paymentTxHash, s_cts.Token));
         }
         catch (Exception e)
         {

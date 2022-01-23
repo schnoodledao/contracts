@@ -35,7 +35,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
 
     public long MintFee { get; }
 
-    public async Task<NftAssetItem> GenerateAsset(string to, string paymentTxHash, CancellationToken cancellationToken = default)
+    public async Task<NftAssetItem> GenerateAsset(string assetName, string to, string paymentTxHash, CancellationToken cancellationToken = default)
     {
         // Validate the payment transaction.
         var transaction = await _web3.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
@@ -51,8 +51,8 @@ public sealed class NftMintingService : ISelfScopedLifetime
         if (amount < _blockchainOptions.MintFee) throw new InvalidOperationException($"Payment transaction amount (${amount}) is less than the required fee to mint (${_blockchainOptions.MintFee}).");
 
         // Generate the NFT asset.
-        await using var stream = await _assetService.Create3DAsset("Test", cancellationToken);
-        var hash = await _filePinningService.CreateNftAsset(stream, "Test.glb", "model/gltf-binary", cancellationToken);
+        await using var stream = await _assetService.Create3DAsset(assetName, cancellationToken);
+        var hash = await _filePinningService.CreateNftAsset(stream, $"{assetName}.glb", "model/gltf-binary", cancellationToken);
 
         var nftAssetItem = new NftAssetItem {Id = Guid.NewGuid().ToString(), To = to, AssetHash = hash};
         await _nftMintDbService.AddItemAsync(nftAssetItem);

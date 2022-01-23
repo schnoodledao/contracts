@@ -114,10 +114,9 @@ export class Viewer {
     this.activeCamera = this.defaultCamera;
     this.scene.add( this.defaultCamera );
 
-    this.renderer = window.renderer = new WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+    this.renderer = window.renderer = new WebGLRenderer({antialias: true, preserveDrawingBuffer: true, alpha: true});
     this.renderer.physicallyCorrectLights = true;
     this.renderer.outputEncoding = sRGBEncoding;
-    this.renderer.setClearColor( 0xcccccc );
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( el.clientWidth, el.clientHeight );
 

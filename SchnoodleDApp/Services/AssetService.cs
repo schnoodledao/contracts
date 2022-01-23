@@ -1,8 +1,9 @@
-﻿using Azure.Storage.Files.Shares;
+﻿using System.Numerics;
+using Azure.Storage.Files.Shares;
 using Microsoft.Extensions.Options;
 using SchnoodleDApp.Models;
 using Scrutor.AspNetCore;
-using SharpGLTF.Schema2;
+using SharpGLTF.Scenes;
 
 namespace SchnoodleDApp.Services;
 
@@ -27,46 +28,52 @@ public sealed class AssetService : ISelfScopedLifetime
                 throw new DirectoryNotFoundException($"The directory '{directoryName}' does not exist on the file share.");
             }
 
-            var tempPath = Path.GetTempPath();
+            var assetsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Assets");
             const string gltfFileExtension = ".gltf";
-            var mainFilePath = await DownloadFiles(mainDirectory);
+            var sceneBuilder = new SceneBuilder();
+            await BuildSceneFromDirectory(mainDirectory);
 
-            async Task<string?> DownloadFiles(ShareDirectoryClient directory)
+            async Task BuildSceneFromDirectory(ShareDirectoryClient directory)
             {
-                string? gltfFilePath = null;
+                var gltfFilePath = string.Empty;
                 await foreach (var item in directory.GetFilesAndDirectoriesAsync(cancellationToken: cancellationToken))
                 {
                     if (item.IsDirectory)
                     {
-                        gltfFilePath = await DownloadFiles(directory.GetSubdirectoryClient(item.Name)) ?? gltfFilePath;
+                        await BuildSceneFromDirectory(directory.GetSubdirectoryClient(item.Name));
                     }
                     else
                     {
                         var file = directory.GetFileClient(item.Name);
-                        var localFilePath = Path.Combine(tempPath, file.Path);
-                        Directory.CreateDirectory(Path.GetDirectoryName(localFilePath)!);
+                        var filePath = Path.Combine(assetsPath, file.Path);
+                        if (!Directory.CreateDirectory(Path.GetDirectoryName(filePath)!).Exists) continue;
 
-                        await using var stream = File.OpenWrite(localFilePath);
-                        await (await file.DownloadAsync(cancellationToken: cancellationToken)).Value.Content.CopyToAsync(stream, cancellationToken);
-
-                        if (Path.GetExtension(localFilePath) == gltfFileExtension)
+                        if ((await file.GetPropertiesAsync(cancellationToken)).Value.SmbProperties.FileCreatedOn!.Value > File.GetCreationTime(filePath).ToUniversalTime())
                         {
-                            gltfFilePath = localFilePath;
+                            await using var stream = File.OpenWrite(filePath);
+                            await (await file.DownloadAsync(cancellationToken: cancellationToken)).Value.Content.CopyToAsync(stream, cancellationToken);
+                        }
+
+                        if (Path.GetExtension(filePath) == gltfFileExtension)
+                        {
+                            gltfFilePath = filePath;
                         }
                     }
                 }
 
-                return gltfFilePath;
+                if (!string.IsNullOrEmpty(gltfFilePath))
+                {
+                    sceneBuilder.AddScene(SceneBuilder.Load(gltfFilePath), Matrix4x4.CreateTranslation(0, 0, 0));
+                }
             }
 
-            if (mainFilePath is null)
+            if (!sceneBuilder.Instances.Any())
             {
-                throw new FileNotFoundException($"No file with extension '{gltfFileExtension}' exists in the directory.");
+                throw new FileNotFoundException($"No 3D assets exists in directory '${directoryName}' on the server.");
             }
 
-            var model = ModelRoot.Load(mainFilePath);
             var glbStream = new MemoryStream();
-            model.WriteGLB(glbStream);
+            sceneBuilder.ToGltf2().WriteGLB(glbStream);
             glbStream.Position = 0;
             return glbStream;
         }
