@@ -577,8 +577,8 @@ TABLE
   margin-left: 5%;
 }
 .dg.main li.folder {
-  @apply tw-inline-block tw-float-left !important;
-  width: 30%
+  @apply md:tw-inline-block tw-block tw-float-left !important;
+  width: 30%;
 }
 
 .close-bottom {
@@ -613,7 +613,7 @@ TABLE
   border-bottom: 0px !important;
 }
 
-.dg li:not(.folder) {
+.dg li:not(.folder):not(.gui-stats) {
   @apply tw-h-10 !important;
 }
 
@@ -622,9 +622,10 @@ TABLE
 }
 
 .gui-stats {
-  height: 78px !important;
+  height: 83px !important;
   border-bottom: 2px solid rgb(88, 199, 243) !important;
 }
+
 .closed .gui-stats {
   border-bottom: 0px !important;
 }
@@ -639,6 +640,14 @@ TABLE
   line-height: 2.5em;
 }
 
+@media only screen and (max-width: 769px) {
+  .dg.main li.folder {
+    @apply tw-w-full tw-ml-0 !important;
+  }
+  .dg.main li.folder:nth-child(2)  {
+    @apply tw-my-4;
+  }
+}
 
 @keyframes react-responsive-modal-overlay-in {
   0% {
@@ -794,3 +803,4 @@ TABLE
     opacity: 0;
   }
 }
+
