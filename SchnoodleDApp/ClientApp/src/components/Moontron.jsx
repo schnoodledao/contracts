@@ -206,28 +206,30 @@ export class Moontron extends Component {
                       )}
 
                       <div className="tw-card-actions tw-text-center tw-mx-auto tw-w-full">
-                        <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
+                        <form className="tw-w-full tw-mt-5">
                           <fieldset>
-                            <div ref={this.viewerRef} className="viewer" />
-                            <div className="tw-form-control">
-                              <div>
-                                <label className="tw-label">
+                            <div className="tw-form-control space-y-6 sm:space-y-5">
+                              <div className="tw-sm:grid tw-sm:grid-cols-3 tw-sm:gap-4 tw-sm:items-start tw-sm:border-t tw-sm:border-gray-200 tw-sm:pt-5">
+                                <label className="tw-label tw-block">
                                   <span className="tw-label-text">
-                                    Asset
+                                   Select Asset
                                   </span>
                                 </label>
-                                <div className="tw-relative tw-flex">
-                                  <select value={this.state.assetName} onChange={this.updateAssetName}>
-                                    <option value="Krypto">Krypto</option>
+                                <div className="">
+                                  <select value={this.state.assetName} onChange={this.updateAssetName} className="tw-text-xl tw-leading-6 tw-select tw-select-bordered tw-select-secondary tw-w-full tw-max-w-xs tw-text-white">
+                                    <option value="Krypto" className="tw-text-xl">Krypto</option>
                                   </select>
                                 </div>
                               </div>
                             </div>
-                            <div className="tw-mb-3 tw-form-control">
-                              <button type="button" className="keybtn maxbuttons" disabled={false} onClick={this.generateAsset}>Generate</button>
+
+                            <div ref={this.viewerRef} className="viewer tw-max-w-6xl tw-mx-auto" />
+
+                            <div className="tw-mb-3 tw-form-control tw-w-full">
+                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={false} onClick={this.generateAsset}>Generate</button>
                             </div>
-                            <div className="tw-mb-3 tw-form-control">
-                              <button type="button" className="keybtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
+                            <div className="tw-mb-3 tw-form-control tw-w-full">
+                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
                             </div>
                           </fieldset>
                         </form>
