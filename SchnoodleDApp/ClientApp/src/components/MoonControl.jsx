@@ -87,15 +87,20 @@ export class MoonControl extends Component {
     const blockNumber = await web3.eth.getBlockNumber();
 
     this.setState({ blockNumber }, async () => {
-      const depositedEvents = (await getPastLogs('Deposited(address,uint256,uint256)')).concat(await getPastLogs('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)'));
+      const topicsOld = [web3.utils.sha3('Deposited(address,uint256,uint256)')];
+      const topicsNew = [web3.utils.sha3('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)')];
+      const depositedEvents = (await getPastLogs(topicsOld, 13761101, 'latest')).concat(await getPastLogs(topicsNew, 13761101, 'latest'));
 
-      async function getPastLogs(signature) {
-        return await web3.eth.getPastLogs({
-          fromBlock: 0,
-          toBlock: 'latest',
-          address: schnoodleFarming._address,
-          topics: [web3.utils.sha3(signature)]
-        });
+      // Divide and conquer strategy to address query timeouts when getting past events (https://ethereum.stackexchange.com/a/84836/63971)
+      async function getPastLogs(topics, fromBlock, toBlock) {
+        try {
+          return await web3.eth.getPastLogs({ fromBlock, toBlock, address: schnoodleFarming._address, topics });
+        } catch (err) {
+          const midBlock = (fromBlock + toBlock) >> 1;
+          const arr1 = await getPastLogs(topics, fromBlock, midBlock);
+          const arr2 = await getPastLogs(topics, midBlock + 1, toBlock);
+          return [...arr1, ...arr2];
+        }
       }
 
       const accounts = [...new Set(await depositedEvents.map((depositedEvent) => `0x${depositedEvent.topics[1].slice(26)}`))];
