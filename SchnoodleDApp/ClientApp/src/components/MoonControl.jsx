@@ -87,9 +87,10 @@ export class MoonControl extends Component {
     const blockNumber = await web3.eth.getBlockNumber();
 
     this.setState({ blockNumber }, async () => {
+      const farmingStartBlock = 13761101;
       const topicsOld = [web3.utils.sha3('Deposited(address,uint256,uint256)')];
       const topicsNew = [web3.utils.sha3('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)')];
-      const depositedEvents = (await getPastLogs(topicsOld, 13761101, 'latest')).concat(await getPastLogs(topicsNew, 13761101, 'latest'));
+      const depositedEvents = (await getPastLogs(topicsOld, farmingStartBlock, blockNumber)).concat(await getPastLogs(topicsNew, farmingStartBlock, blockNumber));
 
       // Divide and conquer strategy to address query timeouts when getting past events (https://ethereum.stackexchange.com/a/84836/63971)
       async function getPastLogs(topics, fromBlock, toBlock) {
