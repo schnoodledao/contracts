@@ -494,7 +494,7 @@ export class Farming extends Component {
                         <div className="tw-flex">
                           <input type="number" min="1" max={amount} value={this.state.withdrawAmounts[i] || ''} onChange={this.updateWithdrawAmount.bind(this, i)} className="withdrawinput" />
                           <button type="button" onClick={this.maxWithdraw.bind(this, i)} className="maxwithdraw">Max</button>
-                          <button type="button" className="withdrawbtn" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span className="">Withdraw</span></button>
+                          <button type="button" className="withdrawbtn" disabled={this.state.withdrawAmounts[i] < 1 || this.state.withdrawAmounts[i] > amount} onClick={this.withdraw.bind(this, i)}><span>Withdraw</span></button>
                         </div>
                       </div>
                     </fieldset>

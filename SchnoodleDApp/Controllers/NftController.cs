@@ -10,20 +10,16 @@ public class NftController : ControllerBase
 {
     private readonly ILogger<NftController> _logger;
     private readonly FilePinningService _filePinningService;
+    private readonly AssetService _assetService;
     private readonly NftMintingService _nftMintingService;
     private static CancellationTokenSource s_cts = new();
 
-    public NftController(ILogger<NftController> logger, FilePinningService filePinningService, NftMintingService nftMintingService)
+    public NftController(ILogger<NftController> logger, FilePinningService filePinningService, AssetService assetService, NftMintingService nftMintingService)
     {
         _logger = logger;
         _filePinningService = filePinningService;
+        _assetService = assetService;
         _nftMintingService = nftMintingService;
-    }
-
-    [HttpGet("serviceaccount")]
-    public ActionResult<string> GetServiceAccount()
-    {
-        return Ok(_nftMintingService.ServiceAccount);
     }
 
     [HttpGet("gatewaybaseurl")]
@@ -32,20 +28,36 @@ public class NftController : ControllerBase
         return Ok(_filePinningService.GatewayBaseUrl);
     }
 
+    [HttpGet("serviceaccount")]
+    public ActionResult<string> GetServiceAccount()
+    {
+        return Ok(_nftMintingService.ServiceAccount);
+    }
+
     [HttpGet("mintfee")]
     public ActionResult<long> GetMintFee()
     {
         return Ok(_nftMintingService.MintFee);
     }
 
+    [HttpGet("assetconfigs")]
+    public async Task<ActionResult<IReadOnlyDictionary<string, Dictionary<string, AssetConfig>>>> GetAssetConfigs()
+    {
+        return Ok(await _assetService.GetConfigs(s_cts.Token));
+    }
+
     [HttpPost("generateasset")]
-    [Route("generateasset/{assetName}/{to}/{paymentTxHash}")]
-    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string assetName, string to, string paymentTxHash)
+    [Route("generateasset/{assetName}/{configName}/{to}/{paymentTxHash}")]
+    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string assetName, string configName, [FromQuery] string[] components, string to, string paymentTxHash)
     {
         try
         {
             Reset();
-            return Ok(await _nftMintingService.GenerateAsset(assetName, to, paymentTxHash, s_cts.Token));
+            return Ok(await _nftMintingService.GenerateAsset(assetName, configName, components, to, paymentTxHash, s_cts.Token));
+        }
+        catch (DirectoryNotFoundException e)
+        {
+            return NotFound(e);
         }
         catch (Exception e)
         {

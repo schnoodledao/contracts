@@ -27,13 +27,17 @@ export class Moontron extends Component {
       helpInfo: '',
       helpDetails: '',
       busy: false,
-      assetName: 'Krypto',
-      serviceAccount: null,
+      selectedAsset: null,
+      selectedConfig: null,
+      selectedComponents: [],
       gatewayBaseUrl: null,
+      assetConfigs: null,
+      serviceAccount: null,
       mintFee: null,
       nftAssetItem: null
     };
 
+    this.updateAssetConfig = this.updateAssetConfig.bind(this);
     this.generateAsset = this.generateAsset.bind(this);
     this.mint = this.mint.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
@@ -56,11 +60,12 @@ export class Moontron extends Component {
       const web3 = await getWeb3();
       const moontronDeployedNetwork = MoontronV1.networks[await web3.eth.net.getId()];
       const moontron = new web3.eth.Contract(MoontronV1.abi, moontronDeployedNetwork && moontronDeployedNetwork.address);
-      const serviceAccount = await (await this.fetch('nft/serviceaccount')).text();
       const gatewayBaseUrl = await (await this.fetch('nft/gatewaybaseurl')).text();
+      const serviceAccount = await (await this.fetch('nft/serviceaccount')).text();
       const mintFee = await (await this.fetch('nft/mintfee')).text();
+      const assetConfigs = await (await this.fetch('nft/assetconfigs')).json();
 
-      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee });
+      this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee, assetConfigs });
 
       this.viewer = new Viewer(this.viewerRef.current, this.options);
 
@@ -72,20 +77,27 @@ export class Moontron extends Component {
     }
   }
 
-  async updateAssetName(e) {
-    this.setState({ assetName: e.target.value });
+  async updateAssetConfig(e) {
+    const [selectedAsset, selectedConfig] = e.target.value.split(',');
+    this.setState({ selectedAsset, selectedConfig });
+  }
+
+  async updateSelectedComponent(component) {
+    const { selectedComponents } = this.state;
+    selectedComponents[component] = !selectedComponents[component];
+    this.setState({ selectedComponents });
   }
 
   async generateAsset() {
     try {
-      const { web3, selectedAddress, serviceAccount, assetName, gatewayBaseUrl, mintFee } = this.state;
+      const { web3, selectedAddress, serviceAccount, selectedAsset, selectedConfig, selectedComponents, gatewayBaseUrl, mintFee } = this.state;
 
       this.setState({ busy: true });
       const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
-      const nftAssetItem = await (await this.fetch(`nft/generateasset/${assetName}/${selectedAddress}/${txn.transactionHash}`)).json();
+      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${txn.transactionHash}?${Object.keys(selectedComponents).map((component) => `components=${component}`).join('&')}`)).json();
 
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
-      const file = new File([(await (await fetch(assetUrl)).blob())], `${assetName}.glb`, { type: 'model/gltf-binary' });
+      const file = new File([(await (await fetch(assetUrl)).blob())], `${selectedAsset}.glb`, { type: 'model/gltf-binary' });
 
       const assetMap = new Map();
       assetMap.set(assetUrl, file);
@@ -210,15 +222,25 @@ export class Moontron extends Component {
                           <fieldset>
                             <div className="tw-form-control space-y-6 sm:space-y-5">
                               <div className="tw-sm:grid tw-sm:grid-cols-3 tw-sm:gap-4 tw-sm:items-start tw-sm:border-t tw-sm:border-gray-200 tw-sm:pt-5">
-                                <label className="tw-label tw-block">
-                                  <span className="tw-label-text">
-                                   Select Asset
-                                  </span>
-                                </label>
-                                <div className="">
-                                  <select value={this.state.assetName} onChange={this.updateAssetName} className="tw-text-xl tw-leading-6 tw-select tw-select-bordered tw-select-secondary tw-w-full tw-max-w-xs tw-text-white">
-                                    <option value="Krypto" className="tw-text-xl">Krypto</option>
+                                <div>
+                                  <select value={[this.state.selectedAsset, this.state.selectedConfig]} onChange={this.updateAssetConfig} className="tw-text-xl tw-leading-6 tw-select tw-select-bordered tw-select-secondary tw-w-full tw-max-w-xs tw-text-white">
+                                    <option className="tw-text-xl">Select Asset</option>
+                                    {Object.keys(this.state.assetConfigs).map((assetName) => {
+                                      return Object.keys(this.state.assetConfigs[assetName]).map((configName) => {
+                                        return (<option value={[assetName, configName]} className="tw-text-xl">{`${assetName} - ${configName}`}</option>);
+                                      });
+                                    })}
                                   </select>
+                                  <fieldset>
+                                    {this.state.selectedAsset && this.state.assetConfigs[this.state.selectedAsset][this.state.selectedConfig]['optional'].map((component) => {
+                                      return (
+                                        <div>
+                                          <input type="checkbox" id={component} value={component} checked={this.state.selectedComponents[component]} onChange={() => this.updateSelectedComponent(component)} />
+                                          <label htmlFor={component} className="tw-text-xl tw-text-white">{component}</label>
+                                        </div>
+                                      );
+                                    })}
+                                  </fieldset>
                                 </div>
                               </div>
                             </div>
@@ -226,7 +248,7 @@ export class Moontron extends Component {
                             <div ref={this.viewerRef} className="viewer tw-max-w-6xl tw-mx-auto" />
 
                             <div className="tw-mb-3 tw-form-control tw-w-full">
-                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={false} onClick={this.generateAsset}>Generate</button>
+                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.selectedConfig == null} onClick={this.generateAsset}>Generate</button>
                             </div>
                             <div className="tw-mb-3 tw-form-control tw-w-full">
                               <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
