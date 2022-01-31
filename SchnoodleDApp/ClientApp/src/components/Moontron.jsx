@@ -93,12 +93,19 @@ export class Moontron extends Component {
       const { web3, selectedAddress, serviceAccount, selectedAsset, selectedConfig, selectedComponents, gatewayBaseUrl, mintFee } = this.state;
 
       this.setState({ busy: true });
-      const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
-      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${txn.transactionHash}?${Object.keys(selectedComponents).map((component) => `components=${component}`).join('&')}`)).json();
 
+      // Request payment for the NFT upfront
+      const txn = await web3.eth.sendTransaction({ from: selectedAddress, to: serviceAccount, value: mintFee });
+
+      // Generate the asset sending proof of payment (PoP), and the desired list of components
+      const componentsQuery = Object.keys(selectedComponents).filter((component) => selectedComponents[component]).map((component) => `components=${component}`).join('&');
+      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${txn.transactionHash}?${componentsQuery}`)).json();
+
+      // Fetch the GLB file from its pinned URL on IPFS
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
       const file = new File([(await (await fetch(assetUrl)).blob())], `${selectedAsset}.glb`, { type: 'model/gltf-binary' });
 
+      // Load the GLB file into the 3D viewer
       const assetMap = new Map();
       assetMap.set(assetUrl, file);
       await this.viewer.load(nftAssetItem.assetHash, gatewayBaseUrl, assetMap);
