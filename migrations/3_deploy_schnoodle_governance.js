@@ -15,7 +15,7 @@ module.exports = async function (deployer, network) {
   await deployer.deploy(SchnoodleGovernance, governance.minDelay, governance.proposers, governance.executors);
   const schnoodleGovernanceAddress = (await SchnoodleGovernance.deployed()).address;
   await admin.transferProxyAdminOwnership(schnoodleGovernanceAddress);
-  (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);
+  await (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);
 
   contractsFile.append(contractName);
 };

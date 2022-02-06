@@ -1,5 +1,5 @@
 const path = require("path");
-const { mnemonic, infuraProjectId, etherscanApiKey } = require('./secrets.json');
+const { mnemonic, moralisId, etherscanApiKey, bscscanApiKey } = require('./secrets.json');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
@@ -11,15 +11,16 @@ module.exports = {
       port: 7545,
       network_id: "*",
     },
+    // Ethereum
     ropsten: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://ropsten.infura.io/ws/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/eth/ropsten/ws`),
       websockets: true,
       network_id: 3,
       gasPrice: 10e9,
       skipDryRun: true
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://rinkeby.infura.io/ws/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/eth/rinkeby/ws`),
       websockets: true,
       network_id: 4,
       gasPrice: 10e9,
@@ -27,7 +28,7 @@ module.exports = {
       skipDryRun: true
     },
     kovan: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://kovan.infura.io/ws/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/eth/kovan/ws`),
       websockets: true,
       network_id: 42,
       gasPrice: 10e9,
@@ -35,7 +36,7 @@ module.exports = {
       skipDryRun: true
     },
     goerli: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://goerli.infura.io/ws/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/eth/goerli/ws`),
       websockets: true,
       network_id: 5,
       gasPrice: 10e9,
@@ -43,13 +44,30 @@ module.exports = {
       skipDryRun: true
     },
     mainnet: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/eth/mainnet/ws`),
       websockets: true,
       network_id: 1,
       gasPrice: 10e9,
       gas: 10e6,
       skipDryRun: true
-    }
+    },
+    // BSC
+    chapel: {
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/bsc/testnet/ws`),
+      websockets: true,
+      network_id: 97,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
+    bsc: {
+      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/bsc/mainnet/ws`),
+      websockets: true,
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
   },
 
   mocha: {
@@ -73,7 +91,8 @@ module.exports = {
   ],
 
   api_keys: {
-    etherscan: etherscanApiKey
+    etherscan: etherscanApiKey,
+    bscscan: bscscanApiKey
   },
 
   db: {

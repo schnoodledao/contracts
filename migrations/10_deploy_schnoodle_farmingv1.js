@@ -14,7 +14,7 @@ module.exports = async function (deployer, network) {
 
   // Transfer ownership of SchnoodleFarming to SchnoodleGovernance
   const SchnoodleGovernance = artifacts.require('SchnoodleGovernance');
-  (await SchnoodleFarming.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
+  await (await SchnoodleFarming.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
 
   const contractsFile = require('../scripts/contracts-file.js');
   contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(schnoodleFarming.address)}`);
