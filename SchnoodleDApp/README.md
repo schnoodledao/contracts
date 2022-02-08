@@ -1,5 +1,5 @@
 # Schnoodle DApp
-Schnoodle X is a DApp to allow interact with the Schnoodle smart contract via a web browser interface.
+Schnoodle X is a DApp to allow interaction with the Schnoodle smart contract via a web browser interface.
 
 # Prerequisites
 - [Node.js](https://nodejs.org/)
@@ -13,7 +13,7 @@ Execute the following commands in a `truffle develop` console:
 1. `exec scripts/initialize.js`
 
 # Run
-1. Execute `npm i`
+1. Execute `npm i`.
 1. Open **Schnoodle.sln** in Visual Studio 2022.
 1. Build and run.
 1. Connect MetaMask to local network (e.g., http://localhost:7545). You will need to reset MetaMask (in advanced settings) if the network was restarted since the previous run.

@@ -24,8 +24,8 @@ If ($Remigrate) {
 
 If ($Rebuild) {
     Remove-Item SchnoodleDApp\ClientApp\src\contracts\*.json
-    $process = Start-Process npx -ArgumentList $CompileArgs -NoNewWindow -PassThru -Wait
-    If ($process.ExitCode -ne 0) { Exit }
+    $Process = Start-Process npx -ArgumentList $CompileArgs -NoNewWindow -PassThru -Wait
+    If ($Process.ExitCode -ne 0) { Exit }
 }
 
 $LogsPath = "logs"
@@ -33,18 +33,22 @@ If (!(Test-Path $LogsPath)) {
     New-Item -Name $LogsPath -ItemType "directory"
 }
 
-$process = Start-Process npx -ArgumentList $MigrateArgs -RedirectStandardOutput $LogsPath\migrate-$Network-$(Get-Date -Format FileDateTimeUniversal).log -PassThru -Wait -WindowStyle Hidden
+$Process = Start-Process npx -ArgumentList $MigrateArgs -RedirectStandardOutput $LogsPath\migrate-$Network-$(Get-Date -Format FileDateTimeUniversal).log -PassThru -Wait -WindowStyle Hidden
 
 If (($process.ExitCode -eq 0) -and ($Network -ne "develop")) {
     "Waiting till $((Get-Date).AddMinutes(2)) to verify contracts."
     Start-Sleep -s 120
     
     $ContractsFile = "contracts.txt"
+    $VerifyFailed = $false;
+
     ForEach ($Contract in Get-Content $ContractsFile) {
-        npx truffle run verify $Contract --network $Network
+        $VerifyArgs = @("truffle", "run", "verify", $Contract, "--network", $Network)
+        $Process = Start-Process npx -ArgumentList $VerifyArgs -NoNewWindow -PassThru -Wait
+        If ($Process.ExitCode -ne 0) { $VerifyFailed = $true }
     }
 
-    If (Test-Path $ContractsFile) {
+    If (Test-Path $ContractsFile && !$VerifyFailed) {
         Remove-Item $ContractsFile
     }
 }

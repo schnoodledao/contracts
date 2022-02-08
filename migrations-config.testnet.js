@@ -10,5 +10,6 @@ module.exports = {
     minDelay: 30, // Minimum delay timer in seconds
     proposers: ['0xF4157e28eF1d741F3B3f4050E2273cb206Cafc3B'],
     executors: ['0xF4157e28eF1d741F3B3f4050E2273cb206Cafc3B']
-  }
+  },
+  bridgeOwners: ['0x3Fb6E133a40Af01Bb6dA475EB6c9F68AFe1C845A', '0xCb141e5C8FCB7765dACCFFB4500845FB1C943422']
 };
