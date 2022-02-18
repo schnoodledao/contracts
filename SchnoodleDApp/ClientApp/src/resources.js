@@ -13,6 +13,7 @@ export const resources = {
   LOADING: 'Loading',
   MOON_FARMING: 'Moon Farming',
   MOON_CONTROL: 'Moon Control',
+  MOONTRON: 'Moontron',
   START_FARMING: 'Start Farming',
   ADD_DEPOSIT: 'Add Deposit',
   MOON_FARM_DATA: 'Moon Farm Data',
