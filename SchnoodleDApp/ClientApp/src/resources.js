@@ -11,6 +11,7 @@ function assInfo(insert) {
 export const resources = {
   APP_NAME: 'Schnoodle X',
   LOADING: 'Loading',
+  BRIDGE: 'Bridge',
   MOON_FARMING: 'Moon Farming',
   MOON_CONTROL: 'Moon Control',
   START_FARMING: 'Start Farming',

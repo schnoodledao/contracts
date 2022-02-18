@@ -34,6 +34,9 @@ export class NavMenu extends Component {
                   <NavLink tag={Link} className="text-light tw-uppercase" to="/" onClick={this.toggleNavbar}>Home</NavLink>
                 </NavItem>
                 <NavItem>
+                  <NavLink tag={Link} className="text-light tw-uppercase" to="/bridge" onClick={this.toggleNavbar}>{resources.BRIDGE}</NavLink>
+                </NavItem>
+                <NavItem>
                   <NavLink tag={Link} className="text-light tw-uppercase" to="/farming" onClick={this.toggleNavbar}>{resources.MOON_FARMING}</NavLink>
                 </NavItem>
                 <NavItem>
