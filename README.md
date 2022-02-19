@@ -2,7 +2,7 @@
 Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO governance. The first of its kind.
 
 # Prerequisites
-- [Node.js](https://nodejs.org/)
+- [Node.js](https://nodejs.org)
 - [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
 - Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
@@ -26,6 +26,7 @@ A description of each parameter is in the PowerShell script itself. In general, 
 If a migration fails due to rate limiting on the RPC node, continue the migration by rerunning the script with only the `network` parameter specified.
 
 ## Launch Steps
+1. Execute `npm i`.
 1. Migrate `SchnoodleV1`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
 1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.

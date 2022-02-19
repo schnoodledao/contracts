@@ -99,7 +99,7 @@ fieldset:disabled button {
 }
 
 .maxwithdraw {
-  @apply  tw-btn tw-btn-link tw-text-accent tw-opacity-80 tw-text-lg tw-uppercase hover:tw-bg-transparent hover:tw-opacity-100;
+  @apply tw-btn tw-btn-link tw-text-accent tw-opacity-80 tw-text-lg tw-uppercase hover:tw-bg-transparent hover:tw-opacity-100;
   background-color: transparent !important;
   text-decoration: none !important;
 }
@@ -176,7 +176,7 @@ input.withdrawinput {
 }
 
 .dwmbutton {
-  @apply depositbtns tw-btn tw-btn-secondary tw-bordered tw-border-secondary ;
+  @apply depositbtns tw-btn tw-btn-secondary tw-bordered tw-border-secondary;
 }
 
 .maxbuttons {
@@ -196,7 +196,7 @@ input.withdrawinput {
 }
 
 .withdrawbtn {
-  @apply tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2 !important; 
+  @apply tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2 !important;
 }
 
 .keybtn:disabled {
@@ -247,13 +247,15 @@ fieldset:disabled .bottomstats {
   text-align: left;
   max-width: 80vw;
 }
+
 .scene-tooltip .moontip span {
   font-size: 18px;
   text-transform: uppercase;
   margin-bottom: 4px;
 }
 
-.plotcontainer, .overlay {
+.plotcontainer,
+.overlay {
   grid-area: 1 / 1;
 }
 
@@ -272,12 +274,13 @@ fieldset:disabled .bottomstats {
   margin: auto;
 }
 
-.js-plotly-plot, #scene, #scene canvas {
+.js-plotly-plot,
+#scene,
+#scene canvas {
   max-width: 736px;
   width: 100% !important;
   margin: auto;
-} 
-
+}
 
 /*
 ________________________________________________________________________
@@ -412,7 +415,9 @@ TABLE
 
 @media only screen and (max-width: 1023px) {
 
-  .js-plotly-plot, #scene, #scene canvas {
+  .js-plotly-plot,
+  #scene,
+  #scene canvas {
     max-width: 85vw !important;
     width: 100% !important;
     margin: auto;
@@ -421,6 +426,7 @@ TABLE
   [role="table"] .columnheader-group {
     display: none;
   }
+
   [role="table"] [role="columnheader"],
   [role="table"] [role="cell"] {
     /* Minimum single cell width (cell padding and border deducted) */
@@ -429,21 +435,26 @@ TABLE
     -webkit-flex: 1 1 100%;
     padding: 8px 10px;
   }
+
   [role="table"] [role="row"] {
     @apply tw-py-6 tw-px-4;
   }
+
   [role="table"] [role="cell"] {
     border-bottom: 0;
   }
+
   [role="table"] [role="row"] [role="cell"]:not(:first-child) {
     border-left: 0px;
   }
+
   [role="table"] [role="cell"],
   [role="table"] [role="cell"] span {
     text-align: right;
     justify-content: space-between;
     display: initial;
   }
+
   [role="table"] [role="row"] label {
     float: right;
     width: 32px;
@@ -452,6 +463,7 @@ TABLE
     line-height: 32px;
     height: 32px;
   }
+
   [role="table"] [role="cell"]::before {
     content: attr(data-header);
     float: left;
@@ -463,24 +475,32 @@ TABLE
     color: rgba(255, 255, 255, var(--tw-tw-text-opacity));
     margin-right: 20px;
   }
+
   [role="table"] [role="rowgroup"] [role="row"]:nth-child(even) {
     @apply tw-bg-base-200;
   }
+
   [role="table"] [role="rowgroup"]+[role="rowgroup"]>[role="row"]:not(:last-child) {
     @apply tw-border-b-2 tw-border-secondary tw-border-t-0 tw-border-l-0 tw-border-r-0;
   }
+
   [role="table"] [role="row"] [role="cell"] {
     @apply tw-border-l-0 tw-border-r-0;
   }
+
   [role="table"] [role="rowgroup"]:last-child [role="row"]:last-child [role="cell"].expandable {
     @apply tw-border-b-0;
   }
 }
 
 @media only screen and (max-width: 769px) {
-  #scene, #scene canvas, .svg-container {
-    width:80vw;
+
+  #scene,
+  #scene canvas,
+  .svg-container {
+    width: 80vw;
   }
+
   .scene-tooltip .moontip {
     font-size: 11px;
   }
@@ -490,14 +510,16 @@ TABLE
 .customOverlay {
   background: rgba(36, 123, 160, 0.7);
 }
+
 .customModal {
-  background-color: hsla(var(--b1)/var(--tw-bg-opacity,1)) !important; 
+  background-color: hsla(var(--b1)/var(--tw-bg-opacity, 1)) !important;
   max-width: calc(50vw - 2rem) !important;
-  width: 100%; 
+  width: 100%;
   border-radius: 1rem;
   padding: 2rem !important;
   color: #fff !important;
 }
+
 @media only screen and (max-width: 1023px) {
   .customModal {
     max-width: calc(95vw - 2rem) !important;
@@ -509,7 +531,7 @@ TABLE
   font-weight: 900;
   text-transform: uppercase;
   color: #f000b8;
-  margin-bottom:1em;
+  margin-bottom: 1em;
 }
 
 .customModal svg {
@@ -522,10 +544,117 @@ TABLE
   border: 0;
 }
 
+/* NFT */
+
+.nftbtn {
+  @apply fullhalfwidth tw-mx-auto  !important;
+}
+
+.viewer {
+  @apply tw-w-full;
+  height: 50vh;
+}
+
+.viewer canvas {
+  @apply tw-my-5 tw-w-full tw-h-full !important;
+}
+
+.gui-wrap,
+.axes {
+  display: block;
+}
+
+.dg.main {
+  @apply tw-block tw-w-full !important;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif  !important;
+}
+
+.dg.main .title {
+  @apply tw-text-xl tw-leading-10 tw-pt-1 tw-select tw-select-bordered tw-select-secondary tw-w-full tw-max-w-xs tw-text-white !important;
+}
+
+.dg.main li.folder:not(:first-child) {
+  margin-left: 5%;
+}
+
+.dg.main li.folder {
+  @apply md:tw-inline-block tw-block tw-float-left !important;
+  width: 30%;
+}
+
+.close-bottom {
+  display: none;
+}
+
+.gui-stats canvas {
+  display: inline-block;
+  float: left;
+  width: 32% !important;
+  margin-left: 1%;
+}
+
+.dg .c input[type=text] {
+  margin-top: 0px !important;
+  padding: 0px !important;
+}
+
+.dg .cr, .gui-stats {
+  border-left: 2px solid rgb(88, 199, 243) !important;
+  border-right: 2px solid rgb(88, 199, 243) !important;
+  margin-left: 14px;
+  margin-right: 18px;
+  background-color: rgb(45, 27, 105) !important;
+}
+
+.dg ul .cr:last-child {
+  border-bottom: 2px solid rgb(88, 199, 243) !important;
+}
+
+.dg ul.closed .cr:last-child {
+  border-bottom: 0px !important;
+}
+
+.dg li:not(.folder):not(.gui-stats) {
+  @apply tw-h-10 !important;
+}
+
+.dg .closed li:not(.folder) {
+  @apply tw-h-0 !important;
+}
+
+.gui-stats {
+  height: 83px !important;
+  border-bottom: 2px solid rgb(88, 199, 243) !important;
+}
+
+.closed .gui-stats {
+  border-bottom: 0px !important;
+}
+
+.dg .c select {
+  color: black;
+  height: 2em;
+}
+
+.dg .property-name {
+  font-size: 1.3em;
+  line-height: 2.5em;
+}
+
+@media only screen and (max-width: 769px) {
+  .dg.main li.folder {
+    @apply tw-w-full tw-ml-0 !important;
+  }
+  .dg.main li.folder:nth-child(2)  {
+    @apply tw-my-4;
+  }
+}
+
 @keyframes react-responsive-modal-overlay-in {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -535,6 +664,7 @@ TABLE
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -545,6 +675,7 @@ TABLE
     transform: scale(0.96);
     opacity: 0;
   }
+
   100% {
     transform: scale(100%);
     opacity: 1;
@@ -556,6 +687,7 @@ TABLE
     transform: scale(100%);
     opacity: 1;
   }
+
   100% {
     transform: scale(0.96);
     opacity: 0;
@@ -564,6 +696,7 @@ TABLE
 
 /* Animations */
 @keyframes blink {
+
   /**
    * At the start of the animation the dot
    * has an opacity of .2
@@ -571,6 +704,7 @@ TABLE
   0% {
     opacity: .2;
   }
+
   /**
    * At 20% the dot is fully visible and
    * then fades out slowly
@@ -578,6 +712,7 @@ TABLE
   20% {
     opacity: 1;
   }
+
   /**
    * Until it reaches an opacity of .2 and
    * the animation can start again
@@ -669,3 +804,4 @@ TABLE
     opacity: 0;
   }
 }
+
