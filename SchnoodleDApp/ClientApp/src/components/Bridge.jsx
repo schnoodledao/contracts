@@ -3,11 +3,12 @@ import './Bridge.css'
 import { ConnectWallet } from './ConnectWallet';
 import $ from 'jquery';
 import getWeb3 from '../getWeb3';
+import Web3 from 'web3';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import SchnoodleV8 from '../contracts/SchnoodleV8.json';
-import BridgeBsc from '../contracts/BridgeBsc.json';
 import BridgeEthereum from '../contracts/BridgeEthereum.json';
+import BridgeBsc from '../contracts/BridgeBsc.json';
 
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
@@ -26,6 +27,8 @@ export class Bridge extends Component {
       loading: false,
       loadingApprove: false,
       web3: null,
+      web3Eth: null,
+      web3Bsc: null,
       schnoodleEth: null,
       schnoodleBsc: null,
       bridgeEthereum: null,
@@ -97,7 +100,7 @@ export class Bridge extends Component {
         } else {
           let arr = [];
           let gas = 15001 * Math.pow(10, 11);
-          for (let i = 0; i < process.env.REACT_APP_SERVER_URLS.split(' ').length; i++) {
+          for (let i = 0; i < process.env.REACT_APP_SERVER_URLS.split(',').length; i++) {
             arr.push(gas);
           }
           this.setState({ gasPay: arr });
@@ -126,24 +129,23 @@ export class Bridge extends Component {
 
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
-      //if (!firebase.apps.length) {
-      //  firebase.initializeApp(config);
-      //} else {
-      //  firebase.app();
-      //}
+
+      // Web3
+      const web3 = await getWeb3();
+      const web3Eth = new Web3(process.env.REACT_APP_ETH_CHAIN);
+      const web3Bsc = new Web3(new Web3.providers.HttpProvider(process.env.REACT_APP_BSC_CHAIN));
 
       // Smart contracts
-      const web3 = await getWeb3();
       const schnoodleEthDeployedNetwork = SchnoodleV1.networks[process.env.REACT_APP_NETID_ETH];
-      const schnoodleEth = new web3.eth.Contract(SchnoodleV8.abi, schnoodleEthDeployedNetwork && schnoodleEthDeployedNetwork.address);
+      const schnoodleEth = new web3Eth.eth.Contract(SchnoodleV8.abi, schnoodleEthDeployedNetwork && schnoodleEthDeployedNetwork.address);
       const schnoodleBscDeployedNetwork = SchnoodleV1.networks[process.env.REACT_APP_NETID_BSC];
-      const schnoodleBsc = new web3.eth.Contract(SchnoodleV8.abi, schnoodleBscDeployedNetwork && schnoodleBscDeployedNetwork.address);
-      const bridgeEthereumDeployedNetwork = BridgeEthereum.networks[await web3.eth.net.getId()];
-      const bridgeEthereum = new web3.eth.Contract(BridgeEthereum.abi, bridgeEthereumDeployedNetwork && bridgeEthereumDeployedNetwork.address);
-      const bridgeBscDeployedNetwork = BridgeBsc.networks[await web3.eth.net.getId()];
-      const bridgeBsc = new web3.eth.Contract(BridgeBsc.abi, bridgeBscDeployedNetwork && bridgeBscDeployedNetwork.address);
+      const schnoodleBsc = new web3Bsc.eth.Contract(SchnoodleV8.abi, schnoodleBscDeployedNetwork && schnoodleBscDeployedNetwork.address);
+      const bridgeEthereumDeployedNetwork = BridgeEthereum.networks[process.env.REACT_APP_NETID_ETH];
+      const bridgeEthereum = new web3Eth.eth.Contract(BridgeEthereum.abi, bridgeEthereumDeployedNetwork && bridgeEthereumDeployedNetwork.address);
+      const bridgeBscDeployedNetwork = BridgeBsc.networks[process.env.REACT_APP_NETID_BSC];
+      const bridgeBsc = new web3Bsc.eth.Contract(BridgeBsc.abi, bridgeBscDeployedNetwork && bridgeBscDeployedNetwork.address);
 
-      this.setState({ database, web3, schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc, selectedAddress: web3.currentProvider.selectedAddress }, () => {
+      this.setState({ database, web3, web3Eth, web3Bsc, schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc, selectedAddress: web3.currentProvider.selectedAddress }, () => {
         this.getApproveInfo();
         this.getEthFeeInfo();
         this.getBnbFeeInfo();
@@ -162,13 +164,13 @@ export class Bridge extends Component {
       await this.changeChainId();
 
       if (this.state.chainId.toString() === process.env.REACT_APP_NETID_ETH) {
-        await schnoodleEth.methods.allowance(account, schnoodleEth.options.address).call({ from: account }).then((result) => {
+        await schnoodleEth.methods.allowance(account, bridgeEthereum.options.address).call({ from: account }).then((result) => {
           if (result > 1000000000) {
             this.setState({ approvedEth: true });
           }
         });
       } else if (this.state.chainId.toString() === process.env.REACT_APP_NETID_BSC) {
-        await schnoodleBsc.methods.allowance(account, schnoodleBsc.options.address).call({ from: account }).then((result) => {
+        await schnoodleBsc.methods.allowance(account, bridgeBsc.options.address).call({ from: account }).then((result) => {
           if (result > 1000000000) {
             this.setState({ approvedBsc: true });
           }
@@ -180,17 +182,19 @@ export class Bridge extends Component {
   }
 
   async getEthFeeInfo() {
-    const [approveFee, sendFee, receiveFee] = await this.getFeeInfo(process.env.REACT_APP_ETH_CHAIN, 'eth');
-    this.setState({ ethApproveFee: approveFee ?? this.state.ethApproveFee, ethSendFee: sendFee ?? this.state.ethSendFee, ethReceiveFee: receiveFee ?? this.state.ethReceiveFee });
+    const { web3Eth, ethApproveFee, ethSendFee, ethReceiveFee } = this.state;
+    const [approveFee, sendFee, receiveFee] = await this.getFeeInfo(web3Eth, 'eth');
+    this.setState({ ethApproveFee: approveFee ?? ethApproveFee, ethSendFee: sendFee ?? ethSendFee, ethReceiveFee: receiveFee ?? ethReceiveFee });
   }
 
   async getBnbFeeInfo() {
-    const [approveFee, sendFee, receiveFee] = await this.getFeeInfo(process.env.REACT_APP_BSC_CHAIN, 'bsc');
-    this.setState({ bscApproveFee: approveFee ?? this.state.bscApproveFee, bscSendFee: sendFee ?? this.state.bscSendFee, bscReceiveFee: receiveFee ?? this.state.bscReceiveFee });
+    const { web3Bsc, bscApproveFee, bscSendFee, bscReceiveFee } = this.state;
+    const [approveFee, sendFee, receiveFee] = await this.getFeeInfo(web3Bsc, 'bsc');
+    this.setState({ bscApproveFee: approveFee ?? bscApproveFee, bscSendFee: sendFee ?? bscSendFee, bscReceiveFee: receiveFee ?? bscReceiveFee });
   }
 
-  async getFeeInfo(provider, symbol) {
-    const { web3, database } = this.state;
+  async getFeeInfo(web3, symbol) {
+    const { database } = this.state;
 
     const gas = await web3.eth.getGasPrice() / 1e18;
     let approveFee, sendFee, receiveFee;
@@ -282,7 +286,7 @@ export class Bridge extends Component {
     const { database, schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc } = this.state;
 
     const account = localStorage.getItem('account').split('');
-    const accountToSend = account.slice(6) + '...' + account.slice(-6);
+    const accountToSend = account.slice(0, 6) + '...' + account.slice(-6);
     localStorage.setItem('accountToSend', accountToSend);
     this.setState({ accountToSend });
     localStorage.setItem('amountToSend', amount);
@@ -313,8 +317,9 @@ export class Bridge extends Component {
           await this.waitForTxnMined(hash);
           await this.apiRequestFunc(localStorage.getItem('account'), tokenType, this.state.secondNet);
 
-          const urlArray = process.env.REACT_APP_SERVER_URLS.split(' ');
+          const urlArray = process.env.REACT_APP_SERVER_URLS.split(',');
           console.log(this.state.apiRequestAmount);
+
           if (this.state.apiRequestAmount !== urlArray.length) {
             localStorage.setItem('showReceive', false);
             this.setState({ serverError: 'Remote server error', apiRequestAmount: 0 });
@@ -339,7 +344,7 @@ export class Bridge extends Component {
   }
 
   apiRequestFunc = async (account, typeSwap, typeReceive) => {
-    const urlArray = process.env.REACT_APP_SERVER_URLS.split(' ');
+    const urlArray = process.env.REACT_APP_SERVER_URLS.split(',');
     for (let i = 0; i < urlArray.length; i++) {
       await this.apiOneRequest(urlArray[i], account, typeSwap, typeReceive);
     }
@@ -441,24 +446,23 @@ export class Bridge extends Component {
   checkTokenBalance = async (amount) => {
     if (this.isMetaMaskInstalled() && this.isMetaMaskConnected()) {
       if (!isNaN(+amount)) {
-        if (this.state.chainId.toString() === process.env.REACT_APP_NETID_BSC) {
-          yyy(process.env.REACT_APP_BSC_CHAIN);
-        } else if (this.state.chainId.toString() === process.env.REACT_APP_NETID_ETH) {
-          yyy(process.env.REACT_APP_ETH_CHAIN);
+        if (this.state.chainId.toString() === process.env.REACT_APP_NETID_ETH) {
+          yyy(schnoodleEth, schnoodleBsc, bridgeBsc);
+        } else if (this.state.chainId.toString() === process.env.REACT_APP_NETID_BSC) {
+          yyy(schnoodleBsc, schnoodleEth, bridgeEthereum);
         }
 
-        async function yyy(provider)
+        async function yyy(schnoodle, schnoodleOther, bridgeOther)
         {
-          const { schnoodleBsc, schnoodleEth } = this.state;
+          const otherBridgeBalance = await schnoodleOther.methods.balanceOf(bridgeOther.options.address).call();
 
-          const bscBridgeBalance = await schnoodleBsc.methods.balanceOf(schnoodleBsc.options.address).call();
+          const decimals = await schnoodle.methods.decimals().call();
+          const currentBalance = await schnoodle.methods.balanceOf(localStorage.getItem('account')).call();
 
-          const decimals = await schnoodleEth.methods.decimals().call();
-          const currentBalance = await schnoodleEth.methods.balanceOf(localStorage.getItem('account')).call();
           if (parseFloat(amount) * Math.pow(10, decimals) > currentBalance) {
             this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Not enough tokens for transaction</div> });
-          } else if (this.state.secondNet === 'BEP' && (parseFloat(amount) * Math.pow(10, decimals) > bscBridgeBalance)) {
-            this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Not enough tokens on BSC bridge</div> });
+          } else if (this.state.secondNet === 'BEP' && (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance)) {
+            this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Not enough tokens on TODO bridge</div> });
           } else if (parseFloat(amount) < Math.pow(10, -decimals)) {
             this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Token amount below minimum</div> });
           } else {
@@ -493,7 +497,7 @@ export class Bridge extends Component {
   }
 
   async checkServerStatus() {
-    const urlArray = process.env.REACT_APP_SERVER_URLS.split(' ');
+    const urlArray = process.env.REACT_APP_SERVER_URLS.split(',');
     for (let i = 0; i < urlArray.length; i++) {
       const response = await fetch(`http://${urlArray[i]}/CheckServer`).catch(function (err) {
         console.log(err);
