@@ -184,7 +184,7 @@ export class Moontron extends Component {
           <div className="h-noheader md:tw-flex">
             <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
               <div className="tw-px-4">
-                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
                 <div className="maintitles tw-uppercase">{resources.MOONTRON}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>

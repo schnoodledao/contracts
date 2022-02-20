@@ -61,6 +61,13 @@ export class Bridge extends Component {
       amount: null,
       errorMessageSend: null
     }
+
+    this.getApproveInfo = this.getApproveInfo.bind(this);
+    this.resetApprove = this.resetApprove.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleChangeSecond = this.handleChangeSecond.bind(this);
+    this.handleChangeAmount = this.handleChangeAmount.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   isMetaMaskInstalled() {
@@ -157,7 +164,7 @@ export class Bridge extends Component {
   }
 
   async getApproveInfo() {
-    const { schnoodleEth, schnoodleBsc } = this.state;
+    const { schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc } = this.state;
 
     if (this.isMetaMaskInstalled() && this.isMetaMaskConnected()) {
       const account = localStorage.getItem('account');
@@ -244,10 +251,10 @@ export class Bridge extends Component {
     var amount = `0x${amountToken.toString(16)}`;
 
     if (this.state.firstNet === 'ERC') {
-      const approved = zzz(schnoodleEth, 'eth');
+      const approved = await zzz.call(this, schnoodleEth, 'eth');
       this.setState({ approvedEth: approved });
     } else if (this.state.firstNet === 'BEP') {
-      const approved = zzz(schnoodleBsc, 'bsc');
+      const approved = await zzz.call(this, schnoodleBsc, 'bsc');
       this.setState({ approvedBsc: approved });
     }
 
@@ -294,9 +301,9 @@ export class Bridge extends Component {
     localStorage.setItem('typetrade', this.state.secondNet);
 
     if (this.state.firstNet === 'ERC') {
-      www(schnoodleEth, bridgeEthereum, 'eth', 'ERC');
+      await www.call(this, schnoodleEth, bridgeEthereum, 'eth', 'ERC');
     } else if (this.state.firstNet === 'BEP') {
-      www(schnoodleBsc, bridgeBsc, 'bsc', 'BEP');
+      await www.call(this, schnoodleBsc, bridgeBsc, 'bsc', 'BEP');
     }
 
     async function www(schnoodle, bridge, symbol, tokenType) {
@@ -392,20 +399,21 @@ export class Bridge extends Component {
   }
 
   receiveTokensFunc = async () => {
+    const { secondNet, bridgeEthereum, bridgeBsc } = this.state;
     this.checkServerStatus();
 
-    if (this.state.secondNet === 'ERC') {
-      xxx(this.state.bridgeEthereum, 'eth');
-    } else if (this.state.secondNet === 'BEP') {
-      xxx(this.state.bridgeBsc, 'bsc');
+    if (secondNet === 'ERC') {
+      await xxx.call(this, bridgeEthereum, 'eth');
+    } else if (secondNet === 'BEP') {
+      await xxx.call(this, bridgeBsc, 'bsc');
     }
 
     async function xxx(bridge, symbol) {
       this.setState({ loadingReceive: true });
-      const { database, web3 } = this.state;
+      const { gasPay, database, web3 } = this.state;
 
       this.changeChainId();
-      const arrGas = this.state.gasPay;
+      const arrGas = gasPay;
       let sum = 0;
       for (let i = 0; i < arrGas.length; i++) {
         sum += arrGas[i];
@@ -427,16 +435,11 @@ export class Bridge extends Component {
         })
         .on('transactionHash', async (hash) => {
           await this.waitForTxnMined(hash);
-          this.setState({ hash: hash });
-          this.setState({ loadingReceive: false });
-          this.setState({ showReceive: false });
-          this.setState({ showEnd: true });
           localStorage.setItem('showReceive', false);
-          this.setState({ gasPay: [] });
+          this.setState({ hash: hash, loadingReceive: false, showReceive: false, showEnd: true, gasPay: [] });
         }).catch(err => {
           if (err.code === 4001) {
-            this.setState({ loadingReceive: false });
-            this.setState({ showReceive: true });
+            this.setState({ loadingReceive: false, showReceive: true });
             localStorage.setItem('showReceive', true);
           }
         });
@@ -444,16 +447,17 @@ export class Bridge extends Component {
   }
 
   checkTokenBalance = async (amount) => {
+    const { schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc, chainId, secondNet } = this.state;
+
     if (this.isMetaMaskInstalled() && this.isMetaMaskConnected()) {
       if (!isNaN(+amount)) {
-        if (this.state.chainId.toString() === process.env.REACT_APP_NETID_ETH) {
-          yyy(schnoodleEth, schnoodleBsc, bridgeBsc);
-        } else if (this.state.chainId.toString() === process.env.REACT_APP_NETID_BSC) {
-          yyy(schnoodleBsc, schnoodleEth, bridgeEthereum);
+        if (chainId.toString() === process.env.REACT_APP_NETID_ETH) {
+          await yyy.call(this, schnoodleEth, schnoodleBsc, bridgeBsc);
+        } else if (chainId.toString() === process.env.REACT_APP_NETID_BSC) {
+          await yyy.call(this, schnoodleBsc, schnoodleEth, bridgeEthereum);
         }
 
-        async function yyy(schnoodle, schnoodleOther, bridgeOther)
-        {
+        async function yyy(schnoodle, schnoodleOther, bridgeOther) {
           const otherBridgeBalance = await schnoodleOther.methods.balanceOf(bridgeOther.options.address).call();
 
           const decimals = await schnoodle.methods.decimals().call();
@@ -461,7 +465,7 @@ export class Bridge extends Component {
 
           if (parseFloat(amount) * Math.pow(10, decimals) > currentBalance) {
             this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Not enough tokens for transaction</div> });
-          } else if (this.state.secondNet === 'BEP' && (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance)) {
+          } else if (secondNet === 'BEP' && (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance)) {
             this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Not enough tokens on TODO bridge</div> });
           } else if (parseFloat(amount) < Math.pow(10, -decimals)) {
             this.setState({ errorMessageSend: <div className="text-center text-red-500 mt-2.5">Token amount below minimum</div> });
@@ -593,20 +597,20 @@ export class Bridge extends Component {
     let bridge;
     if (this.state.loading) {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
-        <img src="/images/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
+        <img src="/assets/img/svg/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
         <div className=" text-2xl lg:text-3xl leading-snug text-white text-center">Please wait while the token swap transaction is confirmed...
         </div>
       </div>;
     } else if (this.state.loadingApprove) {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
-        <img src="/images/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
+        <img src="/assets/img/svg/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
         <div className=" text-2xl lg:text-3xl leading-snug text-white text-center">Please wait while the token approve is finished...
         </div>
       </div>;
     } else if (this.state.loadingReceive) {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
-        <img src="/images/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
-        <div className=" text-2xl lg:text-3xl leading-snug text-white text-center">Please wait while the token recieve is finished...
+        <img src="/assets/img/svg/load.svg" alt="" className="w-16 h-16 mb-8 lg:mb-11 animate-spin" />
+        <div className=" text-2xl lg:text-3xl leading-snug text-white text-center">Please wait while the token receive is finished...
         </div>
       </div>;
     } else if (this.state.showEnd) {
@@ -617,7 +621,7 @@ export class Bridge extends Component {
           <div className="text-lg mb-16 lg:mb-5 text-center">You can track the transaction: <a href={this.state.secondNet === 'BEP' ? `http://testnet.bscscan.com/tx/${this.state.hash}` : this.state.secondNet === 'MATIC' ? `http://polygonscan.com/tx/${this.state.hash}` : (`http://kovan.etherscan.io/tx/${this.state.hash}`)} target="_blank" rel="noreferrer"
             className="text-main-color transition-all duration-200 hover:text-main-color-hover hover:underline">link</a>
           </div>
-          <button onClick={() => this.endButton()} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">
+          <button onClick={this.endButton} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">
             END
           </button>
         </div>
@@ -653,7 +657,7 @@ export class Bridge extends Component {
           RECEIVE
         </button>)}
         {this.state.secondNet === 'ERC' ? (this.state.chainId.toString() === process.env.REACT_APP_NETID_ETH ? null : <div className="text-center text-sm mt-2.5">Swap to ETH network</div>) : this.state.secondNet === 'BEP' ? (this.state.chainId.toString() === process.env.REACT_APP_NETID_BSC ? null : <div className="text-center text-sm mt-2.5">Swap to BSC network</div>) : (this.state.chainId.toString() === process.env.REACT_APP_NETID_MATIC ? null : <div className="text-center text-sm mt-2.5">Swap to MATIC network</div>)}
-      </div>
+      </div>;
     } else {
       bridge =
         <div className="col-span-7 lg:px-6 lg:py-10 rounded-13 lg:bg-main-bg bg-transparent">
@@ -661,31 +665,31 @@ export class Bridge extends Component {
             <div className="w-full lg:w-5/12 p-5 lg:p-0 rounded-xl bg-second-bg lg:bg-transparent">
               <div className="font-bold text-xs lg:mb-4 text-main-color">From</div>
               <div className="flex items-center justify-between lg:p-4 bg-second-bg rounded-lg">
-                <div className="">
+                <div>
                   <div className="text-second-text opacity-50 uppercase text-xl font-bold">
                     SNOOD
                   </div>
                   <Select styles={styles} options={options} onChange={this.handleChange} components={{ IndicatorSeparator: () => null }} />
                 </div>
                 <div className="rounded-full w-16 h-16 flex justify-center items-center">
-                  <img src="/images/logo-round.png" alt="" />
+                  <img src="/assets/img/png/logo-krypto.png" alt="" />
                 </div>
               </div>
             </div>
-            <button className="p-2 bg-main-color w-10 h-10 lg:mx-6 rounded-10 outline-none focus:outline-none -mt-3 lg:mt-7 relative z-20 lg:static transform rotate-90  lg:transform-none">
-              <img className="block w-5 h-5 mx-auto" src="/images/arrows.svg" alt="" />
+            <button className="p-2 bg-main-color w-10 h-10 lg:mx-6 rounded-10 outline-none focus:outline-none -mt-3 lg:mt-7 relative z-20 lg:static transform rotate-90 lg:transform-none">
+              <img className="block w-5 h-5 mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
             <div className="w-full lg:w-5/12 relative -top-3 lg:static bg-second-bg lg:bg-transparent p-5 lg:p-0 rounded-xl">
               <div className="font-bold text-xs lg:mb-4 text-main-color">To</div>
               <div className="flex items-center justify-between lg:p-5 bg-second-bg rounded-lg">
-                <div className="">
+                <div>
                   <div className="text-second-text opacity-50 uppercase text-xl font-bold">
                     SNOOD
                   </div>
                   <Select styles={styles} options={options2} onChange={this.handleChangeSecond} components={{ IndicatorSeparator: () => null }} />
                 </div>
                 <div className="w-16 h-16 flex justify-center items-center rounded-full">
-                  <img src="/images/logo-round.png" alt="" />
+                  <img src="/assets/img/png/logo-krypto.png" alt="" />
                 </div>
               </div>
             </div>
@@ -696,7 +700,7 @@ export class Bridge extends Component {
               <input onChange={this.handleChangeAmount} className="w-full text-white bg-third-bg rounded-md text-sm border border-border p-3.5 font-medium outline-none focus:outline-none"
                 placeholder="Amount" type="text" />
             </div>
-            {this.state.typeSwap != '' && this.state.errorMessage === null && this.isMetaMaskInstalled() && this.isMetaMaskConnected() ? (this.state.firstNet === 'BEP' && this.state.approvedBsc === false) || (this.state.firstNet === 'ERC' && this.state.approved === false) || (this.state.firstNet === 'MATIC' && this.state.approvedmatic === false) ? <button onClick={this.approveFunc} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">Approve Token</button> : (this.state.errorMessageSend === null && this.state.amount != null && this.isMetaMaskConnected() ? <button from="form" type="submit" className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">Send Tokens</button> : <button from="form" type="submit" className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none button--disabled">Send Tokens</button>)
+            {this.state.typeSwap !== '' && this.state.errorMessage === null && this.isMetaMaskInstalled() && this.isMetaMaskConnected() ? (this.state.firstNet === 'BEP' && this.state.approvedBsc === false) || (this.state.firstNet === 'ERC' && this.state.approved === false) || (this.state.firstNet === 'MATIC' && this.state.approvedmatic === false) ? <button onClick={this.approveFunc} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">Approve Token</button> : (this.state.errorMessageSend === null && this.state.amount != null && this.isMetaMaskConnected() ? <button from="form" type="submit" className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">Send Tokens</button> : <button from="form" type="submit" className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none button--disabled">Send Tokens</button>)
               : <button className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none button--disabled">Approve Token</button>}
           </form>{this.state.errorMessageSend}
           {this.state.errorMessage}
@@ -713,7 +717,7 @@ export class Bridge extends Component {
                 <button className="burger outline-none focus:outline-none"></button>
               </div>
               <a href="/">
-                <img className="w-40 h-auto" src="/images/logo.png" alt="" />
+                <img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="" />
               </a>
               <ConnectWallet getApproveInfo={this.getApproveInfo} resetApprove={this.resetApprove} changeChainId={this.changeChainId} getErrorsFunc={this.getErrorsFunc} resetErrorsFunc={this.resetErrorsFunc} />
             </div>
