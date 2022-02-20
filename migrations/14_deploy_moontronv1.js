@@ -1,6 +1,6 @@
 // migrations/14_deploy_moontronv1.js
 
-const { deployProxy, admin } = require('@openzeppelin/truffle-upgrades');
+const { deployProxy, erc1967 } = require('@openzeppelin/truffle-upgrades');
 const contractName = 'MoontronV1';
 
 module.exports = async function (deployer, network) {
@@ -20,5 +20,7 @@ module.exports = async function (deployer, network) {
   //(await Contract.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
 
   const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
+
+  erc1967.getImplementationAddress(proxy.address);
+  contractsFile.append(`${contractName}@${await erc1967.getImplementationAddress(proxy.address)}`);
 };
