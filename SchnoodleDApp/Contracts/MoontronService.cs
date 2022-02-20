@@ -65,15 +65,15 @@ namespace SchnoodleDApp.Contracts
             return ContractHandler.QueryAsync<MINTER_ROLEFunction, byte[]>(null, blockParameter);
         }
 
-        public Task<byte[]> PAUSER_ROLEQueryAsync(PAUSER_ROLEFunction pAUSER_ROLEFunction, BlockParameter blockParameter = null)
+        public Task<byte[]> UPGRADER_ROLEQueryAsync(UPGRADER_ROLEFunction uPGRADER_ROLEFunction, BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryAsync<PAUSER_ROLEFunction, byte[]>(pAUSER_ROLEFunction, blockParameter);
+            return ContractHandler.QueryAsync<UPGRADER_ROLEFunction, byte[]>(uPGRADER_ROLEFunction, blockParameter);
         }
 
         
-        public Task<byte[]> PAUSER_ROLEQueryAsync(BlockParameter blockParameter = null)
+        public Task<byte[]> UPGRADER_ROLEQueryAsync(BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryAsync<PAUSER_ROLEFunction, byte[]>(null, blockParameter);
+            return ContractHandler.QueryAsync<UPGRADER_ROLEFunction, byte[]>(null, blockParameter);
         }
 
         public Task<string> ApproveRequestAsync(ApproveFunction approveFunction)
@@ -172,35 +172,6 @@ namespace SchnoodleDApp.Contracts
             return ContractHandler.QueryAsync<GetRoleAdminFunction, byte[]>(getRoleAdminFunction, blockParameter);
         }
 
-        public Task<string> GetRoleMemberQueryAsync(GetRoleMemberFunction getRoleMemberFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<GetRoleMemberFunction, string>(getRoleMemberFunction, blockParameter);
-        }
-
-        
-        public Task<string> GetRoleMemberQueryAsync(byte[] role, BigInteger index, BlockParameter blockParameter = null)
-        {
-            var getRoleMemberFunction = new GetRoleMemberFunction();
-                getRoleMemberFunction.Role = role;
-                getRoleMemberFunction.Index = index;
-            
-            return ContractHandler.QueryAsync<GetRoleMemberFunction, string>(getRoleMemberFunction, blockParameter);
-        }
-
-        public Task<BigInteger> GetRoleMemberCountQueryAsync(GetRoleMemberCountFunction getRoleMemberCountFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<GetRoleMemberCountFunction, BigInteger>(getRoleMemberCountFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> GetRoleMemberCountQueryAsync(byte[] role, BlockParameter blockParameter = null)
-        {
-            var getRoleMemberCountFunction = new GetRoleMemberCountFunction();
-                getRoleMemberCountFunction.Role = role;
-            
-            return ContractHandler.QueryAsync<GetRoleMemberCountFunction, BigInteger>(getRoleMemberCountFunction, blockParameter);
-        }
-
         public Task<string> GrantRoleRequestAsync(GrantRoleFunction grantRoleFunction)
         {
              return ContractHandler.SendRequestAsync(grantRoleFunction);
@@ -254,39 +225,9 @@ namespace SchnoodleDApp.Contracts
              return ContractHandler.SendRequestAndWaitForReceiptAsync(initializeFunction, cancellationToken);
         }
 
-        public Task<string> InitializeRequestAsync(string name, string symbol, string baseTokenURI)
-        {
-            var initializeFunction = new InitializeFunction();
-                initializeFunction.Name = name;
-                initializeFunction.Symbol = symbol;
-                initializeFunction.BaseTokenURI = baseTokenURI;
-            
-             return ContractHandler.SendRequestAsync(initializeFunction);
-        }
-
-        public Task<TransactionReceipt> InitializeRequestAndWaitForReceiptAsync(string name, string symbol, string baseTokenURI, CancellationTokenSource cancellationToken = null)
-        {
-            var initializeFunction = new InitializeFunction();
-                initializeFunction.Name = name;
-                initializeFunction.Symbol = symbol;
-                initializeFunction.BaseTokenURI = baseTokenURI;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(initializeFunction, cancellationToken);
-        }
-
-        public Task<string> InitializeRequestAsync(InitializeFunction1 initializeFunction)
-        {
-             return ContractHandler.SendRequestAsync(initializeFunction);
-        }
-
-        public Task<TransactionReceipt> InitializeRequestAndWaitForReceiptAsync(InitializeFunction1 initializeFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(initializeFunction, cancellationToken);
-        }
-
         public Task<string> InitializeRequestAsync(string proxyRegistryAddress)
         {
-            var initializeFunction = new InitializeFunction1();
+            var initializeFunction = new InitializeFunction();
                 initializeFunction.ProxyRegistryAddress = proxyRegistryAddress;
             
              return ContractHandler.SendRequestAsync(initializeFunction);
@@ -294,7 +235,7 @@ namespace SchnoodleDApp.Contracts
 
         public Task<TransactionReceipt> InitializeRequestAndWaitForReceiptAsync(string proxyRegistryAddress, CancellationTokenSource cancellationToken = null)
         {
-            var initializeFunction = new InitializeFunction1();
+            var initializeFunction = new InitializeFunction();
                 initializeFunction.ProxyRegistryAddress = proxyRegistryAddress;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(initializeFunction, cancellationToken);
@@ -313,60 +254,6 @@ namespace SchnoodleDApp.Contracts
                 isApprovedForAllFunction.OperatorAddress = operator1Address;
             
             return ContractHandler.QueryAsync<IsApprovedForAllFunction, bool>(isApprovedForAllFunction, blockParameter);
-        }
-
-        public Task<string> MintRequestAsync(MintFunction mintFunction)
-        {
-             return ContractHandler.SendRequestAsync(mintFunction);
-        }
-
-        public Task<TransactionReceipt> MintRequestAndWaitForReceiptAsync(MintFunction mintFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(mintFunction, cancellationToken);
-        }
-
-        public Task<string> MintRequestAsync(string to)
-        {
-            var mintFunction = new MintFunction();
-                mintFunction.To = to;
-            
-             return ContractHandler.SendRequestAsync(mintFunction);
-        }
-
-        public Task<TransactionReceipt> MintRequestAndWaitForReceiptAsync(string to, CancellationTokenSource cancellationToken = null)
-        {
-            var mintFunction = new MintFunction();
-                mintFunction.To = to;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(mintFunction, cancellationToken);
-        }
-
-        public Task<string> MintIpfsRequestAsync(MintIpfsFunction mintIpfsFunction)
-        {
-             return ContractHandler.SendRequestAsync(mintIpfsFunction);
-        }
-
-        public Task<TransactionReceipt> MintIpfsRequestAndWaitForReceiptAsync(MintIpfsFunction mintIpfsFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(mintIpfsFunction, cancellationToken);
-        }
-
-        public Task<string> MintIpfsRequestAsync(string to, string hash)
-        {
-            var mintIpfsFunction = new MintIpfsFunction();
-                mintIpfsFunction.To = to;
-                mintIpfsFunction.Hash = hash;
-            
-             return ContractHandler.SendRequestAsync(mintIpfsFunction);
-        }
-
-        public Task<TransactionReceipt> MintIpfsRequestAndWaitForReceiptAsync(string to, string hash, CancellationTokenSource cancellationToken = null)
-        {
-            var mintIpfsFunction = new MintIpfsFunction();
-                mintIpfsFunction.To = to;
-                mintIpfsFunction.Hash = hash;
-            
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(mintIpfsFunction, cancellationToken);
         }
 
         public Task<string> NameQueryAsync(NameFunction nameFunction, BlockParameter blockParameter = null)
@@ -394,35 +281,15 @@ namespace SchnoodleDApp.Contracts
             return ContractHandler.QueryAsync<OwnerOfFunction, string>(ownerOfFunction, blockParameter);
         }
 
-        public Task<string> PauseRequestAsync(PauseFunction pauseFunction)
+        public Task<byte[]> ProxiableUUIDQueryAsync(ProxiableUUIDFunction proxiableUUIDFunction, BlockParameter blockParameter = null)
         {
-             return ContractHandler.SendRequestAsync(pauseFunction);
-        }
-
-        public Task<string> PauseRequestAsync()
-        {
-             return ContractHandler.SendRequestAsync<PauseFunction>();
-        }
-
-        public Task<TransactionReceipt> PauseRequestAndWaitForReceiptAsync(PauseFunction pauseFunction, CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(pauseFunction, cancellationToken);
-        }
-
-        public Task<TransactionReceipt> PauseRequestAndWaitForReceiptAsync(CancellationTokenSource cancellationToken = null)
-        {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync<PauseFunction>(null, cancellationToken);
-        }
-
-        public Task<bool> PausedQueryAsync(PausedFunction pausedFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<PausedFunction, bool>(pausedFunction, blockParameter);
+            return ContractHandler.QueryAsync<ProxiableUUIDFunction, byte[]>(proxiableUUIDFunction, blockParameter);
         }
 
         
-        public Task<bool> PausedQueryAsync(BlockParameter blockParameter = null)
+        public Task<byte[]> ProxiableUUIDQueryAsync(BlockParameter blockParameter = null)
         {
-            return ContractHandler.QueryAsync<PausedFunction, bool>(null, blockParameter);
+            return ContractHandler.QueryAsync<ProxiableUUIDFunction, byte[]>(null, blockParameter);
         }
 
         public Task<string> RenounceRoleRequestAsync(RenounceRoleFunction renounceRoleFunction)
@@ -479,6 +346,34 @@ namespace SchnoodleDApp.Contracts
                 revokeRoleFunction.Account = account;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(revokeRoleFunction, cancellationToken);
+        }
+
+        public Task<string> SafeMintRequestAsync(SafeMintFunction safeMintFunction)
+        {
+             return ContractHandler.SendRequestAsync(safeMintFunction);
+        }
+
+        public Task<TransactionReceipt> SafeMintRequestAndWaitForReceiptAsync(SafeMintFunction safeMintFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeMintFunction, cancellationToken);
+        }
+
+        public Task<string> SafeMintRequestAsync(string to, string uri)
+        {
+            var safeMintFunction = new SafeMintFunction();
+                safeMintFunction.To = to;
+                safeMintFunction.Uri = uri;
+            
+             return ContractHandler.SendRequestAsync(safeMintFunction);
+        }
+
+        public Task<TransactionReceipt> SafeMintRequestAndWaitForReceiptAsync(string to, string uri, CancellationTokenSource cancellationToken = null)
+        {
+            var safeMintFunction = new SafeMintFunction();
+                safeMintFunction.To = to;
+                safeMintFunction.Uri = uri;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeMintFunction, cancellationToken);
         }
 
         public Task<string> SafeTransferFromRequestAsync(SafeTransferFromFunction safeTransferFromFunction)
@@ -596,35 +491,6 @@ namespace SchnoodleDApp.Contracts
             return ContractHandler.QueryAsync<SymbolFunction, string>(null, blockParameter);
         }
 
-        public Task<BigInteger> TokenByIndexQueryAsync(TokenByIndexFunction tokenByIndexFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<TokenByIndexFunction, BigInteger>(tokenByIndexFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> TokenByIndexQueryAsync(BigInteger index, BlockParameter blockParameter = null)
-        {
-            var tokenByIndexFunction = new TokenByIndexFunction();
-                tokenByIndexFunction.Index = index;
-            
-            return ContractHandler.QueryAsync<TokenByIndexFunction, BigInteger>(tokenByIndexFunction, blockParameter);
-        }
-
-        public Task<BigInteger> TokenOfOwnerByIndexQueryAsync(TokenOfOwnerByIndexFunction tokenOfOwnerByIndexFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<TokenOfOwnerByIndexFunction, BigInteger>(tokenOfOwnerByIndexFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> TokenOfOwnerByIndexQueryAsync(string owner, BigInteger index, BlockParameter blockParameter = null)
-        {
-            var tokenOfOwnerByIndexFunction = new TokenOfOwnerByIndexFunction();
-                tokenOfOwnerByIndexFunction.Owner = owner;
-                tokenOfOwnerByIndexFunction.Index = index;
-            
-            return ContractHandler.QueryAsync<TokenOfOwnerByIndexFunction, BigInteger>(tokenOfOwnerByIndexFunction, blockParameter);
-        }
-
         public Task<string> TokenURIQueryAsync(TokenURIFunction tokenURIFunction, BlockParameter blockParameter = null)
         {
             return ContractHandler.QueryAsync<TokenURIFunction, string>(tokenURIFunction, blockParameter);
@@ -637,17 +503,6 @@ namespace SchnoodleDApp.Contracts
                 tokenURIFunction.TokenId = tokenId;
             
             return ContractHandler.QueryAsync<TokenURIFunction, string>(tokenURIFunction, blockParameter);
-        }
-
-        public Task<BigInteger> TotalSupplyQueryAsync(TotalSupplyFunction totalSupplyFunction, BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<TotalSupplyFunction, BigInteger>(totalSupplyFunction, blockParameter);
-        }
-
-        
-        public Task<BigInteger> TotalSupplyQueryAsync(BlockParameter blockParameter = null)
-        {
-            return ContractHandler.QueryAsync<TotalSupplyFunction, BigInteger>(null, blockParameter);
         }
 
         public Task<string> TransferFromRequestAsync(TransferFromFunction transferFromFunction)
@@ -680,24 +535,58 @@ namespace SchnoodleDApp.Contracts
              return ContractHandler.SendRequestAndWaitForReceiptAsync(transferFromFunction, cancellationToken);
         }
 
-        public Task<string> UnpauseRequestAsync(UnpauseFunction unpauseFunction)
+        public Task<string> UpgradeToRequestAsync(UpgradeToFunction upgradeToFunction)
         {
-             return ContractHandler.SendRequestAsync(unpauseFunction);
+             return ContractHandler.SendRequestAsync(upgradeToFunction);
         }
 
-        public Task<string> UnpauseRequestAsync()
+        public Task<TransactionReceipt> UpgradeToRequestAndWaitForReceiptAsync(UpgradeToFunction upgradeToFunction, CancellationTokenSource cancellationToken = null)
         {
-             return ContractHandler.SendRequestAsync<UnpauseFunction>();
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(upgradeToFunction, cancellationToken);
         }
 
-        public Task<TransactionReceipt> UnpauseRequestAndWaitForReceiptAsync(UnpauseFunction unpauseFunction, CancellationTokenSource cancellationToken = null)
+        public Task<string> UpgradeToRequestAsync(string newImplementation)
         {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(unpauseFunction, cancellationToken);
+            var upgradeToFunction = new UpgradeToFunction();
+                upgradeToFunction.NewImplementation = newImplementation;
+            
+             return ContractHandler.SendRequestAsync(upgradeToFunction);
         }
 
-        public Task<TransactionReceipt> UnpauseRequestAndWaitForReceiptAsync(CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> UpgradeToRequestAndWaitForReceiptAsync(string newImplementation, CancellationTokenSource cancellationToken = null)
         {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync<UnpauseFunction>(null, cancellationToken);
+            var upgradeToFunction = new UpgradeToFunction();
+                upgradeToFunction.NewImplementation = newImplementation;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(upgradeToFunction, cancellationToken);
+        }
+
+        public Task<string> UpgradeToAndCallRequestAsync(UpgradeToAndCallFunction upgradeToAndCallFunction)
+        {
+             return ContractHandler.SendRequestAsync(upgradeToAndCallFunction);
+        }
+
+        public Task<TransactionReceipt> UpgradeToAndCallRequestAndWaitForReceiptAsync(UpgradeToAndCallFunction upgradeToAndCallFunction, CancellationTokenSource cancellationToken = null)
+        {
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(upgradeToAndCallFunction, cancellationToken);
+        }
+
+        public Task<string> UpgradeToAndCallRequestAsync(string newImplementation, byte[] data)
+        {
+            var upgradeToAndCallFunction = new UpgradeToAndCallFunction();
+                upgradeToAndCallFunction.NewImplementation = newImplementation;
+                upgradeToAndCallFunction.Data = data;
+            
+             return ContractHandler.SendRequestAsync(upgradeToAndCallFunction);
+        }
+
+        public Task<TransactionReceipt> UpgradeToAndCallRequestAndWaitForReceiptAsync(string newImplementation, byte[] data, CancellationTokenSource cancellationToken = null)
+        {
+            var upgradeToAndCallFunction = new UpgradeToAndCallFunction();
+                upgradeToAndCallFunction.NewImplementation = newImplementation;
+                upgradeToAndCallFunction.Data = data;
+            
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(upgradeToAndCallFunction, cancellationToken);
         }
     }
 }

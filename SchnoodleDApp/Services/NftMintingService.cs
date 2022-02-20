@@ -25,8 +25,8 @@ public sealed class NftMintingService : ISelfScopedLifetime
         _filePinningService = filePinningService;
         _nftMintDbService = nftMintDbService;
 
-        _web3 = new Web3(new Account(_blockchainOptions.PrivateKey, Chain.Rinkeby), _blockchainOptions.Web3Url);
-        _moontronService = new MoontronService(_web3, _blockchainOptions.ContractAddress);
+        _web3 = new Web3(new Account(_blockchainOptions.PrivateKey, _blockchainOptions.Chain), _blockchainOptions.Web3Url);
+        _moontronService = new MoontronService(_web3, _blockchainOptions.MoontronContractAddress);
         ServiceAccount = new EthECKey(_blockchainOptions.PrivateKey.HexToByteArray(), true).GetPublicAddress();
         MintFee = _blockchainOptions.MintFee;
     }
@@ -69,7 +69,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
         var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Krypto", "This is Krypto, Schnoodle's venerable mascot.", cancellationToken);
 
         // Mint the NFT
-        var mintTxHash = await _moontronService.MintIpfsRequestAsync(nftMintItem.To, metadataHash);
+        var mintTxHash = await _moontronService.SafeMintRequestAsync(nftMintItem.To, metadataHash);
 
         // Delete the item from the database so it can no longer be minted against.
         await _nftMintDbService.DeleteItemAsync(id);
