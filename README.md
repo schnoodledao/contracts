@@ -19,11 +19,11 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 # Migrate
 Execute the following PowerShell script to migrate (and verify) contracts:
 ```
-.\Migrate.ps1 [<network>] [<reset>] [<rebuild>]
+.\Migrate.ps1 [<network>] [<reset>] [<remigrate>] [<rebuild>]
 ```
-- `network`: The network to run the migration on (default is `develop`).
-- `reset`: Run all migrations from the beginning (default is `$false`).
-- `rebuild`: Delete all compiled contracts and the network manifest (default is `$false`).
+A description of each parameter is in the PowerShell script itself. In general, set `remigrate` to `$true` to remigrate all contracts to a network that has been previously migrated to.
+
+If a migration fails due to rate limiting on the RPC node, continue the migration by rerunning the script with only the `network` parameter specified.
 
 ## Launch Steps
 1. Execute `npm i`.
