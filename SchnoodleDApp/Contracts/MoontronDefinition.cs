@@ -213,10 +213,10 @@ namespace SchnoodleDApp.Contracts
         public virtual BigInteger TokenId { get; set; }
     }
 
-    public partial class SafeTransferFromFunction1 : SafeTransferFromFunctionBase1 { }
+    public partial class SafeTransferFrom1Function : SafeTransferFrom1FunctionBase { }
 
     [Function("safeTransferFrom")]
-    public class SafeTransferFromFunctionBase1 : FunctionMessage
+    public class SafeTransferFrom1FunctionBase : FunctionMessage
     {
         [Parameter("address", "from", 1)]
         public virtual string From { get; set; }
