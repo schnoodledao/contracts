@@ -18,8 +18,7 @@ Additionally, the following shared services steps should be completed **only onc
 
 # Blockchain
 Execute the following commands in a `truffle develop` console in the root folder of the repo:
-1. `compile --all`
-1. `migrate`
+1. `migrate` (add `--compile-none` if contracts haven't changed since the last compile)
 1. `exec scripts/initialize.js`
 
 # Server
@@ -53,6 +52,6 @@ Execute the following commands in a `truffle develop` console in the root folder
 
 ### Secrets
 1. For `Pinata:Jwt`, open a [Pinata](https://app.pinata.cloud) account then create an API key.
-1. For `Blockchain:PrivateKey`, use any Ethereum account that has some test ETH on Rinkeby. Ensure this account has the `MINTER_ROLE` on the smart contract using `hasRole`. If not, the contract owner must grant it using `grantRole`.
+1. For `Blockchain:PrivateKey`, use any Ethereum account that has some test ETH. Ensure this account has the `MINTER_ROLE` on the smart contract using `hasRole`. If not, the contract owner must grant it using `grantRole`.
 1. For `Data:Key`, obtain the read-write primary key for the test Azure Cosmos DB account from the administrator of that account.
 1. For `Files:Key`, obtain one of the access keys for the test Azure storage account from the administrator of that account.

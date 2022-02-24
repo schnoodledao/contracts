@@ -99,7 +99,7 @@ export class Moontron extends Component {
 
       // Generate the asset sending proof of payment (PoP), and the desired list of components
       const componentsQuery = Object.keys(selectedComponents).filter((component) => selectedComponents[component]).map((component) => `components=${component}`).join('&');
-      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${txn.transactionHash}?${componentsQuery}`)).json();
+      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${await web3.eth.getChainId()}/${txn.transactionHash}?${componentsQuery}`)).json();
 
       // Fetch the GLB file from its pinned URL on IPFS
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
