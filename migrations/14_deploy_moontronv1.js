@@ -13,7 +13,34 @@ module.exports = async function (deployer, network) {
   // Deploy proxy contract
   const Contract = artifacts.require(contractName);
   const proxy = await deployProxy(Contract, [proxyRegistryAddress], { deployer });
-  if (network === 'develop') return;
+
+  // Determine the chain ID for the network being deployed to
+  const chainId = { mainnet: 1, rinkeby: 4, chapel: 97, bsc: 56, develop: 1337 }[network];
+
+  // Go through each environment to update the DApp application settings
+  for (const env of ['Development', 'Test', 'Production']) {
+    const jsonfile = require('jsonfile');
+    const file = `SchnoodleDApp/appsettings.${env}.json`;
+    let id;
+
+    // Read the settings file, then rebuild it replacing the relevant chain details based on the current deployment
+    await jsonfile.writeFile(file, await jsonfile.readFile(file), {spaces: 2, EOL: '\r\n', replacer: (key, value) => {
+      if (key == 'Id') id = value;
+
+      if (id === chainId) {
+        switch (key) {
+          case 'Web3Url': return deployer.provider.host;
+          case 'MoontronContractAddress': return proxy.address;
+        }
+      }
+
+      return value;
+    }});
+  }
+
+  if (network === 'develop') {
+    return;
+  }
 
   // Transfer ownership of contract to SchnoodleGovernance
   //const SchnoodleGovernance = artifacts.require('SchnoodleGovernance');
