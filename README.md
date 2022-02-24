@@ -9,7 +9,7 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 # Setup
 ## Gnosis Safe
 - Create Safe on [Gnosis Safe](https://gnosis-safe.io/app) (mainnet) or equivalent testnet (e.g., [Rinkeby](https://rinkeby.gnosis-safe.io/app)).
-- Update `governance.proposers` and `governance.executors` in `migrations-config.js` with Safe address (tutorial [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) if required).
+- Update `governance.proposers` and `governance.executors` in `migrations-config.[chain].js` with Safe address (tutorial [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) if required).
 
 ## Snapshot / SafeSnap
 - Create a Snapshot space [here](https://snapshot.org/#/setup) using [this guide](https://docs.snapshot.org/spaces/create).
