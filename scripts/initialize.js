@@ -2,13 +2,14 @@
 
 module.exports = async function main(callback) {
   try {
+    const { testContracts } = require(`../migrations-config.develop.js`);
     const bigInt = require('big-integer');
     const accounts = await web3.eth.getAccounts();
     serviceAccount = accounts[0];
 
     const SchnoodleV1 = artifacts.require("SchnoodleV1");
-    const SchnoodleV8 = artifacts.require("SchnoodleV8");
-    const schnoodle = new SchnoodleV8((await SchnoodleV1.deployed()).address);
+    const Schnoodle = artifacts.require(testContracts.schnoodle);
+    const schnoodle = new Schnoodle((await SchnoodleV1.deployed()).address);
     const decimalsFactor = BigInt(10 ** await schnoodle.decimals());
     
     await schnoodle.changeSowRate(40);
