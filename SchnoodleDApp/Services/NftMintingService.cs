@@ -82,6 +82,14 @@ public sealed class NftMintingService : ISelfScopedLifetime
 
     private Web3 GetWeb3(BlockchainOptions.ChainOptions chainOptions)
     {
-        return new Web3(new Account(_blockchainOptions.PrivateKey, chainOptions.Id), chainOptions.Web3Url);
+        var web3 = new Web3(new Account(_blockchainOptions.PrivateKey, chainOptions.Id), chainOptions.Web3Url);
+
+        // Possible issue with EIP-1559. See: https://discord.com/channels/765580668327034880/765580668327034886/945867847513554994
+        if (chainOptions.Id == (int)Chain.Private)
+        {
+            web3.TransactionManager.UseLegacyAsDefault = true;
+        }
+
+        return web3;
     }
 }
