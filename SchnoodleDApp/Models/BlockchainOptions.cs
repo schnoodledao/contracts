@@ -1,6 +1,4 @@
-﻿using Nethereum.Signer;
-
-namespace SchnoodleDApp.Models;
+﻿namespace SchnoodleDApp.Models;
 
 public class BlockchainOptions
 {
@@ -8,11 +6,16 @@ public class BlockchainOptions
 
     public string PrivateKey { get; set; } = String.Empty;
 
-    public Chain Chain { get; set; }
+    public List<ChainOptions> Chains { get; } = new();
 
-    public string Web3Url { get; set; } = String.Empty;
+    public long NftMintFee { get; set; }
 
-    public string MoontronContractAddress { get; set; } = String.Empty;
+    public class ChainOptions
+    {
+        public int Id { get; set; }
 
-    public long MintFee { get; set; }
+        public string Web3Url { get; set; } = String.Empty;
+
+        public string MoontronContractAddress { get; set; } = String.Empty;
+    }
 }

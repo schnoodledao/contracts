@@ -47,13 +47,13 @@ public class NftController : ControllerBase
     }
 
     [HttpPost("generateasset")]
-    [Route("generateasset/{assetName}/{configName}/{to}/{paymentTxHash}")]
-    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string assetName, string configName, [FromQuery] string[] components, string to, string paymentTxHash)
+    [Route("generateasset/{assetName}/{configName}/{to}/{chainId:int}/{paymentTxHash}")]
+    public async Task<ActionResult<NftAssetItem>> GenerateAsset(string assetName, string configName, [FromQuery] string[] components, string to, int chainId, string paymentTxHash)
     {
         try
         {
             Reset();
-            return Ok(await _nftMintingService.GenerateAsset(assetName, configName, components, to, paymentTxHash, s_cts.Token));
+            return Ok(await _nftMintingService.GenerateAsset(assetName, configName, components, to, chainId, paymentTxHash, s_cts.Token));
         }
         catch (DirectoryNotFoundException e)
         {
