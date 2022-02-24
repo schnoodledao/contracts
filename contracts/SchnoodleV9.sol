@@ -31,7 +31,7 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
     // Transfer overrides
 
-    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal virtual override {
+    function _beforeTokenTransfer(address operator, address from, address to, uint256 amount) internal override {
         // Ensure the sender has enough unlocked balance to perform the transfer
         if (from != address(0)) {
             uint256 standardAmount = _getStandardAmount(amount);
@@ -43,12 +43,12 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         super._beforeTokenTransfer(operator, from, to, amount);
     }
 
-    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual override {
+    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal override {
         super.payFees(to, amount, reflectedAmount, transferCallback);
         payFund(to, _farmingFund, amount, _sowRate, transferCallback);
     }
 
-    function isLiquidityToken(address account) internal view virtual override returns(bool)
+    function isLiquidityToken(address account) internal view override returns(bool)
     {
         return hasRole(LIQUIDITY, account);
     }

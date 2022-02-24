@@ -38,7 +38,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     // Transfer overrides
 
-    function totalSupply() public view virtual override returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
@@ -46,7 +46,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return _getStandardAmount(super.balanceOf(account));
     }
 
-    function transfer(address recipient, uint256 amount) public virtual override returns (bool) {
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transfer(recipient, reflectedAmount);
         emit Transfer(_msgSender(), recipient, amount);
@@ -55,15 +55,15 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return result;
     }
 
-    function allowance(address holder, address spender) public view virtual override returns (uint256) {
+    function allowance(address holder, address spender) public view override returns (uint256) {
         return _getStandardAmount(super.allowance(holder, spender));
     }
 
-    function approve(address spender, uint256 value) public virtual override returns (bool) {
-        return super.approve(spender, _getReflectedAmount(value));
+    function _approve(address holder, address spender, uint256 value) internal override {
+        super._approve(holder, spender, _getReflectedAmount(value));
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public virtual override returns (bool) {
+    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         bool result = super.transferFrom(sender, recipient, reflectedAmount);
         emit Transfer(sender, recipient, amount);
@@ -72,16 +72,20 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return result;
     }
 
-    function _mint(address account, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
+    function _spendAllowance(address owner, address spender, uint256 amount) internal override {
+        super._spendAllowance(owner, spender, _getStandardAmount(amount));
+    }
+
+    function _mint(address account, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal override {
         super._mint(account, amount, userData, operatorData, requireReceptionAck);
     }
 
-    function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal virtual override {
+    function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;
     }
 
-    function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal virtual override {
+    function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal override {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
         emit Transfer(from, to, amount);
@@ -91,7 +95,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     // Reflection convenience functions
 
     function _transferFromReflected(address from, address to, uint256 reflectedAmount) internal {
-        _approve(from, _msgSender(), reflectedAmount);
+        super._approve(from, _msgSender(), reflectedAmount);
         super.transferFrom(from, to, reflectedAmount);
     }
 
