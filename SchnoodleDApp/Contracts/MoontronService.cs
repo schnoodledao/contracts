@@ -247,11 +247,11 @@ namespace SchnoodleDApp.Contracts
         }
 
         
-        public Task<bool> IsApprovedForAllQueryAsync(string owner, string operator1Address, BlockParameter blockParameter = null)
+        public Task<bool> IsApprovedForAllQueryAsync(string owner, string operatorAddress, BlockParameter blockParameter = null)
         {
             var isApprovedForAllFunction = new IsApprovedForAllFunction();
                 isApprovedForAllFunction.Owner = owner;
-                isApprovedForAllFunction.OperatorAddress = operator1Address;
+                isApprovedForAllFunction.OperatorAddress = operatorAddress;
             
             return ContractHandler.QueryAsync<IsApprovedForAllFunction, bool>(isApprovedForAllFunction, blockParameter);
         }
@@ -406,36 +406,36 @@ namespace SchnoodleDApp.Contracts
              return ContractHandler.SendRequestAndWaitForReceiptAsync(safeTransferFromFunction, cancellationToken);
         }
 
-        public Task<string> SafeTransferFromRequestAsync(SafeTransferFromFunction1 safeTransferFromFunction)
+        public Task<string> SafeTransferFromRequestAsync(SafeTransferFrom1Function safeTransferFrom1Function)
         {
-             return ContractHandler.SendRequestAsync(safeTransferFromFunction);
+             return ContractHandler.SendRequestAsync(safeTransferFrom1Function);
         }
 
-        public Task<TransactionReceipt> SafeTransferFromRequestAndWaitForReceiptAsync(SafeTransferFromFunction1 safeTransferFromFunction, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SafeTransferFromRequestAndWaitForReceiptAsync(SafeTransferFrom1Function safeTransferFrom1Function, CancellationTokenSource cancellationToken = null)
         {
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeTransferFromFunction, cancellationToken);
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeTransferFrom1Function, cancellationToken);
         }
 
         public Task<string> SafeTransferFromRequestAsync(string from, string to, BigInteger tokenId, byte[] data)
         {
-            var safeTransferFromFunction = new SafeTransferFromFunction1();
-                safeTransferFromFunction.From = from;
-                safeTransferFromFunction.To = to;
-                safeTransferFromFunction.TokenId = tokenId;
-                safeTransferFromFunction.Data = data;
+            var safeTransferFrom1Function = new SafeTransferFrom1Function();
+                safeTransferFrom1Function.From = from;
+                safeTransferFrom1Function.To = to;
+                safeTransferFrom1Function.TokenId = tokenId;
+                safeTransferFrom1Function.Data = data;
             
-             return ContractHandler.SendRequestAsync(safeTransferFromFunction);
+             return ContractHandler.SendRequestAsync(safeTransferFrom1Function);
         }
 
         public Task<TransactionReceipt> SafeTransferFromRequestAndWaitForReceiptAsync(string from, string to, BigInteger tokenId, byte[] data, CancellationTokenSource cancellationToken = null)
         {
-            var safeTransferFromFunction = new SafeTransferFromFunction1();
-                safeTransferFromFunction.From = from;
-                safeTransferFromFunction.To = to;
-                safeTransferFromFunction.TokenId = tokenId;
-                safeTransferFromFunction.Data = data;
+            var safeTransferFrom1Function = new SafeTransferFrom1Function();
+                safeTransferFrom1Function.From = from;
+                safeTransferFrom1Function.To = to;
+                safeTransferFrom1Function.TokenId = tokenId;
+                safeTransferFrom1Function.Data = data;
             
-             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeTransferFromFunction, cancellationToken);
+             return ContractHandler.SendRequestAndWaitForReceiptAsync(safeTransferFrom1Function, cancellationToken);
         }
 
         public Task<string> SetApprovalForAllRequestAsync(SetApprovalForAllFunction setApprovalForAllFunction)
@@ -448,19 +448,19 @@ namespace SchnoodleDApp.Contracts
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setApprovalForAllFunction, cancellationToken);
         }
 
-        public Task<string> SetApprovalForAllRequestAsync(string operator1, bool approved)
+        public Task<string> SetApprovalForAllRequestAsync(string @operator, bool approved)
         {
             var setApprovalForAllFunction = new SetApprovalForAllFunction();
-                setApprovalForAllFunction.Operator = operator1;
+                setApprovalForAllFunction.Operator = @operator;
                 setApprovalForAllFunction.Approved = approved;
             
              return ContractHandler.SendRequestAsync(setApprovalForAllFunction);
         }
 
-        public Task<TransactionReceipt> SetApprovalForAllRequestAndWaitForReceiptAsync(string operator1, bool approved, CancellationTokenSource cancellationToken = null)
+        public Task<TransactionReceipt> SetApprovalForAllRequestAndWaitForReceiptAsync(string @operator, bool approved, CancellationTokenSource cancellationToken = null)
         {
             var setApprovalForAllFunction = new SetApprovalForAllFunction();
-                setApprovalForAllFunction.Operator = operator1;
+                setApprovalForAllFunction.Operator = @operator;
                 setApprovalForAllFunction.Approved = approved;
             
              return ContractHandler.SendRequestAndWaitForReceiptAsync(setApprovalForAllFunction, cancellationToken);
