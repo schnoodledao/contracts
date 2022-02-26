@@ -1,4 +1,4 @@
-// migrations/14_deploy_bridge_ethereum_bsc.js
+// migrations/15_deploy_bridge_ethereum_bsc.js
 
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 

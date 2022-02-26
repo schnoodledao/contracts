@@ -53,7 +53,7 @@ module.exports = {
     },
     // BSC
     chapel: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/bsc/testnet/ws`),
+      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-1-s1.binance.org:8545/'),
       websockets: true,
       network_id: 97,
       confirmations: 10,
@@ -61,7 +61,7 @@ module.exports = {
       skipDryRun: true
     },
     bsc: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://speedy-nodes-nyc.moralis.io/${moralisId}/bsc/mainnet/ws`),
+      provider: () => new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org/'),
       websockets: true,
       network_id: 56,
       confirmations: 10,

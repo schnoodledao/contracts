@@ -1,5 +1,5 @@
-const fastify = require('fastify');
 require('dotenv').config();
+const fastify = require('fastify');
 const Web3 = require('web3');
 fs = require('fs');
 var CryptoJS = require('crypto-js');
@@ -51,22 +51,24 @@ app1.post('/WriteSecretMessage', async (request, reply) => writeSecretMessage(re
 app2.post('/WriteSecretMessage', async (request, reply) => writeSecretMessage(request, reply, 2));
 
 async function writeSecretMessage(request, reply, serverNum) {
-  const data = JSON.parse(request.body);
   const encrypted = `encrypted${serverNum}.json`;
 
   fs.readFile(encrypted, 'utf-8', async (error, dataFile) => {
     console.log(error);
-    if (data.message.toString() !== '' && dataFile == null) {
-      fs.writeFile(encrypted, JSON.stringify({ "account": data.message.toString() }), (err) => {
+    const message = request.body.message;
+
+    if (message === '') {
+      sendReply(reply, 'Message is empty');
+    } else if (dataFile != null) {
+      sendReply(reply, 'Message file already exists');
+    }
+    else {
+      fs.writeFile(encrypted, JSON.stringify({ "message": message }), (err) => {
         if (err) {
           sendReply(reply, 'error');
         }
       });
-      sendReply(reply, 'Ok');
-    } else if (data.message.toString() === '') {
-      sendReply(reply, 'request is empty');
-    } else {
-      sendReply(reply, 'Key already exists');
+      sendReply(reply, 'OK');
     }
   });
 }

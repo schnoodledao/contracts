@@ -6,43 +6,38 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 - [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
 - Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
+The following shared services should be set up **only once** per blockchain (except local):
+1. Gnosis Safe
+    - Create Safe on [Gnosis Safe](https://gnosis-safe.io/app) (mainnet) or equivalent testnet (e.g., [Rinkeby](https://rinkeby.gnosis-safe.io/app)).
+    - Update `governance.proposers` and `governance.executors` in `migrations-config.[chain].js` with Safe address (tutorial [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) if required).
+1. Snapshot / SafeSnap
+    - Create a Snapshot space [here](https://snapshot.org/#/setup) using [this guide](https://docs.snapshot.org/spaces/create).
+    - Deploy and enable a SafeSnap DAO module instance with a default template as per the 'Setting up the module' instructions [here](https://github.com/gnosis/dao-module/blob/main/docs/setup_guide.md#setting-up-the-module).
+    - Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
+
 # Setup
-## Gnosis Safe
-- Create Safe on [Gnosis Safe](https://gnosis-safe.io/app) (mainnet) or equivalent testnet (e.g., [Rinkeby](https://rinkeby.gnosis-safe.io/app)).
-- Update `governance.proposers` and `governance.executors` in `migrations-config.[chain].js` with Safe address (tutorial [here](https://forum.openzeppelin.com/t/tutorial-on-using-a-gnosis-safe-multisig-with-a-timelock-to-upgrade-contracts-and-use-functions-in-a-proxy-contract/7272) if required).
-
-## Snapshot / SafeSnap
-- Create a Snapshot space [here](https://snapshot.org/#/setup) using [this guide](https://docs.snapshot.org/spaces/create).
-- Deploy and enable a SafeSnap DAO module instance with a default template as per the 'Setting up the module' instructions [here](https://github.com/gnosis/dao-module/blob/main/docs/setup_guide.md#setting-up-the-module).
-- Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
-
-# Migrate
-Execute the following PowerShell script to migrate (and verify) contracts:
-```
-.\Migrate.ps1 [<network>] [<reset>] [<remigrate>] [<rebuild>]
-```
-A description of each parameter is in the PowerShell script itself. In general, set `remigrate` to `$true` to remigrate all contracts to a network that has been previously migrated to.
-
-If a migration fails due to rate limiting on the RPC node, continue the migration by rerunning the script with only the `network` parameter specified.
-
-## Launch Steps
 1. Execute `npm i`.
-1. Migrate `SchnoodleV1`, `SchnoodleGovernance`, and `SchnoodleTimelockFactory`.
+1. If target blockchain is local, execute `truffle develop` in a separate shell.
+1. Execute `.\Migrate.ps1 <network> $true $true $true` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
+
+# Blockchain Launch
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
 1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.
 1. [Create a timelock contract](#create-timelock-contract) to lock the full amount of the liquidity token held by the beneficiary wallet.
 
-## Create Timelock Contract
-1. Go to `SchnoodleTimelockFactory` contract address and call `create` specifying the address of the token to be locked, the beneficiary, and the release time as a [Unix timestamp](https://www.unixtimestamp.com).
-1. Once the transaction has been mined, note the 'To' contract address of the `call_0_1` internal transaction. Verify that this is the `SchnoodleTimelock` clone address.
-1. Go to the address of the token to be locked, and transfer the desired amount to the `SchnoodleTimelock` clone address.
+# Operational Procedures
+## Timelock Tokens
+Follow these steps to timelock tokens:
+1. Call `create` on `SchnoodleTimelockFactory` specifying the contract address of the token to be locked, the beneficiary, and the release time as a [Unix timestamp](https://www.unixtimestamp.com).
+1. Once the transaction has been mined, note the 'To' contract address of the `create_0` internal transaction. Verify that this is the `SchnoodleTimelock` clone address.
+1. Transfer the desired amount of tokens to be locked from the token contract address to the `SchnoodleTimelock` clone address.
 1. After timelock elapsed, go to `SchnoodleTimelock` clone address, and call `release`.
 
-## Config Procedure
-1. Perform a [contract interaction](#contract-interaction) with `TransparentUpgradeableProxy` to call `changeFeePercent` or `changeEleemosynary`.
+## Configuration
+1. Perform a [contract interaction](#contract-interaction) with `TransparentUpgradeableProxy` to call a function (e.g., `changeFeePercent`, `changeEleemosynary`, `maintenance`, `configure`).
 
-## Upgrade Procedure
-1. Migrate `SchnoodleVX` (`prepareUpgrade`)
+## Contract Upgrade
+1. Execute `.\Migrate.ps1 <network>` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
 1. Perform a [contract interaction](#contract-interaction) with `ProxyAdmin` to call `upgrade` using `proxy` and `implementation` parameters outputted in step 1.
 
 ## Contract Interaction
