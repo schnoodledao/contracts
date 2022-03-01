@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { resources } from '../resources';
+import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import SchnoodleV8 from '../contracts/SchnoodleV8.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
@@ -563,7 +563,7 @@ export class Farming extends Component {
                 <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
                 <div className="maintitles tw-uppercase">{resources.MOON_FARMING}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
                 <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>

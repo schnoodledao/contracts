@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { resources } from '../resources';
+import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
 import getWeb3 from '../getWeb3';
 import { Viewer } from '../viewer/viewer';
@@ -187,7 +187,7 @@ export class Moontron extends Component {
                 <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
                 <div className="maintitles tw-uppercase">{resources.MOONTRON}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
                 <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>

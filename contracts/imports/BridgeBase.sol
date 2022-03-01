@@ -25,8 +25,7 @@ abstract contract BridgeBase is Multiownable {
         require(amount > 0, "BridgeBase: Amount must be non-zero");
         require(ERC20(_tokenAddress).balanceOf(msg.sender) >= amount, "BridgeBase: Insufficient balance");
         
-        transferStatus = ERC20(_tokenAddress).transferFrom(msg.sender, address(this), amount);
-        if (transferStatus == true) {
+        if (ERC20(_tokenAddress).transferFrom(msg.sender, address(this), amount)) {
             _tokensReceived[msg.sender] += amount;
         }
     }

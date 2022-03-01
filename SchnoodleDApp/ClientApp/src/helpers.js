@@ -51,3 +51,20 @@ export function blocksDurationText(blocks) {
 export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNumber) {
   return Math.max(0, parseInt(startBlockNumber) + parseInt(vestingBlocks) - currentBlockNumber);
 }
+
+export function createEnum(values) {
+  const enumObject = {};
+  for (const val of values) {
+    enumObject[val] = val;
+  }
+  return Object.freeze(enumObject);
+}
+
+export async function waitForTransaction(hash, delay = 1000) {
+  const web3 = await getWeb3();
+  let transactionReceipt = null;
+  while (transactionReceipt == null) { // Waiting until the transaction is mined
+    transactionReceipt = await web3.eth.getTransactionReceipt(hash);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+}

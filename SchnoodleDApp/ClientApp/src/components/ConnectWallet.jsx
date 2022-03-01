@@ -25,9 +25,9 @@ export class ConnectWallet extends Component {
       });
 
       window.ethereum.on('chainChanged', () => {
-        this.props.getErrorsFunc();
+        this.props.checkNetwork();
         this.props.resetApprove();
-        this.props.getApproveInfo();
+        this.props.updateApproval();
       });
     }
   }
@@ -41,8 +41,8 @@ export class ConnectWallet extends Component {
     if (accounts.length > 0) {
       account = accounts[0];
       localStorage.setItem('account', account);
-      this.props.getErrorsFunc();
-      this.props.getApproveInfo();
+      this.props.checkNetwork();
+      this.props.updateApproval();
     }
 
     this.setState({ account });
