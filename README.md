@@ -3,6 +3,8 @@ Schnoodle is a progressive DeFi dog-themed meme token with multisig and DAO gove
 
 # Prerequisites
 - [Node.js](https://nodejs.org)
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Solidity extension](https://marketplace.visualstudio.com/items?itemName=JuanBlanco.solidity)
 - [PowerShell](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-windows) 7 or later
 - Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
@@ -18,8 +20,8 @@ The following shared services should be set up **only once** per blockchain (exc
 # Setup
 1. Execute `npm i`.
 1. In Visual Studio Code, open each Solidity file in the **\contracts** folder corresponding to the ABI files listed in [Nethereum.Generator.json](SchnoodleDApp/Nethereum.Generator.json), and press F5 ('Solidity: Compile Contract' command).
-1. If target blockchain is local, execute `truffle develop` in a separate shell.
-1. Execute `.\Migrate.ps1 <network> $true $true $true` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
+1. If target network is local, execute `truffle develop` in a separate terminal.
+1. Execute `.\Migrate.ps1 <network> $true $true` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
 
 # Blockchain Launch
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.

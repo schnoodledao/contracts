@@ -7,11 +7,7 @@ module.exports = {
 
     const proxy = await ProxyContract.deployed();
 
-    if (network === 'develop') {
-      const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-      // Use unsafeAllowRenames until resolved: https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/73#issuecomment-968532028
-      return await upgradeProxy(proxy.address, NewContract, { deployer, call, unsafeAllowRenames: true });
-    } else {
+    if (['mainnet', 'bsc'].includes(network)) {
       const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
       const contractsFile = require('../scripts/contracts-file.js');
       // Use unsafeAllowRenames until resolved: https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/73#issuecomment-968532028
@@ -23,6 +19,10 @@ module.exports = {
       console.log("Implementation address:", address);
 
       contractsFile.append(`${newContract}@${address}`);
+    } else {
+      const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+      // Use unsafeAllowRenames until resolved: https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/73#issuecomment-968532028
+      return await upgradeProxy(proxy.address, NewContract, { deployer, call, unsafeAllowRenames: true });
     }
 
     return proxy;

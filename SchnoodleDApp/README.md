@@ -4,8 +4,6 @@ Schnoodle X is a DApp to allow interaction with the Schnoodle smart contracts vi
 # Prerequisites
 - [Node.js](https://nodejs.org/)
 - [Visual Studio 2022 Preview](https://visualstudio.microsoft.com/vs/preview/)
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Solidity extension](https://marketplace.visualstudio.com/items?itemName=JuanBlanco.solidity)
 - Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
 The following shared services should be set up **only once** per environment:
@@ -27,12 +25,13 @@ The following shared services should be set up **only once** per environment:
 1. For `Files:Key`, obtain one of the access keys for the test Azure storage account from the administrator of that account.
 
 # Server
-1. Open **Server** folder in Visual Studio Code.
-1. Execute `node server`.
+1. Open **Server** folder in a terminal.
+1. Execute `$env:DOTENV_CONFIG_PATH=".env.development"`.
+1. Execute `node -r dotenv/config server`.
 1. Execute `node encrypt`.
 
 # Client
 1. Open **Schnoodle.sln** in Visual Studio 2022.
 1. Build and run.
-1. Connect MetaMask to local network (e.g., http://localhost:8545). You will need to reset MetaMask (in advanced settings) if the network was restarted since the previous run.
+1. Connect MetaMask to target network (e.g., Rinkeby or http://localhost:8545). You will need to reset MetaMask (in advanced settings) if the network is local and was restarted since the previous run.
 1. Add the first account private key in Truffle Develop to MetaMask, and select this account.

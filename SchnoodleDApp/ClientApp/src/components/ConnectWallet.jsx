@@ -26,8 +26,8 @@ export class ConnectWallet extends Component {
 
       window.ethereum.on('chainChanged', () => {
         this.props.checkNetwork();
-        this.props.resetApprove();
-        this.props.updateApproval();
+        this.props.resetAllowance();
+        this.props.updateAllowance();
       });
     }
   }
@@ -35,14 +35,14 @@ export class ConnectWallet extends Component {
   async connect() {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     let account = null;
-    this.props.resetErrorsFunc();
-    this.props.resetApprove();
+    this.props.clearMessage();
+    this.props.resetAllowance();
 
     if (accounts.length > 0) {
       account = accounts[0];
       localStorage.setItem('account', account);
       this.props.checkNetwork();
-      this.props.updateApproval();
+      this.props.updateAllowance();
     }
 
     this.setState({ account });

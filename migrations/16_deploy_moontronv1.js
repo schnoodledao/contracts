@@ -29,7 +29,7 @@ module.exports = async function (deployer, network) {
 
       if (id === chainId) {
         switch (key) {
-          case 'Web3Url': return deployer.provider.host;
+          case 'Web3Url': return deployer.provider.host ?? deployer.provider.engine._providers.find(provider => provider._url)?._url ?? deployer.provider.engine._providers.find(provider => provider.rpcUrl).rpcUrl
           case 'MoontronContractAddress': return proxy.address;
         }
       }

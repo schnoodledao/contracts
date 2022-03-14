@@ -13,6 +13,10 @@ module.exports = async function (deployer, network) {
   const bridge = await deployer.deploy(Bridge, schnoodle.address);
   await bridge.transferOwnership(bridgeOwners);
 
+  if (network === 'develop') {
+    await schnoodle.transfer(bridge.address, BigInt(1e9) * BigInt(10 ** await schnoodle.decimals()));
+  }
+
   const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${(await Bridge.deployed()).address}`);
+  contractsFile.append(`${contractName}@${bridge.address}`);
 };

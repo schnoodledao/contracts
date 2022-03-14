@@ -10,7 +10,7 @@ abstract contract BridgeBase is Multiownable {
 
     mapping(address => uint256) private _tokensSent;
     mapping(address => uint256) private _tokensReceived;
-    mapping(address => uint256) private _tokensReceivedButNotSent;
+    mapping(address => uint256) private _tokensReceivedToSend;
 
     bool transferStatus;
     bool avoidReentrancy;
@@ -36,12 +36,12 @@ abstract contract BridgeBase is Multiownable {
         require(!avoidReentrancy);
         
         avoidReentrancy = true;
-        _tokensReceivedButNotSent[user] += amount;
+        _tokensReceivedToSend[user] += amount;
         avoidReentrancy = false;
     }
 
     function receiveTokens(uint256[] memory commissions) public payable {
-        if (_tokensReceivedButNotSent[msg.sender] != 0) {
+        if (_tokensReceivedToSend[msg.sender] != 0) {
             require(commissions.length == _owners.length, "BridgeBase: The numbers of commissions and owners do not match");
             uint256 sum;
 
@@ -58,7 +58,7 @@ abstract contract BridgeBase is Multiownable {
                 owner.transfer(commission);
             }
             
-            uint256 amountToSend = _tokensReceivedButNotSent[msg.sender] - _tokensSent[msg.sender];
+            uint256 amountToSend = _tokensReceivedToSend[msg.sender] - _tokensSent[msg.sender];
             transferStatus = ERC20(_tokenAddress).transfer(msg.sender, amountToSend);
 
             if (transferStatus) {
@@ -81,5 +81,13 @@ abstract contract BridgeBase is Multiownable {
         require(address(this).balance >= amount, "BridgeBase: Insufficient balance");
 
         receiver.transfer(amount);
+    }
+
+    function tokensSent(address account) external view returns (uint256) {
+        return _tokensSent[account];
+    }
+
+    function tokensReceived(address account, bool toSend) external view returns (uint256) {
+        return (toSend ? _tokensReceivedToSend : _tokensReceived)[account];
     }
 }
