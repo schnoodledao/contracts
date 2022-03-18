@@ -107,18 +107,11 @@ async function writeTransaction(request, reply, serverNum) {
 
   //CONTRACTS
   try {
-    const tokensReceivedBnb = new BigNumber(await bridgeBsc.methods.tokensReceived(data.address, false).call());
-    const tokensReceivedEth = new BigNumber(await bridgeEthereum.methods.tokensReceived(data.address, false).call());
-    const tokensSentEth = new BigNumber(await bridgeEthereum.methods.tokensReceived(data.address, true).call());
-    const tokensSentBnb = new BigNumber(await bridgeBsc.methods.tokensReceived(data.address, true).call());
+    const tokensPendingEth = new BigNumber(await bridgeEthereum.methods.tokensPending(data.address).call());
+    const tokensPendingBsc = new BigNumber(await bridgeBsc.methods.tokensPending(data.address).call());
+    const amount = tokensPendingEth.plus(tokensPendingBsc);
 
-    const receivedTotal = tokensReceivedBnb.plus(tokensReceivedEth);
-    const sentTotal = tokensSentEth.plus(tokensSentBnb);
-    const amount = receivedTotal.minus(sentTotal);
-
-    console.log(`${receivedTotal} = ${tokensReceivedBnb} + ${tokensReceivedEth}`);
-    console.log(`${sentTotal} = ${tokensSentBnb} + ${tokensSentEth}`);
-    console.log(`Amount to send: ${amount} = ${receivedTotal} - ${sentTotal}`);
+    console.log(`Amount to send: ${amount} = ${tokensPendingEth} + ${tokensPendingBsc}`);
     
     switch (data.targetNetwork) {
       case 'Ethereum':

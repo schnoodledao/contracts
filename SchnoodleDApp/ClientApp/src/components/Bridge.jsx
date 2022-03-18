@@ -130,7 +130,7 @@ export class Bridge extends Component {
       }
 
       const selectedAddress = web3.currentProvider.selectedAddress;
-      const tokensReceived = await bridge.methods.tokensReceived(selectedAddress, true).call();
+      const tokensReceived = await bridge.methods.tokensPending(selectedAddress).call();
 
       if (tokensReceived > 0) {
         const gasPay = localStorage.getItem('gasPay');
