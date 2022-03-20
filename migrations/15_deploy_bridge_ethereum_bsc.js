@@ -3,7 +3,7 @@
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 
 module.exports = async function (deployer, network) {
-  const { bridgeOwners } = require(`../migrations-config.${network}.js`);
+  const { bridgeOwner } = require(`../migrations-config.${network}.js`);
   const Schnoodle = artifacts.require('SchnoodleV1');
   const schnoodle = await Schnoodle.deployed();
 
@@ -11,12 +11,12 @@ module.exports = async function (deployer, network) {
 
   const Bridge = artifacts.require(contractName);
   const bridge = await deployer.deploy(Bridge, schnoodle.address);
-  await bridge.transferOwnership(bridgeOwners);
+  await bridge.transferOwnership(bridgeOwner);
 
-  if (network === 'develop') {
+  const { appendList, isProduction } = require('../scripts/contracts.js');
+  if (!isProduction(network)) {
     await schnoodle.transfer(bridge.address, BigInt(1e9) * BigInt(10 ** await schnoodle.decimals()));
   }
 
-  const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${bridge.address}`);
+  appendList(`${contractName}@${bridge.address}`, network);
 };

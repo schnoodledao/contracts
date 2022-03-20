@@ -24,11 +24,6 @@ export class Farming extends Component {
 
     this.state = {
       success: false,
-      message: null,
-      web3: null,
-      schnoodle: null,
-      schnoodleFarming: null,
-      selectedAddress: null,
       getInfoIntervalId: 0,
       farmingFundBalance: 0,
       blockNumber: 0,
@@ -138,7 +133,7 @@ export class Farming extends Component {
 
       const unbondingSummary = [].concat(await schnoodleFarming.methods.getUnbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
 
-      let withdrawAmounts = [];
+      const withdrawAmounts = [];
       for (let i = 0; i < farmingSummary.length; i++) {
         const withdrawAmount = this.state.withdrawAmounts[i];
         withdrawAmounts[i] = this.state.withdrawAmounts[i] === undefined ? scaleDownUnits(farmingSummary[i].deposit.amount) : withdrawAmount;
@@ -197,7 +192,7 @@ export class Farming extends Component {
 
       const depositAmountValue = this.preventDust(depositAmount, availableAmount);
       const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), this.vestingBlocks(), this.unbondingBlocks()).send({ from: selectedAddress });
-      this.handleResponse(response);
+      await this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
@@ -210,7 +205,7 @@ export class Farming extends Component {
       const depositInfo = farmingSummary[i];
       const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositInfo.deposit.amount);
       const response = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
-      this.handleResponse(response);
+      await this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
@@ -618,7 +613,7 @@ export class Farming extends Component {
                     <div className="tw-stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                     <div className="tw-stat-desc">%</div>
                   </div>
-                  <div claclassNamess="tw-stat">
+                  <div className="tw-stat">
                     <div className="tw-stat-title">
                       {resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
                       <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />

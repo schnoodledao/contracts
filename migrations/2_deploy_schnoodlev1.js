@@ -23,6 +23,6 @@ module.exports = async function (deployer, network, accounts) {
   await proxy.changeFeePercent(initialization.feePercent);
   await proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
 
-  const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
+  const { appendList } = require('../scripts/contracts.js');
+  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`, network);
 };

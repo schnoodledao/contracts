@@ -18,22 +18,12 @@ export class Moontron extends Component {
 
     this.state = {
       success: false,
-      message: null,
-      web3: null,
-      moontron: null,
-      selectedAddress: null,
       openHelpModal: false,
       helpTitle: '',
       helpInfo: '',
       helpDetails: '',
       busy: false,
-      selectedAsset: null,
-      selectedConfig: null,
       selectedComponents: [],
-      gatewayBaseUrl: null,
-      assetConfigs: null,
-      serviceAccount: null,
-      mintFee: null,
       nftAssetItem: null
     };
 
@@ -77,6 +67,28 @@ export class Moontron extends Component {
     }
   }
 
+  //#region Error handling
+
+  async fetch(input, init) {
+    const result = await fetch(input, init);
+
+    if (result.ok) {
+      this.setState({ success: true, message: 'Operation successful' });
+      return result;
+    }
+
+    throw new Error(result.statusText);
+  }
+
+  handleError(err) {
+    console.error(err);
+
+    this.setState({ success: false, message: err.message });
+    alert(err.message);
+  }
+
+  //#endregion
+
   async updateAssetConfig(e) {
     const [selectedAsset, selectedConfig] = e.target.value.split(',');
     this.setState({ selectedAsset, selectedConfig });
@@ -112,7 +124,7 @@ export class Moontron extends Component {
 
       this.setState({ nftAssetItem });
     } catch (err) {
-      await this.handleError(err);
+      this.handleError(err);
     }
     this.setState({ busy: false });
   }
@@ -132,32 +144,10 @@ export class Moontron extends Component {
       // Nullify the generated asset item on a successful mint
       this.setState({ nftAssetItem: null });
     } catch (err) {
-      await this.handleError(err);
+      this.handleError(err);
     }
     this.setState({ busy: false });
   }
-
-  //#region Error handling
-
-  async fetch(input, init) {
-    const result = await fetch(input, init);
-    
-    if (result.ok) {
-      this.setState({ success: true, message: 'Operation successful' });
-      return result;
-    }
-
-    throw new Error(result.statusText);
-  }
-
-  handleError(err) {
-    console.error(err);
-
-    this.setState({ success: false, message: err.message });
-    alert(err.message);
-  }
-
-  //#endregion
 
   //#region Help functions
 
@@ -174,7 +164,6 @@ export class Moontron extends Component {
   //#region Rendering
 
   render() {
-    const token = 'SNOOD';
     const subtitle1 = 'Build your own NFT.';
     const subtitle2 = 'Build your own Moontron.';
 

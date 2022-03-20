@@ -25,10 +25,7 @@ The following shared services should be set up **only once** per environment:
 1. For `Files:Key`, obtain one of the access keys for the test Azure storage account from the administrator of that account.
 
 # Server
-1. Open **Server** folder in a terminal.
-1. Execute `$env:DOTENV_CONFIG_PATH=".env.development"`.
-1. Execute `node -r dotenv/config server`.
-1. Execute `node encrypt`.
+1. Execute `.\Server.ps1`.
 
 # Client
 1. Open **Schnoodle.sln** in Visual Studio 2022.

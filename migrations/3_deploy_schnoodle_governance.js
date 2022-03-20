@@ -1,7 +1,6 @@
 // migrations/3_deploy_schnoodle_governance.js
 
 const { admin } = require('@openzeppelin/truffle-upgrades');
-const contractsFile = require('../scripts/contracts-file.js');
 
 const contractName = 'SchnoodleGovernance';
 const SchnoodleGovernance = artifacts.require(contractName);
@@ -17,5 +16,6 @@ module.exports = async function (deployer, network) {
   await admin.transferProxyAdminOwnership(schnoodleGovernanceAddress);
   await (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);
 
-  contractsFile.append(contractName);
+  const { appendList } = require('../scripts/contracts.js');
+  appendList.append(contractName, network);
 };

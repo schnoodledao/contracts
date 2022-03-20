@@ -16,17 +16,14 @@ const bridgeEthereum = new web3Eth.eth.Contract(BridgeEthereum.abi, bridgeEthere
 const bridgeBscDeployedNetwork = BridgeBsc.networks[process.env.NETID_BSC];
 const bridgeBsc = new web3Bsc.eth.Contract(BridgeBsc.abi, bridgeBscDeployedNetwork && bridgeBscDeployedNetwork.address);
 
+const pendingTransactions = {};
+
 function sleep(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
-let app1 = fastify();
-let app2 = fastify();
-var busy = false;
-
-// Listen
-app1.listen(process.env.PORT1, process.env.URL, (err, address) => listen(err, address));
-app2.listen(process.env.PORT2, process.env.URL, (err, address) => listen(err, address));
+let app = fastify();
+app.listen(process.env.PORT, process.env.URL, (err, address) => listen(err, address));
 
 function listen(err, address) {
   if (err) {
@@ -36,20 +33,10 @@ function listen(err, address) {
   }
 }
 
-// Check Server
-app1.get('/CheckServer', async (request, reply) => checkServer(reply));
-app2.get('/CheckServer', async (request, reply) => checkServer(reply));
+app.get('/Alive', async (request, reply) => sendReply(reply, 'ok'));
 
-function checkServer(reply) {
-  sendReply(reply, 'Ok');
-}
-
-// Write Secret Message
-app1.post('/WriteSecretMessage', async (request, reply) => writeSecretMessage(request, reply, 1));
-app2.post('/WriteSecretMessage', async (request, reply) => writeSecretMessage(request, reply, 2));
-
-async function writeSecretMessage(request, reply, serverNum) {
-  const encrypted = `encrypted${serverNum}.json`;
+app.post('/WriteSecretMessage', async (request, reply) => {
+  const encrypted = `encrypted.json`;
 
   fs.readFile(encrypted, 'utf-8', async (err, dataFile) => {
     if (err) {
@@ -72,89 +59,116 @@ async function writeSecretMessage(request, reply, serverNum) {
       });
     }
   });
-}
+});
 
-// Write Transaction
-app1.post('/WriteTransaction', async (request, reply) => writeTransaction(request, reply, 1));
-app2.post('/WriteTransaction', async (request, reply) => writeTransaction(request, reply, 2));
-
-async function writeTransaction(request, reply, serverNum) {
-  if (busy) {
-    sendReply(reply, 'busy');
-  }
-
-  busy = true;
-
+app.post('/GetFee', async (request, reply) => {
   var data = JSON.parse(request.body);
   console.log('====================================================================');
-  console.log(Date.now());
+  console.log(Date.now().toString());
   console.log('Data: ', data);
 
-  //if (data.address !== '' && data.targetNetwork !== '' && data.sourceNetwork !== '' && data.targetNetwork != null && data.sourceNetwork != null) {
+  const decrypted = decryptMessage();
+  const privateKey = decrypted.toString(CryptoJS.enc.Utf8);
+  const account = web3Eth.eth.accounts.privateKeyToAccount(privateKey);
 
-  //ACCOUNT
-  // Decrypt the message
-  const { message } = require(`./encrypted${serverNum}.json`);
+  try {
+    const senderNetwork = data.network === 'Ethereum' ? 'BSC' : 'Ethereum';
+    const web3 = getWeb3(data.network);
+    const bridgeReceiver = getBridge(data.network);
+    const bridgeSender = getBridge(senderNetwork);
+
+    const tokensSent = new BigNumber(await bridgeSender.methods.tokensSent(data.address).call());
+    const tokensReceived = new BigNumber(await bridgeReceiver.methods.tokensReceived(data.address).call());
+    const tokensPending = tokensSent.minus(tokensReceived);
+    let fee = 0;
+
+    if (tokensPending > 0) {
+      console.log(`${tokensPending} tokens pending to bridge from ${senderNetwork} to ${data.network} (${tokensSent} sent less ${tokensReceived} received).`);
+
+      // Build transaction to call receiveTokens, and store it for later execution
+      const txSend = {
+        from: account.address,
+        to: bridgeReceiver.options.address,
+        gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
+        data: bridgeReceiver.methods.receiveTokens(data.address, tokensPending, 0).encodeABI()
+      };
+
+      txSend.gasLimit = await web3.eth.estimateGas(txSend);
+      fee = txSend.gasLimit * txSend.gasPrice;
+      txSend.data = bridgeReceiver.methods.receiveTokens(data.address, tokensPending, fee).encodeABI();
+      pendingTransactions[data.address] = txSend;
+    }
+
+    sendReply(reply, 'ok', { tokensPending, fee });
+  } catch (err) {
+    console.log(err);
+    sendReply(reply, 'error', { err });
+  }
+});
+
+app.post('/ReceiveTokens', async (request, reply) => {
+  var data = JSON.parse(request.body);
+  console.log('====================================================================');
+  console.log(Date.now().toString());
+  console.log('Data: ', data);
+
+  const decrypted = decryptMessage();
+  const privateKey = decrypted.toString(CryptoJS.enc.Utf8);
+
+  try {
+    const web3 = getWeb3(data.targetNetwork);
+    const txSend = pendingTransactions[data.address];
+
+    web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction)
+      .on('transactionHash', async function (hash) {
+        let transactionReceipt = null;
+        while (transactionReceipt == null) {
+          transactionReceipt = await web3.eth.getTransactionReceipt(hash);
+          await sleep(1000);
+        }
+
+        console.log('>>>>>>>> Transaction Successful <<<<<<<<');
+        sendReply(reply, 'ok');
+      })
+      .on('error', error => {
+        throw(error);
+      });
+  } catch (err) {
+    console.log(err);
+    sendReply(reply, 'error', { err });
+  }
+});
+
+function getWeb3(network) {
+  switch (network) {
+    case 'Ethereum':
+      return web3Eth;
+    case 'BSC':
+      return web3Bsc;
+    default:
+      throw `Network not supported: ${data.targetNetwork}`;
+  }
+}
+
+function getBridge(network) {
+  switch (network) {
+    case 'Ethereum':
+      return bridgeEthereum;
+    case 'BSC':
+      return bridgeBsc;
+    default:
+      throw `Network not supported: ${data.targetNetwork}`;
+  }
+}
+
+function decryptMessage() {
+  const { message } = require(`./encrypted.json`);
   const keySize = 256;
   const iterations = 100;
   const salt = CryptoJS.enc.Hex.parse(message.substring(0, 32));
   const iv = CryptoJS.enc.Hex.parse(message.substring(32, 64));
   const key = CryptoJS.PBKDF2(password, salt, { keySize: keySize / 32, iterations });
-  const decrypted = CryptoJS.AES.decrypt(message.substring(64), key, { iv });
-
-  const mainPrivateKey = decrypted.toString(CryptoJS.enc.Utf8);
-  const mainAccount = web3Eth.eth.accounts.privateKeyToAccount(mainPrivateKey);
-
-  //CONTRACTS
-  try {
-    const tokensPendingEth = new BigNumber(await bridgeEthereum.methods.tokensPending(data.address).call());
-    const tokensPendingBsc = new BigNumber(await bridgeBsc.methods.tokensPending(data.address).call());
-    const amount = tokensPendingEth.plus(tokensPendingBsc);
-
-    console.log(`Amount to send: ${amount} = ${tokensPendingEth} + ${tokensPendingBsc}`);
-    
-    switch (data.targetNetwork) {
-      case 'Ethereum':
-        await writeTransaction(bridgeEthereum, web3Eth);
-        break;
-      case 'BSC':
-        await writeTransaction(bridgeBsc, web3Bsc);
-        break;
-      default:
-        throw `Network not supported: ${data.targetNetwork}`;
-    }
-
-    async function writeTransaction(bridge, web3) {
-      const txSend = {
-        from: mainAccount.address,
-        to: bridge.options.address,
-        gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
-        data: bridge.methods.writeTransaction(data.address, amount).encodeABI()
-      };
-
-      txSend.gasLimit = await web3.eth.estimateGas(txSend);
-
-      web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, mainPrivateKey)).rawTransaction)
-        .on('transactionHash', async function (hash) {
-          let transactionReceipt = null;
-          while (transactionReceipt == null) {
-            transactionReceipt = await web3.eth.getTransactionReceipt(hash);
-            await sleep(1000);
-          }
-
-          busy = false;
-          console.log('>>>>>>>> Transaction Successful <<<<<<<<');
-          sendReply(reply, 'ok', { gas: transactionReceipt.gasUsed * (await web3.eth.getGasPrice()) });
-        })
-        .on('error', error => {
-          throw(error);
-        });
-    }
-  } catch (err) {
-    console.log(err);
-    busy = false;
-    sendReply(reply, 'error', { err });
-  }
+  return CryptoJS.AES.decrypt(message.substring(64), key, { iv });
 }
 
 function sendReply(reply, status, body) {

@@ -46,8 +46,7 @@ module.exports = async function (deployer, network) {
   //const SchnoodleGovernance = artifacts.require('SchnoodleGovernance');
   //(await Contract.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
 
-  const contractsFile = require('../scripts/contracts-file.js');
-
+  const { appendList } = require('../scripts/contracts.js');
   erc1967.getImplementationAddress(proxy.address);
-  contractsFile.append(`${contractName}@${await erc1967.getImplementationAddress(proxy.address)}`);
+  appendList(`${contractName}@${await erc1967.getImplementationAddress(proxy.address)}`, network);
 };

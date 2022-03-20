@@ -23,16 +23,12 @@ export class MoonControl extends Component {
 
     this.state = {
       success: false,
-      message: null,
-      web3: null,
-      schnoodle: null,
-      schnoodleFarming: null,
       getInfoIntervalId: 0,
       blockNumber: 0,
       vestingBlocksFactor: 0,
       unbondingBlocksFactor: 0,
       farmingOverview: [],
-      farmData: null,
+      farmData: [],
       arcsData: [],
       globeClickPoint: null,
       openHelpModal: false,
@@ -158,30 +154,6 @@ export class MoonControl extends Component {
     return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor), depositInfo.deposit.blockNumber, this.state.blockNumber);
   }
 
-  //#region Error handling
-
-  async handleResponse(response) {
-    if (response.status) {
-      this.setState({ success: true, message: response.transactionHash });
-    }
-
-    await this.getInfo();
-  }
-
-  handleError(err) {
-    console.error(err);
-    let message = err.message;
-
-    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
-    }
-
-    this.setState({ success: false, message });
-    alert(message);
-  }
-
-  //#endregion
-
   //#region Help functions
 
   openHelpModal(content) {
@@ -214,7 +186,7 @@ export class MoonControl extends Component {
           onPointRightClick={() => this.globeEl.current.controls().autoRotate = false}
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
 
-          ringsData={this.state.farmData?.slice(0)}
+          ringsData={this.state.farmData.slice(0)}
           ringColor="ringColor"
           ringMaxRadius="maxRadius"
           ringPropagationSpeed="propagationSpeed"

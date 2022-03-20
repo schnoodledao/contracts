@@ -7,10 +7,9 @@ import BridgeEthereum from '../contracts/BridgeEthereum.json';
 import BridgeBsc from '../contracts/BridgeBsc.json';
 import getWeb3 from '../getWeb3';
 import { ConnectWallet } from './ConnectWallet';
-import { initializeHelpers, scaleUpUnits, scaleDownUnits, waitForTransaction, createEnum, sleep } from '../helpers';
+import { initializeHelpers, scaleUpUnits, scaleDownUnits, waitForTransaction, createEnum } from '../helpers';
 
 // Third-party libraries
-import $ from 'jquery';
 import Web3 from 'web3';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
@@ -26,45 +25,21 @@ export class Bridge extends Component {
 
     this.state = {
       success: false,
-      message: null,
       busyApprove: false,
       busySwap: false,
       busyReceive: false,
-      selectedAddress: null,
-      web3: null,
-      web3Eth: null,
-      web3Bsc: null,
-      gasPrice: null,
-      schnoodle: null,
-      schnoodleEthNetwork: null,
-      schnoodleEth: null,
-      schnoodleBscNetwork: null,
-      schnoodleBsc: null,
-      bridge: null,
-      bridgeEthereumNetwork: null,
-      bridgeEthereum: null,
-      bridgeBscNetwork: null,
-      bridgeBsc: null,
       allowance: 0,
-      database: null,
-      fees: null,
-      tokensReceived: 0,
+      tokensPending: 0,
       amount: 0,
-      chainId: 0,
-      hash: null,
-      serverStatus: true,
       serverError: null,
-      showClose: false,
-      gasPay: [],
-      sourceNetwork: null,
-      targetNetwork: null,
-      typeSwap: null
+      showClose: false
     }
 
+    this.checkNetwork = this.checkNetwork.bind(this);
     this.updateAllowance = this.updateAllowance.bind(this);
+    this.resetAllowance = this.resetAllowance.bind(this);
     this.sendTokens = this.sendTokens.bind(this);
     this.receiveTokens = this.receiveTokens.bind(this);
-    this.resetAllowance = this.resetAllowance.bind(this);
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
@@ -72,13 +47,7 @@ export class Bridge extends Component {
 
   async componentDidMount() {
     try {
-      this.checkServerStatus();
-
-      // Connecting burger
-      $('.burger').click(function () {
-        $('.burger-list').toggleClass('active');
-        $('.burger').toggleClass('active');
-      });
+      await this.checkServerStatus();
 
       // Firebase
       const firebaseConfig = {
@@ -110,7 +79,7 @@ export class Bridge extends Component {
       const bridgeEthereum = new web3Eth.eth.Contract(BridgeEthereum.abi, bridgeEthereumNetwork && bridgeEthereumNetwork.address);
       const bridgeBscNetwork = BridgeBsc.networks[process.env.REACT_APP_NETID_BSC];
       const bridgeBsc = new web3Bsc.eth.Contract(BridgeBsc.abi, bridgeBscNetwork && bridgeBscNetwork.address);
-      await initializeHelpers(await schnoodleEth.methods.decimals().call());
+      const selectedAddress = web3.currentProvider.selectedAddress;
 
       let schnoodle, bridge, sourceNetwork;
       const chainId = await web3.eth.net.getId();
@@ -129,21 +98,51 @@ export class Bridge extends Component {
         default:
       }
 
-      const selectedAddress = web3.currentProvider.selectedAddress;
-      const tokensReceived = await bridge.methods.tokensPending(selectedAddress).call();
+      await initializeHelpers(await schnoodle.methods.decimals().call());
 
-      if (tokensReceived > 0) {
-        const gasPay = localStorage.getItem('gasPay');
-        if (gasPay != null) {
-          this.setState({ gasPay: gasPay.split(',').map(x => Number(x)) });
-        } else {
-          this.setState({ gasPay: process.env.REACT_APP_SERVER_URLS.split(',').map(x => 15001 * Math.pow(10, 11)) });
+      if (selectedAddress && sourceNetwork) {
+        // Get the fee to call receiveTokens from the server so that this can be paid beforehand
+        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetFee`, {
+          method: 'POST',
+          body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
+        });
+
+        if (this.handleResponse(response)) {
+          const json = await response.json();
+
+          if (json.status === 'ok') {
+            this.setState({ tokensPending: json.body.tokensPending, fee: json.body.fee });
+          } else {
+            this.setState({ serverError: json.body.err.message });
+          }
         }
       }
 
-      this.setState({ database, web3, chainId, web3Eth, web3Bsc, gasPrice, schnoodle, bridge, sourceNetwork, tokensReceived, schnoodleEthNetwork, schnoodleEth, schnoodleBscNetwork, schnoodleBsc, bridgeEthereumNetwork, bridgeEthereum, bridgeBscNetwork, bridgeBsc, selectedAddress }, () => {
+      this.setState({
+        database,
+        web3,
+        chainId,
+        web3Eth,
+        web3Bsc,
+        gasPrice,
+        schnoodle,
+        bridge,
+        sourceNetwork,
+        schnoodleEthNetwork,
+        schnoodleEth,
+        schnoodleBscNetwork,
+        schnoodleBsc,
+        bridgeEthereumNetwork,
+        bridgeEthereum,
+        bridgeBscNetwork,
+        bridgeBsc,
+        selectedAddress
+      }, () => {
         this.getFeesData();
       });
+
+      window.ethereum.on('accountsChanged', () => window.location.reload(true));
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
       alert('Load error. Please check you are connected to the correct network in MetaMask.');
       console.error(err);
@@ -155,15 +154,6 @@ export class Bridge extends Component {
     onValue(approveFeeRef, (snapshot) => {
       this.setState({ fees: snapshot.val() });
     });
-  }
-
-  isMetaMaskInstalled() {
-    const { ethereum } = window;
-    return Boolean(ethereum && ethereum.isMetaMask);
-  }
-
-  isMetaMaskConnected() {
-    return this.state.selectedAddress != null;
   }
 
   //#region Error handling
@@ -179,44 +169,41 @@ export class Bridge extends Component {
     throw new Error(result.statusText);
   }
 
-  async handleResponse(response) {
-    if (response.status) {
+  handleResponse(response) {
+    if (typeof response.status !== 'undefined' && response.status) {
       this.setState({ success: true, message: response.transactionHash });
-    }
-  }
-
-  handleError(err) {
-    console.error(err);
-    let message = err.message;
-
-    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
+      return true;
     }
 
-    this.setState({ success: false, message });
-    alert(message);
+    if (typeof response.ok !== 'undefined' && response.ok) {
+      return true;
+    } else {
+      console.log(`HTTP Error: ${response.status}`);
+    }
+
+    return false;
   }
 
   //#endregion
 
   async checkNetwork() {
-    if (this.isMetaMaskInstalled()) {
-      const { chainId, sourceNetwork } = this.state;
-      this.clearMessage();
+    const { chainId, sourceNetwork } = this.state;
+    this.clearMessage();
 
-      if ((sourceNetwork === Network.BSC && chainId.toString() !== process.env.REACT_APP_NETID_BSC) ||
-         (sourceNetwork === Network.Ethereum && chainId.toString() !== process.env.REACT_APP_NETID_ETH)) {
-        this.setState({ success: false, message: `Please change selected network to ${sourceNetwork}.` });
-      }
+    if ((sourceNetwork === Network.BSC && chainId.toString() !== process.env.REACT_APP_NETID_BSC) ||
+      (sourceNetwork === Network.Ethereum && chainId.toString() !== process.env.REACT_APP_NETID_ETH)) {
+      this.setState({ success: false, message: `Please change selected network to ${sourceNetwork}.` });
     }
   }
 
   async updateAllowance() {
-    if (this.isMetaMaskInstalled() && this.isMetaMaskConnected()) {
-      const { schnoodle, bridge, selectedAddress } = this.state;
-      const allowance = schnoodle ? scaleDownUnits(await schnoodle.methods.allowance(selectedAddress, bridge.options.address).call({ from: selectedAddress })) : 0;
-      this.setState({ allowance });
-    }
+    const { schnoodle, bridge, selectedAddress } = this.state;
+    const allowance = schnoodle ? scaleDownUnits(await schnoodle.methods.allowance(selectedAddress, bridge.options.address).call({ from: selectedAddress })) : 0;
+    this.setState({ allowance });
+  }
+
+  resetAllowance() {
+    this.setState({ allowance: 0 });
   }
 
   async sendTokens() {
@@ -244,7 +231,7 @@ export class Bridge extends Component {
         });
     } else {
       // Allowance is sufficient; send tokens
-      const { database, bridge, selectedAddress, sourceNetwork, targetNetwork } = this.state;
+      const { database, bridge, selectedAddress, sourceNetwork } = this.state;
 
       this.setState({ busySwap: true });
 
@@ -254,60 +241,7 @@ export class Bridge extends Component {
         })
         .on('transactionHash', async (hash) => {
           await waitForTransaction(hash);
-
-          if (await writeTransactions.call(this)) {
-            this.setState({ busySwap: false });
-          } else {
-            this.setState({ serverError: 'Remote server error' });
-          }
-
-          async function writeTransactions() {
-            for (const server of process.env.REACT_APP_SERVER_URLS.split(',')) {
-              if (!await writeTransaction.call(this, server)) {
-                return false;
-              }
-            }
-
-            return true;
-
-            async function writeTransaction(server) {
-              try {
-                const serverResponse = await fetch(`http://${server}/WriteTransaction`, {
-                  method: 'POST',
-                  body: JSON.stringify({ address: selectedAddress, targetNetwork })
-                });
-
-                if (serverResponse.ok) {
-                  const json = await serverResponse.json();
-
-                  switch (json.status) {
-                    case 'error':
-                      this.setState({ serverError: json.body.err.message });
-                      break;
-                    case 'busy':
-                      await sleep(15000);
-                      return await writeTransaction(server);
-                    case 'ok': {
-                      const gasPay = this.state.gasPay;
-                      gasPay.push(json.body.gas);
-                      this.setState({ gasPay });
-                      localStorage.setItem('gasPay', gasPay);
-                      return true;
-                    }
-                    default:
-                      throw 'Invalid response';
-                  }
-                } else {
-                  console.log(`Error HTTP: ${serverResponse.status}`);
-                }
-              } catch (err) {
-                await sleep(15000);
-                return await writeTransaction(server);
-              }
-
-              return false;
-            }
-          }
+          this.setState({ busySwap: false });
         }).catch(err => {
           if (err.code === 4001) {
             this.setState({ busySwap: false });
@@ -319,32 +253,38 @@ export class Bridge extends Component {
   }
 
   async receiveTokens() {
-    const { bridge, selectedAddress, sourceNetwork, gasPay, database, web3 } = this.state;
+    const { bridge, selectedAddress, sourceNetwork, targetNetwork, database, web3, fee } = this.state;
     this.checkServerStatus();
 
     this.setState({ busyReceive: true });
 
-    let sum = gasPay.reduce((a, b) => a + b, 0);
-
-    if (sum <= gasPay.length * 150000 * 1e9) {
-      sum = gasPay.length * 150001 * 1e9;
-    }
-
-    sum = sum.toFixed(0);
-    const gasPrice = await web3.eth.getGasPrice();
-
-    await bridge.methods.receiveTokens(gasPay).send({ from: selectedAddress, value: sum.toString(), gasPrice })
-      .on('receipt', function (receipt) {
-        set(ref(database, `fees/${sourceNetwork.toLowerCase()}/receiveFee`), receipt.gasUsed + sum / gasPrice);
+    // Call payFee on the bridge contract to pay the fee suggested by the server
+    await bridge.methods.payFee().send({ from: selectedAddress, value: fee })
+      .on('receipt', async function (receipt) {
+        set(ref(database, `fees/${sourceNetwork.toLowerCase()}/receiveFee`), receipt.gasUsed + fee / await web3.eth.getGasPrice());
       })
       .on('transactionHash', async (hash) => {
         await waitForTransaction(hash);
-        this.setState({ hash: hash, busyReceive: false, showClose: true, gasPay: [] });
+        this.setState({ hash: hash, busyReceive: false, showClose: true });
       }).catch(err => {
         if (err.code === 4001) {
           this.setState({ busyReceive: false });
         }
       });
+
+      // Request the server to call receiveTokens on the bridge contract
+      const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+        method: 'POST',
+        body: JSON.stringify({ address: selectedAddress, targetNetwork })
+      });
+
+      if (this.handleResponse(response)) {
+        const json = await response.json();
+
+        if (json.status !== 'ok') {
+          this.setState({ serverError: json.body.err.message });
+        }
+      }
   }
 
   clearMessage() {
@@ -356,10 +296,6 @@ export class Bridge extends Component {
     this.setState({ showClose: false, amount: 0, tokensReceived: 0 });
   }
 
-  resetAllowance() {
-    this.setState({ allowance: 0 });
-  }
-
   handleFaq() {
     localStorage.setItem('info', 'faq');
   }
@@ -369,22 +305,14 @@ export class Bridge extends Component {
   }
 
   async checkServerStatus() {
-    const urlArray = process.env.REACT_APP_SERVER_URLS.split(',');
-    for (let i = 0; i < urlArray.length; i++) {
-      const response = await fetch(`http://${urlArray[i]}/CheckServer`).catch(function (err) {
-        console.log(err);
-        this.setState({ serverStatus: false });
-      }.bind(this));
+    this.setState({ serverStatus: false });
 
-      if (response != null) {
-        if (response.ok) {
-          const json = await response.json();
-          console.log(json.response);
-        } else {
-          console.log(`Error HTTP: ${response.status}`);
-          this.setState({ serverStatus: false });
-        }
-      }
+    const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/Alive`).catch(function (err) {
+      console.log(err);
+    });
+
+    if (this.handleResponse(response)) {
+      this.setState({ serverStatus: true });
     }
   }
 
@@ -412,16 +340,12 @@ export class Bridge extends Component {
     this.setState({ sourceNetwork, schnoodle, bridge, typeSwap: '' }, async () => {
       await this.updateAllowance();
     });
-    console.log(e.value);
   }
 
   async changeTargetNetwork(e) {
     const typeSwap = this.state.sourceNetwork + 'to' + e.value;
     this.setState({ typeSwap, targetNetwork: e.value });
-    console.log(typeSwap);
-    if (this.isMetaMaskConnected()) {
-      await this.checkNetwork();
-    }
+    await this.checkNetwork();
   }
 
   async updateAmount(e) {
@@ -431,38 +355,36 @@ export class Bridge extends Component {
 
     const { schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc, chainId, selectedAddress } = this.state;
 
-    if (this.isMetaMaskInstalled() && this.isMetaMaskConnected()) {
-      if (!isNaN(+amount)) {
-        if (chainId.toString() === process.env.REACT_APP_NETID_ETH) {
-          await checkBalance.call(this, schnoodleEth, schnoodleBsc, bridgeBsc);
-        } else if (chainId.toString() === process.env.REACT_APP_NETID_BSC) {
-          await checkBalance.call(this, schnoodleBsc, schnoodleEth, bridgeEthereum);
-        }
-
-        async function checkBalance(schnoodle, schnoodleOther, bridgeOther) {
-          const otherBridgeBalance = await schnoodleOther.methods.balanceOf(bridgeOther.options.address).call();
-
-          const decimals = await schnoodle.methods.decimals().call();
-          const currentBalance = await schnoodle.methods.balanceOf(selectedAddress).call();
-          let message = null;
-
-          if (parseFloat(amount) * Math.pow(10, decimals) > currentBalance) {
-            message = 'Insufficient tokens for transaction';
-          } else if (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance) {
-            message = 'Insufficient tokens on TODO bridge';
-          } else if (parseFloat(amount) < Math.pow(10, -decimals)) {
-            message = 'Token amount below minimum';
-          }
-          this.setState({ success: false, message });
-        }
-      } else {
-        this.setState({ success: false, message: 'Incorrect input' });
+    if (!isNaN(+amount)) {
+      if (chainId.toString() === process.env.REACT_APP_NETID_ETH) {
+        await checkBalance.call(this, schnoodleEth, schnoodleBsc, bridgeBsc);
+      } else if (chainId.toString() === process.env.REACT_APP_NETID_BSC) {
+        await checkBalance.call(this, schnoodleBsc, schnoodleEth, bridgeEthereum);
       }
+
+      async function checkBalance(schnoodle, schnoodleOther, bridgeOther) {
+        const otherBridgeBalance = await schnoodleOther.methods.balanceOf(bridgeOther.options.address).call();
+
+        const decimals = await schnoodle.methods.decimals().call();
+        const currentBalance = await schnoodle.methods.balanceOf(selectedAddress).call();
+        let message = null;
+
+        if (parseFloat(amount) * Math.pow(10, decimals) > currentBalance) {
+          message = 'Insufficient tokens for transaction';
+        } else if (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance) {
+          message = 'Insufficient tokens on TODO bridge';
+        } else if (parseFloat(amount) < Math.pow(10, -decimals)) {
+          message = 'Token amount below minimum';
+        }
+        this.setState({ success: false, message });
+      }
+    } else {
+      this.setState({ success: false, message: 'Incorrect input' });
     }
   }
 
   render() {
-    const { sourceNetwork, targetNetwork, busyApprove, busySwap, busyReceive, allowance, showClose, gasPrice, tokensReceived, fees, amount, selectedAddress, serverStatus, serverError, hash, typeSwap, message } = this.state;
+    const { sourceNetwork, targetNetwork, busyApprove, busySwap, busyReceive, allowance, showClose, gasPrice, tokensPending, fees, amount, selectedAddress, serverStatus, serverError, hash, typeSwap, message } = this.state;
 
     const sourceNetworks = [
       { value: Network.BSC, label: 'BEP20' },
@@ -499,7 +421,7 @@ export class Bridge extends Component {
     } else if (showClose) {
       bridge = <div className="col-span-7 lg:bg-main-bg bg-transparent lg:py-40 pt-10 lg:px-14 px-4 rounded-xl flex items-center flex-col justify-center text-2xl lg:text-3xl text-white">
         <div className="flex items-center flex-col text-2xl lg:text-3xl">
-          <div className="text-center mb-9 leading-normal">We sent you <span className="text-main-color font-medium">{tokensReceived}</span> <span className="font-bold">{`SNOOD to the ${sourceNetwork} network`}</span> at address <span><a className="text-main-color font-medium underline transition-all duration-200 hover:text-main-color-hover">{displayAccount}</a></span></div>
+          <div className="text-center mb-9 leading-normal">We sent you <span className="text-main-color font-medium">{tokensPending}</span> <span className="font-bold">{`SNOOD to the ${targetNetwork} network`}</span> at address <span><a className="text-main-color font-medium underline transition-all duration-200 hover:text-main-color-hover">{displayAccount}</a></span></div>
           <div className="text-lg mb-16 lg:mb-5 text-center">You can track the transaction <a href={sourceNetwork === Network.BSC ? `http://testnet.bscscan.com/tx/${hash}` : (`http://rinkeby.etherscan.io/tx/${hash}`)} target="_blank" rel="noreferrer" className="text-main-color transition-all duration-200 hover:text-main-color-hover hover:underline">here</a></div>
           <button onClick={this.close} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">CLOSE</button>
         </div>
@@ -512,10 +434,10 @@ export class Bridge extends Component {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
         <div className="text-2xl lg:text-3xl leading-snug text-white text-center">{`Remote server error: ${serverError}`}</div>
       </div>;
-    } else if (tokensReceived > 0) {
+    } else if (tokensPending > 0) {
       bridge = <div className="col-span-7 lg:bg-main-bg lg:py-40 pt-10 lg:px-14 px-4 rounded-xl bg-transparent flex items-center flex-col justify-center text-2xl lg:text-3xl text-white">
         <div className="text-center mb-14 leading-normal">
-          <span className="text-main-color font-medium">{scaleDownUnits(tokensReceived)}</span> <span className="font-bold">{`SNOOD ready to be received on ${sourceNetwork} network`}</span> at <span><div className="text-main-color hover:text-main-color-hover font-medium underline transition-all duration-200">{displayAccount}</div></span>
+          <span className="text-main-color font-medium">{scaleDownUnits(tokensPending)}</span> <span className="font-bold">{`SNOOD ready to be received on ${sourceNetwork} network`}</span> at <span><div className="text-main-color hover:text-main-color-hover font-medium underline transition-all duration-200">{displayAccount}</div></span>
         </div>
         <button onClick={this.receiveTokens} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">RECEIVE</button>
       </div>;
@@ -551,7 +473,7 @@ export class Bridge extends Component {
           <div className="flex flex-col border-solid mb-10 lg:mb-16">
             <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="w-full text-white bg-third-bg rounded-md text-sm border border-border p-3.5 font-medium outline-none focus:outline-none" />
           </div>
-          <button onClick={this.sendTokens} disabled={typeSwap === '' || message != null || !this.isMetaMaskInstalled() || !this.isMetaMaskConnected() || amount === 0} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">{allowance < amount ? 'Approve' : 'Send'}</button>
+          <button onClick={this.sendTokens} disabled={typeSwap === '' || message != null || amount === 0} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">{allowance < amount ? 'Approve' : 'Send'}</button>
           <div className="text-center mt-2.5">
             <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
           </div>
@@ -600,7 +522,7 @@ export class Bridge extends Component {
           </div>
         </div>
 
-        <footer className=" hidden lg:block bg-main-bg h-9" />
+        <footer className="hidden lg:block bg-main-bg h-9" />
 
         <div className="burger-list bg-main-bg mr-20 h-auto p-8 pt-24 pb-0 fixed top-0 left-0 z-30 overflow-y-auto h-full">
           <div className="text-2xl lg:text-3xl mb-16 block text-white">Schnoodle Bridge</div>
