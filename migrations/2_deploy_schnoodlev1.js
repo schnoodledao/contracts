@@ -20,9 +20,9 @@ module.exports = async function (deployer, network, accounts) {
 
   const Contract = artifacts.require(contractName);
   const proxy = await deployProxy(Contract, [initialization.initialTokens, serviceAccount], { deployer });
-  proxy.changeFeePercent(initialization.feePercent);
-  proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
+  await proxy.changeFeePercent(initialization.feePercent);
+  await proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
 
-  const contractsFile = require('../scripts/contracts-file.js');
-  contractsFile.append(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`);
+  const { appendList } = require('../scripts/contracts.js');
+  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`, network);
 };

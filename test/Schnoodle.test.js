@@ -31,7 +31,7 @@ beforeEach(async function () {
 
   schnoodleFarming = await SchnoodleFarming.new();
   await schnoodleFarming.initialize(schnoodle.address);
-  await schnoodle.configure(true, serviceAccount, schnoodleFarming.address);
+  await schnoodle.configure(true, serviceAccount, schnoodleFarming.address, serviceAccount);
   await schnoodleFarming.configure();
 });
 
@@ -51,30 +51,30 @@ describe('Balance', () => {
 
 describe('Burning', () => {
   it('should burn tokens decreasing the account\'s balance and total supply by the same amounts', async () => {
-    await _testBurning(BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))));
+    await testBurning(await getRandomBalance(serviceAccount));
   });
 
   it('should burn all tokens reducing account\'s balance and total supply to zero', async () => {
-    await _testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)));
+    await testBurning(await getBalance(serviceAccount));
     assert.equal(await schnoodle.balanceOf(serviceAccount), 0, 'Total supply wasn\'t reduced to zero by burning');
   });
 
   it('should revert on attempt to burn more tokens than are available', async () => {
     // Pre-burn a token to prevent an overflow error on the reflected amount during the test burn
     await schnoodle.burn(1, data, { from: serviceAccount });
-    await truffleAssert.reverts(_testBurning(BigInt(await schnoodle.balanceOf(serviceAccount)) + 1n), 'ERC777: burn amount exceeds balance', 'Burning of more tokens than are available did not revert');
+    await truffleAssert.reverts(testBurning(await getBalance(serviceAccount) + 1n), 'ERC777: burn amount exceeds balance', 'Burning of more tokens than are available did not revert');
   });
 
-  async function _testBurning(amount) {
+  async function testBurning(amount) {
     const totalSupply = BigInt(await schnoodle.totalSupply());
-    const balance = BigInt(await schnoodle.balanceOf(serviceAccount));
+    const balance = await getBalance(serviceAccount);
     
     await schnoodle.burn(amount, data, { from: serviceAccount });
 
     const newTotalSupply = BigInt(await schnoodle.totalSupply());
     assert.equal(newTotalSupply, totalSupply - amount, 'Total supply wasn\'t affected correctly by burning');
 
-    const newBalance = BigInt(await schnoodle.balanceOf(serviceAccount));
+    const newBalance = await getBalance(serviceAccount);
     assert.equal(newBalance, balance - amount, 'Service account wasn\'t affected correctly by burning');
   }
 });
@@ -96,11 +96,11 @@ describe('Transfer', () => {
     await schnoodle.changeFeeRate(feeRate);
     await schnoodle.changeEleemosynaryDetails(eleemosynaryAccount, donationRate);
     await schnoodle.changeSowRate(sowRate);
-    await _populateAccounts();
+    await populateAccounts();
 
     amounts = {};
     for (const account of accounts) {
-      amounts[account] = BigInt(await schnoodle.balanceOf(account));
+      amounts[account] = await getBalance(account);
     }
 
     // Randomly pick different sender and recipient accounts for performing the transfer test
@@ -113,46 +113,46 @@ describe('Transfer', () => {
   });
 
   it('should transfer some ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _transfer(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => transfer(schnoodle, sender, recipient, amount));
   });
 
   it('should transfer all ERC-20 tokens to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _transfer(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => transfer(schnoodle, sender, recipient, amount));
   });
 
   it('should transfer some ERC-20 tokens from the sender to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _transferFrom(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => transferFrom(schnoodle, sender, recipient, amount));
   });
 
   it('should transfer all ERC-20 tokens from the sender to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _transferFrom(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => transferFrom(schnoodle, sender, recipient, amount));
   });
 
   it('should transfer some ERC-777 tokens to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => BigInt(bigInt.randBetween(1, amount)), (schnoodle, sender, recipient, amount) => send(schnoodle, sender, recipient, amount));
   });
 
   it('should transfer all ERC-777 tokens to the recipient and distribute a fee to all accounts', async() => {
-    await _testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => _send(schnoodle, sender, recipient, amount));
+    await testTransfer(amount => amount, (schnoodle, sender, recipient, amount) => send(schnoodle, sender, recipient, amount));
   });
 
-  async function _transfer(schnoodle, sender, recipient, amount) {
+  async function transfer(schnoodle, sender, recipient, amount) {
     await schnoodle.transfer(recipient, amount, {from: sender});
   }
 
-  async function _transferFrom(schnoodle, sender, recipient, amount) {
+  async function transferFrom(schnoodle, sender, recipient, amount) {
     await schnoodle.approve(sender, amount, {from: sender});
     assert.equal(amount, BigInt(await schnoodle.allowance(sender, sender)));
     await schnoodle.transferFrom(sender, recipient, amount, {from: sender});
   }
 
-  async function _send(schnoodle, sender, recipient, amount) {
+  async function send(schnoodle, sender, recipient, amount) {
     await schnoodle.send(recipient, amount, 0, {from: sender});
   }
 
-  async function _testTransfer(amountCallback, transferCallback) {
+  async function testTransfer(amountCallback, transferCallback) {
     // Invoke the callback function to get the desired amount to transfer for this test
-    const transferAmount = amountCallback(BigInt(await schnoodle.balanceOf(sender)));
+    const transferAmount = amountCallback(await getBalance(sender));
 
     await transferCallback(schnoodle, sender, recipient, transferAmount);
 
@@ -175,7 +175,7 @@ describe('Transfer', () => {
       const baseBalance = oldAmount + transferAmount * BigInt(deltaRate) / 1000n;
 
       // The expected balance should include a distribution of the fees, and therefore be higher than the base balance
-      const newBalance = BigInt(await schnoodle.balanceOf(account));
+      const newBalance = await getBalance(account);
 
       totalBalance += newBalance;
 
@@ -200,23 +200,23 @@ describe('Yield Farming', () => {
   beforeEach(async function () {
     await schnoodle.changeSowRate(chance.integer({ min: 10, max: 200 }));
 
-    await _populateAccounts();
+    await populateAccounts();
     farmingFund = await schnoodle.getFarmingFund();
-    await schnoodle.transfer(farmingFund, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)))), { from: serviceAccount });
+    await schnoodle.transfer(farmingFund, await getRandomBalance(serviceAccount), { from: serviceAccount });
     farmer = chance.pickone(accounts);
-    depositAmount = BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(farmer))));
+    depositAmount = await getRandomBalance(farmer);
     vestingBlocks = chance.integer({ min: 1, max: 20 });
     unbondingBlocks = chance.integer({ min: 1, max: 20 });
-    farmerStartBalance = BigInt(await schnoodle.balanceOf(farmer));
-    farmingFundStartBalance = BigInt(await schnoodle.balanceOf(farmingFund));
+    farmerStartBalance = await getBalance(farmer);
+    farmingFundStartBalance = await getBalance(farmingFund);
   });
 
   it('should increase the yield farmer\'s balance by a nonzero reward when a deposit with finite vesting blocks and unbonding blocks is withdrawn', async() => {
     [netReward, grossReward] = await addDepositAndWithdraw(vestingBlocks, unbondingBlocks);
 
     assert.isTrue(netReward > 0n && grossReward > 0n, 'Farming reward value is not positive');
-    assert.equal(BigInt(await schnoodle.balanceOf(farmer)), farmerStartBalance + netReward, 'Yield farmer balance wasn\'t increased by the net reward amount');
-    assert.equal(BigInt(await schnoodle.balanceOf(farmingFund)), farmingFundStartBalance - grossReward, 'Farming fund wasn\'t reduced by the gross reward amount');
+    assert.equal(await getBalance(farmer), farmerStartBalance + netReward, 'Yield farmer balance wasn\'t increased by the net reward amount');
+    assert.equal(await getBalance(farmingFund), farmingFundStartBalance - grossReward, 'Farming fund wasn\'t reduced by the gross reward amount');
   });
 
   it('should add a deposit when unbonding blocks is equal to the defined maximum', async() => {
@@ -308,9 +308,40 @@ describe('Yield Farming', () => {
   }
 });
 
-async function _populateAccounts() {
+describe('Bridge', () => {
+  let holder;
+
+  beforeEach(async function () {
+    await populateAccounts();
+    holder = chance.pickone(accounts);
+  });
+
+  it('should increase the tokens sent by the specified amount', async() => {
+    const amount = await getRandomBalance(holder);
+    await schnoodle.sendTokens(amount, { from: holder });
+    assert.equal(amount, BigInt(await schnoodle.tokensSent(holder)));
+  }); 
+
+  it('should increase the tokens received by the specified amount when the exact fee is paid', async() => {
+    const fee = chance.integer({ min: 1 });
+    const amount = BigInt(chance.integer({ min: 1 }));
+    await schnoodle.payFee({ from: holder, value: fee });
+    await schnoodle.receiveTokens(holder, amount, fee, { from: serviceAccount });
+    assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder)));
+  });
+})
+
+async function getRandomBalance(account) {
+  return BigInt(bigInt.randBetween(1, await getBalance(account)));
+}
+
+async function getBalance(account) {
+  return BigInt(await schnoodle.balanceOf(account));
+}
+
+async function populateAccounts() {
   // Populate all accounts with some tokens from the service account
   for (const account of accounts) {
-    await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, BigInt(await schnoodle.balanceOf(serviceAccount)) / BigInt(accounts.length))), { from: serviceAccount });
+    await schnoodle.transfer(account, BigInt(bigInt.randBetween(1, await getBalance(serviceAccount) / BigInt(accounts.length))), { from: serviceAccount });
   };
 }

@@ -4,16 +4,18 @@ function vestiplierInfo(insert) {
   return `The higher this is relative to other yield farmers as a weighted average combined with ${insert} blocks, the higher the multiplier. ${multiplierInfo}`;
 }
 
-function assInfo(insert) {
+function assInfo() {
   return `Because of the algorithms of the Automated Superyield System subcomponents, this estimation may change significantly depending on the future activity of current and new yield farmers as well as sellers who fund the farming fund. It is therefore advised to consider any yield farming strategy carefully when choosing the vesting blocks and unbonding blocks settings. This is a gamified yield farming platform unlike any other. The yield may fluctuate right up until withdrawal.`;
 }
 
-export const resources = {
+export const general = {
   APP_NAME: 'Schnoodle X',
-  LOADING: 'Loading',
+  LOADING: 'Loading'
+}
+
+export const farming = {
   MOON_FARMING: 'Moon Farming',
   MOON_CONTROL: 'Moon Control',
-  MOONTRON: 'Moontron',
   START_FARMING: 'Start Farming',
   ADD_DEPOSIT: 'Add Deposit',
   MOON_FARM_DATA: 'Moon Farm Data',
@@ -125,11 +127,11 @@ export const resources = {
     TITLE: 'Unbonding Summary',
     AMOUNT: {
       TITLE: 'Amount',
-      INFO: 'The number of tokens that are unbonding.',
+      INFO: 'The number of tokens that are unbonding.'
     },
     PENDING_BLOCKS: {
       TITLE: 'Pending Blocks',
-      INFO: 'The number of blocks remaining before your deposit will be fully unlocked.',
+      INFO: 'The number of blocks remaining before your deposit will be fully unlocked.'
     },
     TIME_REMAINING: {
       TITLE: 'Time Remaining',
@@ -143,4 +145,15 @@ export const resources = {
       INFO: 'The account which made the deposit.'
     }
   }
+}
+
+export const moontron = {
+  MOONTRON: 'Moontron'
+}
+
+export const bridge = {
+  BRIDGE: 'Bridge',
+  BUSY_MESSAGE_SWAP: 'Token swap in progress...',
+  BUSY_MESSAGE_APPROVE: 'Approval in progress...',
+  BUSY_MESSAGE_RECEIVE: 'Token receipt in progress...'
 }
