@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { resources } from '../resources';
+import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import SchnoodleV8 from '../contracts/SchnoodleV8.json';
+import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
@@ -23,16 +23,12 @@ export class MoonControl extends Component {
 
     this.state = {
       success: false,
-      message: null,
-      web3: null,
-      schnoodle: null,
-      schnoodleFarming: null,
       getInfoIntervalId: 0,
       blockNumber: 0,
       vestingBlocksFactor: 0,
       unbondingBlocksFactor: 0,
       farmingOverview: [],
-      farmData: null,
+      farmData: [],
       arcsData: [],
       globeClickPoint: null,
       openHelpModal: false,
@@ -52,7 +48,7 @@ export class MoonControl extends Component {
     try {
       const web3 = await getWeb3();
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(SchnoodleV8.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
@@ -158,30 +154,6 @@ export class MoonControl extends Component {
     return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * this.state.vestingBlocksFactor), depositInfo.deposit.blockNumber, this.state.blockNumber);
   }
 
-  //#region Error handling
-
-  async handleResponse(response) {
-    if (response.status) {
-      this.setState({ success: true, message: response.transactionHash });
-    }
-
-    await this.getInfo();
-  }
-
-  handleError(err) {
-    console.error(err);
-    let message = err.message;
-
-    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
-    }
-
-    this.setState({ success: false, message });
-    alert(message);
-  }
-
-  //#endregion
-
   //#region Help functions
 
   openHelpModal(content) {
@@ -214,7 +186,7 @@ export class MoonControl extends Component {
           onPointRightClick={() => this.globeEl.current.controls().autoRotate = false}
           onPointHover={() => this.globeEl.current.controls().autoRotate = true}
 
-          ringsData={this.state.farmData?.slice(0)}
+          ringsData={this.state.farmData.slice(0)}
           ringColor="ringColor"
           ringMaxRadius="maxRadius"
           ringPropagationSpeed="propagationSpeed"
@@ -373,10 +345,10 @@ export class MoonControl extends Component {
           <div className="tw-h-noheader md:tw-flex">
             <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
               <div className="tw-px-4">
-                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
                 <div className="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
                 <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>
