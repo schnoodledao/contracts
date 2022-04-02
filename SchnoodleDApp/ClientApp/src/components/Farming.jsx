@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { resources } from '../resources';
+import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import SchnoodleV8 from '../contracts/SchnoodleV8.json';
+import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
-import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
+import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
 import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
@@ -24,11 +24,6 @@ export class Farming extends Component {
 
     this.state = {
       success: false,
-      message: null,
-      web3: null,
-      schnoodle: null,
-      schnoodleFarming: null,
-      selectedAddress: null,
       getInfoIntervalId: 0,
       farmingFundBalance: 0,
       blockNumber: 0,
@@ -81,9 +76,9 @@ export class Farming extends Component {
     try {
       const web3 = await getWeb3();
       const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
-      const schnoodle = new web3.eth.Contract(SchnoodleV8.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
+      const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
       const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
-      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
+      const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
       this.setState({ web3, schnoodle, schnoodleFarming, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
@@ -91,7 +86,7 @@ export class Farming extends Component {
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
-    
+
       window.ethereum.on('accountsChanged', () => window.location.reload(true));
       window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
@@ -138,7 +133,7 @@ export class Farming extends Component {
 
       const unbondingSummary = [].concat(await schnoodleFarming.methods.getUnbondingSummary(selectedAddress).call()).sort((a, b) => a.expiryBlock > b.expiryBlock ? 1 : -1);
 
-      let withdrawAmounts = [];
+      const withdrawAmounts = [];
       for (let i = 0; i < farmingSummary.length; i++) {
         const withdrawAmount = this.state.withdrawAmounts[i];
         withdrawAmounts[i] = this.state.withdrawAmounts[i] === undefined ? scaleDownUnits(farmingSummary[i].deposit.amount) : withdrawAmount;
@@ -197,7 +192,7 @@ export class Farming extends Component {
 
       const depositAmountValue = this.preventDust(depositAmount, availableAmount);
       const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), this.vestingBlocks(), this.unbondingBlocks()).send({ from: selectedAddress });
-      this.handleResponse(response);
+      await this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
@@ -210,7 +205,7 @@ export class Farming extends Component {
       const depositInfo = farmingSummary[i];
       const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositInfo.deposit.amount);
       const response = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
-      this.handleResponse(response);
+      await this.handleResponse(response);
     } catch (err) {
       await this.handleError(err);
     }
@@ -560,10 +555,10 @@ export class Farming extends Component {
           <div className="h-noheader md:tw-flex">
             <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
               <div className="tw-px-4">
-                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/schnoodle-logo-white.svg" alt="Schnoodle logo" />
+                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
                 <div className="maintitles tw-uppercase">{resources.MOON_FARMING}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{resources.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
                 <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
               </div>
             </div>
@@ -618,7 +613,7 @@ export class Farming extends Component {
                     <div className="tw-stat-value greenfade">{this.state.operativeFeeRate / 10}</div>
                     <div className="tw-stat-desc">%</div>
                   </div>
-                  <div claclassNamess="tw-stat">
+                  <div className="tw-stat">
                     <div className="tw-stat-title">
                       {resources.ELEEMOSYNARY_DONATION_RATE.TITLE}
                       <img src="../../assets/img/svg/circle-help-purple.svg" alt="Help button" onClick={() => this.openHelpModal(resources.ELEEMOSYNARY_DONATION_RATE)} className="tw-h-4 tw-w-4 tw-inline-block tw-ml-2 tw-cursor-pointer minustop" />

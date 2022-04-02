@@ -15,12 +15,19 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant FARMING_CONTRACT = keccak256("FARMING_CONTRACT");
     bytes32 public constant LOCKED = keccak256("LOCKED");
+    bytes32 public constant BRIDGE = keccak256("BRIDGE");
 
-    function configure(bool testnet, address liquidityToken, address schnoodleFarming) external onlyOwner {
+    bool private _avoidReentrancy;
+    mapping(address => uint256) private _tokensSent;
+    mapping(address => uint256) private _tokensReceived;
+    mapping(address => uint256) private _feesPaid;
+
+    function configure(bool testnet, address liquidityToken, address schnoodleFarming, address bridgeOwner) external onlyOwner {
         if (testnet) {
             _setupRole(DEFAULT_ADMIN_ROLE, owner());
             _setupRole(LIQUIDITY, liquidityToken);
             _setupRole(FARMING_CONTRACT, schnoodleFarming);
+            _setupRole(BRIDGE, bridgeOwner);
             _schnoodleFarming = schnoodleFarming;
             _farmingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
             _sowRate = 40;
@@ -74,6 +81,39 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
         // Burn the unused part of the gross reward
         _burn(_farmingFund, grossReward - netReward, "", "");
+    }
+
+    // Bridge functions
+
+    function sendTokens(uint256 amount) external {
+        burn(amount, "");
+        _tokensSent[_msgSender()] += amount;
+    }
+
+    function payFee() external payable {
+        _feesPaid[_msgSender()] += msg.value;
+    }
+
+    function receiveTokens(address account, uint256 amount, uint256 fee) external {
+        require(!_avoidReentrancy);
+        require(hasRole(BRIDGE, _msgSender()));
+        require(_feesPaid[account] >= fee, "Schnoodle: Insufficient fee paid");
+
+        _avoidReentrancy = true;
+        _feesPaid[account] -= fee;
+
+        _mint(account, amount, "", "");
+        _tokensReceived[account] += amount;
+
+        _avoidReentrancy = false;
+    }
+
+    function tokensSent(address account) external view returns (uint256) {
+        return _tokensSent[account];
+    }
+
+    function tokensReceived(address account) external view returns (uint256) {
+        return _tokensReceived[account];
     }
 
     // Calls to the SchnoodleFarming proxy contract

@@ -1,5 +1,5 @@
 const path = require("path");
-const { mnemonic, infuraProjectId, etherscanApiKey } = require('./secrets.json');
+const { mnemonic, infuraProjectId, moralisId, etherscanApiKey, bscscanApiKey } = require('./secrets.json');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
@@ -11,6 +11,7 @@ module.exports = {
       port: 8545,
       network_id: "*"
     },
+    // Ethereum
     ropsten: {
       provider: () => new HDWalletProvider(mnemonic, `wss://ropsten.infura.io/ws/v3/${infuraProjectId}`),
       websockets: true,
@@ -49,7 +50,24 @@ module.exports = {
       gasPrice: 10e9,
       gas: 10e6,
       skipDryRun: true
-    }
+    },
+    // BSC
+    chapel: {
+      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-1-s1.binance.org:8545/'),
+      websockets: true,
+      network_id: 97,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
+    bsc: {
+      provider: () => new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org/'),
+      websockets: true,
+      network_id: 56,
+      confirmations: 10,
+      timeoutBlocks: 200,
+      skipDryRun: true
+    },
   },
 
   mocha: {
@@ -73,7 +91,8 @@ module.exports = {
   ],
 
   api_keys: {
-    etherscan: etherscanApiKey
+    etherscan: etherscanApiKey,
+    bscscan: bscscanApiKey
   },
 
   db: {
