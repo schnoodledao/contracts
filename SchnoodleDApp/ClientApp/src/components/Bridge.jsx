@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import { bridge as resources } from '../resources';
 import './Bridge.css'
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import SchnoodleV9 from '../contracts/SchnoodleV9.json';
-import BridgeEthereum from '../contracts/BridgeEthereum.json';
-import BridgeBsc from '../contracts/BridgeBsc.json';
+import Schnoodle from '../contracts/SchnoodleV9.json';
 import getWeb3 from '../getWeb3';
 import { ConnectWallet } from './ConnectWallet';
 import { initializeHelpers, scaleUpUnits, scaleDownUnits, waitForTransaction, createEnum } from '../helpers';
@@ -28,21 +26,18 @@ export class Bridge extends Component {
       busyApprove: false,
       busySwap: false,
       busyReceive: false,
-      allowance: 0,
       tokensPending: 0,
       amount: 0,
       serverError: null,
       showClose: false
     }
 
-    this.checkNetwork = this.checkNetwork.bind(this);
-    this.updateAllowance = this.updateAllowance.bind(this);
-    this.resetAllowance = this.resetAllowance.bind(this);
     this.sendTokens = this.sendTokens.bind(this);
     this.receiveTokens = this.receiveTokens.bind(this);
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
+    this.close = this.close.bind(this);
   }
 
   async componentDidMount() {
@@ -72,27 +67,21 @@ export class Bridge extends Component {
 
       // Smart contracts
       const schnoodleEthNetwork = SchnoodleV1.networks[process.env.REACT_APP_NETID_ETH];
-      const schnoodleEth = new web3Eth.eth.Contract(SchnoodleV9.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
+      const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
       const schnoodleBscNetwork = SchnoodleV1.networks[process.env.REACT_APP_NETID_BSC];
-      const schnoodleBsc = new web3Bsc.eth.Contract(SchnoodleV9.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-      const bridgeEthereumNetwork = BridgeEthereum.networks[process.env.REACT_APP_NETID_ETH];
-      const bridgeEthereum = new web3Eth.eth.Contract(BridgeEthereum.abi, bridgeEthereumNetwork && bridgeEthereumNetwork.address);
-      const bridgeBscNetwork = BridgeBsc.networks[process.env.REACT_APP_NETID_BSC];
-      const bridgeBsc = new web3Bsc.eth.Contract(BridgeBsc.abi, bridgeBscNetwork && bridgeBscNetwork.address);
+      const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
       const selectedAddress = web3.currentProvider.selectedAddress;
 
-      let schnoodle, bridge, sourceNetwork;
+      let schnoodle, sourceNetwork;
       const chainId = await web3.eth.net.getId();
 
       switch (chainId.toString()) {
         case process.env.REACT_APP_NETID_ETH:
-          schnoodle = new web3.eth.Contract(SchnoodleV9.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-          bridge = new web3.eth.Contract(BridgeEthereum.abi, bridgeEthereumNetwork && bridgeEthereumNetwork.address);
+          schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
           sourceNetwork = Network.Ethereum;
           break;
         case process.env.REACT_APP_NETID_BSC:
-          schnoodle = new web3.eth.Contract(SchnoodleV9.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-          bridge = new web3.eth.Contract(BridgeBsc.abi, bridgeBscNetwork && bridgeBscNetwork.address);
+          schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
           sourceNetwork = Network.BSC;
           break;
         default:
@@ -126,16 +115,11 @@ export class Bridge extends Component {
         web3Bsc,
         gasPrice,
         schnoodle,
-        bridge,
         sourceNetwork,
         schnoodleEthNetwork,
         schnoodleEth,
         schnoodleBscNetwork,
         schnoodleBsc,
-        bridgeEthereumNetwork,
-        bridgeEthereum,
-        bridgeBscNetwork,
-        bridgeBsc,
         selectedAddress
       }, () => {
         this.getFeesData();
@@ -186,80 +170,35 @@ export class Bridge extends Component {
 
   //#endregion
 
-  async checkNetwork() {
-    const { chainId, sourceNetwork } = this.state;
-    this.clearMessage();
-
-    if ((sourceNetwork === Network.BSC && chainId.toString() !== process.env.REACT_APP_NETID_BSC) ||
-      (sourceNetwork === Network.Ethereum && chainId.toString() !== process.env.REACT_APP_NETID_ETH)) {
-      this.setState({ success: false, message: `Please change selected network to ${sourceNetwork}.` });
-    }
-  }
-
-  async updateAllowance() {
-    const { schnoodle, bridge, selectedAddress } = this.state;
-    const allowance = schnoodle ? scaleDownUnits(await schnoodle.methods.allowance(selectedAddress, bridge.options.address).call({ from: selectedAddress })) : 0;
-    this.setState({ allowance });
-  }
-
-  resetAllowance() {
-    this.setState({ allowance: 0 });
-  }
-
   async sendTokens() {
-    const { allowance, amount } = this.state;
+    const { amount, database, schnoodle, selectedAddress, sourceNetwork } = this.state;
 
-    if (allowance < amount) {
-      // Allowance is insufficient; approve tokens
-      const { database, schnoodle, bridge, selectedAddress, sourceNetwork } = this.state;
-      this.checkServerStatus();
-      this.setState({ busyApprove: true });
+    this.setState({ busySwap: true });
 
-      await schnoodle.methods.approve(bridge.options.address, scaleUpUnits(amount).toString()).send({ from: selectedAddress })
-        .on('receipt', function (receipt) {
-          set(ref(database, `fees/${sourceNetwork.toLowerCase()}/approveFee`), receipt.gasUsed);
-        })
-        .on('transactionHash', async (hash) => {
-          await waitForTransaction(hash);
-          await this.updateAllowance();
-          this.setState({ busyApprove: false });
-          this.checkServerStatus();
-        }).catch(err => {
-          if (err.code === 4001) {
-            this.setState({ busyApprove: false });
-          }
-        });
-    } else {
-      // Allowance is sufficient; send tokens
-      const { database, bridge, selectedAddress, sourceNetwork } = this.state;
-
-      this.setState({ busySwap: true });
-
-      const response = await bridge.methods.sendTokens(scaleUpUnits(amount).toString()).send({ from: selectedAddress })
-        .on('receipt', function (receipt) {
-          set(ref(database, `fees/${sourceNetwork.toLowerCase()}/sendFee`), receipt.gasUsed);
-        })
-        .on('transactionHash', async (hash) => {
-          await waitForTransaction(hash);
+    const response = await schnoodle.methods.sendTokens(scaleUpUnits(amount).toString()).send({ from: selectedAddress })
+      .on('receipt', function (receipt) {
+        set(ref(database, `fees/${sourceNetwork.toLowerCase()}/sendFee`), receipt.gasUsed);
+      })
+      .on('transactionHash', async (hash) => {
+        await waitForTransaction(hash);
+        this.setState({ busySwap: false });
+      }).catch(err => {
+        if (err.code === 4001) {
           this.setState({ busySwap: false });
-        }).catch(err => {
-          if (err.code === 4001) {
-            this.setState({ busySwap: false });
-          }
-        });
+        }
+      });
 
-      this.handleResponse(response);
-    }
+    this.handleResponse(response);
   }
 
   async receiveTokens() {
-    const { bridge, selectedAddress, sourceNetwork, targetNetwork, database, web3, fee } = this.state;
+    const { schnoodle, selectedAddress, sourceNetwork, database, web3, fee } = this.state;
     this.checkServerStatus();
 
     this.setState({ busyReceive: true });
 
-    // Call payFee on the bridge contract to pay the fee suggested by the server
-    await bridge.methods.payFee().send({ from: selectedAddress, value: fee })
+    // Pay the fee (suggested by the server) to the Schnoodle contract
+    await schnoodle.methods.payFee().send({ from: selectedAddress, value: fee })
       .on('receipt', async function (receipt) {
         set(ref(database, `fees/${sourceNetwork.toLowerCase()}/receiveFee`), receipt.gasUsed + fee / await web3.eth.getGasPrice());
       })
@@ -272,36 +211,19 @@ export class Bridge extends Component {
         }
       });
 
-      // Request the server to call receiveTokens on the bridge contract
-      const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
-        method: 'POST',
-        body: JSON.stringify({ address: selectedAddress, targetNetwork })
-      });
+    // Request the server to call receiveTokens on the Schnoodle contract
+    const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+      method: 'POST',
+      body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
+    });
 
-      if (this.handleResponse(response)) {
-        const json = await response.json();
+    if (this.handleResponse(response)) {
+      const json = await response.json();
 
-        if (json.status !== 'ok') {
-          this.setState({ serverError: json.body.err.message });
-        }
+      if (json.status !== 'ok') {
+        this.setState({ serverError: json.body.err.message });
       }
-  }
-
-  clearMessage() {
-    this.setState({ message: null });
-  }
-
-  close() {
-    this.clearMessage();
-    this.setState({ showClose: false, amount: 0, tokensReceived: 0 });
-  }
-
-  handleFaq() {
-    localStorage.setItem('info', 'faq');
-  }
-
-  handleGuide() {
-    localStorage.setItem('info', 'guide');
+    }
   }
 
   async checkServerStatus() {
@@ -317,74 +239,63 @@ export class Bridge extends Component {
   }
 
   async changeSourceNetwork(e) {
-    const { web3, schnoodleEthNetwork, schnoodleBscNetwork, bridgeBscNetwork, bridgeEthereumNetwork } = this.state;
+    const { web3, schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
     const sourceNetwork = e.value;
-    let schnoodle, bridge;
+    let schnoodle;
 
     switch (sourceNetwork) {
       case Network.Ethereum:
       {
-        schnoodle = new web3.eth.Contract(SchnoodleV9.abi, schnoodleEthNetwork.address);
-        bridge = new web3.eth.Contract(BridgeEthereum.abi, bridgeEthereumNetwork.address);
+        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork.address);
         break;
       }
       case Network.BSC:
       {
-        schnoodle = new web3.eth.Contract(SchnoodleV9.abi, schnoodleBscNetwork.address);
-        bridge = new web3.eth.Contract(BridgeBsc.abi, bridgeBscNetwork.address);
+        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork.address);
         break;
       }
     }
 
-    await this.clearMessage();
-    this.setState({ sourceNetwork, schnoodle, bridge, typeSwap: '' }, async () => {
-      await this.updateAllowance();
-    });
+    this.setState({ sourceNetwork, schnoodle, typeSwap: '' });
   }
 
   async changeTargetNetwork(e) {
-    const typeSwap = this.state.sourceNetwork + 'to' + e.value;
-    this.setState({ typeSwap, targetNetwork: e.value });
-    await this.checkNetwork();
+    const { chainId, sourceNetwork } = this.state;
+
+    this.setState({ typeSwap: sourceNetwork + 'to' + e.value, targetNetwork: e.value });
+    this.clearMessage();
+
+    if ((sourceNetwork === Network.BSC && chainId.toString() !== process.env.REACT_APP_NETID_BSC) ||
+      (sourceNetwork === Network.Ethereum && chainId.toString() !== process.env.REACT_APP_NETID_ETH)) {
+      this.setState({ success: false, message: `Please change selected network to ${sourceNetwork}.` });
+    }
   }
 
   async updateAmount(e) {
     const amount = Number(e.target.value);
     if (!Number.isInteger(amount)) return;
-    this.setState({ amount }, async () => await this.updateAllowance());
+    this.setState({ amount });
+  }
 
-    const { schnoodleEth, schnoodleBsc, bridgeEthereum, bridgeBsc, chainId, selectedAddress } = this.state;
+  handleFaq() {
+    localStorage.setItem('info', 'faq');
+  }
 
-    if (!isNaN(+amount)) {
-      if (chainId.toString() === process.env.REACT_APP_NETID_ETH) {
-        await checkBalance.call(this, schnoodleEth, schnoodleBsc, bridgeBsc);
-      } else if (chainId.toString() === process.env.REACT_APP_NETID_BSC) {
-        await checkBalance.call(this, schnoodleBsc, schnoodleEth, bridgeEthereum);
-      }
+  handleGuide() {
+    localStorage.setItem('info', 'guide');
+  }
 
-      async function checkBalance(schnoodle, schnoodleOther, bridgeOther) {
-        const otherBridgeBalance = await schnoodleOther.methods.balanceOf(bridgeOther.options.address).call();
+  close() {
+    this.clearMessage();
+    this.setState({ showClose: false, amount: 0, tokensReceived: 0 });
+  }
 
-        const decimals = await schnoodle.methods.decimals().call();
-        const currentBalance = await schnoodle.methods.balanceOf(selectedAddress).call();
-        let message = null;
-
-        if (parseFloat(amount) * Math.pow(10, decimals) > currentBalance) {
-          message = 'Insufficient tokens for transaction';
-        } else if (parseFloat(amount) * Math.pow(10, decimals) > otherBridgeBalance) {
-          message = 'Insufficient tokens on TODO bridge';
-        } else if (parseFloat(amount) < Math.pow(10, -decimals)) {
-          message = 'Token amount below minimum';
-        }
-        this.setState({ success: false, message });
-      }
-    } else {
-      this.setState({ success: false, message: 'Incorrect input' });
-    }
+  clearMessage() {
+    this.setState({ message: null });
   }
 
   render() {
-    const { sourceNetwork, targetNetwork, busyApprove, busySwap, busyReceive, allowance, showClose, gasPrice, tokensPending, fees, amount, selectedAddress, serverStatus, serverError, hash, typeSwap, message } = this.state;
+    const { sourceNetwork, targetNetwork, busyApprove, busySwap, busyReceive, showClose, gasPrice, tokensPending, fees, amount, selectedAddress, serverStatus, serverError, hash, typeSwap, message } = this.state;
 
     const sourceNetworks = [
       { value: Network.BSC, label: 'BEP20' },
@@ -473,7 +384,7 @@ export class Bridge extends Component {
           <div className="flex flex-col border-solid mb-10 lg:mb-16">
             <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="w-full text-white bg-third-bg rounded-md text-sm border border-border p-3.5 font-medium outline-none focus:outline-none" />
           </div>
-          <button onClick={this.sendTokens} disabled={typeSwap === '' || message != null || amount === 0} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">{allowance < amount ? 'Approve' : 'Send'}</button>
+          <button onClick={this.sendTokens} disabled={typeSwap === '' || message != null || amount === 0} className="text-sm max-w-xs w-full mx-auto h-12 bg-main-color block rounded transition-all duration-200 hover:bg-main-color-hover text-white outline-none focus:outline-none">Send</button>
           <div className="text-center mt-2.5">
             <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
           </div>
@@ -487,7 +398,7 @@ export class Bridge extends Component {
             <div className="flex justify-between py-3 items-center w-full">
               <div className="relative w-8 h-8 lg:hidden"><button className="burger outline-none focus:outline-none"></button></div>
               <a href="/"><img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="" /></a>
-              <ConnectWallet updateAllowance={this.updateAllowance} resetAllowance={this.resetAllowance} checkNetwork={this.checkNetwork} clearMessage={this.clearMessage} />
+              <ConnectWallet checkNetwork={this.checkNetwork} clearMessage={this.clearMessage} />
             </div>
           </div>
         </header>

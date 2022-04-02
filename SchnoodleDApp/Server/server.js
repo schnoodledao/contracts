@@ -1,20 +1,20 @@
 const fastify = require('fastify');
 const Web3 = require('web3');
-fs = require('fs');
-var CryptoJS = require('crypto-js');
+const fs = require('fs');
+const CryptoJS = require('crypto-js');
 const BigNumber = require('bignumber.js');
 const { password } = require('./secrets.json');
 
-const BridgeEthereum = require('../ClientApp/src/contracts/BridgeEthereum.json');
-const BridgeBsc = require('../ClientApp/src/contracts/BridgeBsc.json');
+const SchnoodleV1 = require('../ClientApp/src/contracts/SchnoodleV1.json');
+const Schnoodle = require('../ClientApp/src/contracts/SchnoodleV9.json');
 
 const web3Eth = new Web3(process.env.ETH_CHAIN);
 const web3Bsc = new Web3(new Web3.providers.HttpProvider(process.env.BSC_CHAIN));
 
-const bridgeEthereumDeployedNetwork = BridgeEthereum.networks[process.env.NETID_ETH];
-const bridgeEthereum = new web3Eth.eth.Contract(BridgeEthereum.abi, bridgeEthereumDeployedNetwork && bridgeEthereumDeployedNetwork.address);
-const bridgeBscDeployedNetwork = BridgeBsc.networks[process.env.NETID_BSC];
-const bridgeBsc = new web3Bsc.eth.Contract(BridgeBsc.abi, bridgeBscDeployedNetwork && bridgeBscDeployedNetwork.address);
+const schnoodleEthDeployedNetwork = SchnoodleV1.networks[process.env.NETID_ETH];
+const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi, schnoodleEthDeployedNetwork && schnoodleEthDeployedNetwork.address);
+const schnoodleBscDeployedNetwork = SchnoodleV1.networks[process.env.NETID_BSC];
+const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi, schnoodleBscDeployedNetwork && schnoodleBscDeployedNetwork.address);
 
 const pendingTransactions = {};
 
@@ -74,11 +74,11 @@ app.post('/GetFee', async (request, reply) => {
   try {
     const senderNetwork = data.network === 'Ethereum' ? 'BSC' : 'Ethereum';
     const web3 = getWeb3(data.network);
-    const bridgeReceiver = getBridge(data.network);
-    const bridgeSender = getBridge(senderNetwork);
+    const schnoodleReceiver = getContract(data.network);
+    const schnoodleSender = getContract(senderNetwork);
 
-    const tokensSent = new BigNumber(await bridgeSender.methods.tokensSent(data.address).call());
-    const tokensReceived = new BigNumber(await bridgeReceiver.methods.tokensReceived(data.address).call());
+    const tokensSent = new BigNumber(await schnoodleSender.methods.tokensSent(data.address).call());
+    const tokensReceived = new BigNumber(await schnoodleReceiver.methods.tokensReceived(data.address).call());
     const tokensPending = tokensSent.minus(tokensReceived);
     let fee = 0;
 
@@ -88,14 +88,14 @@ app.post('/GetFee', async (request, reply) => {
       // Build transaction to call receiveTokens, and store it for later execution
       const txSend = {
         from: account.address,
-        to: bridgeReceiver.options.address,
-        gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
-        data: bridgeReceiver.methods.receiveTokens(data.address, tokensPending, 0).encodeABI()
+        to: schnoodleReceiver.options.address,
+        gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(2.2).toFixed(0),
+        data: schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, 0).encodeABI()
       };
 
-      txSend.gasLimit = await web3.eth.estimateGas(txSend);
+      txSend.gasLimit = await web3.eth.estimateGas(txSend) * 2;
       fee = txSend.gasLimit * txSend.gasPrice;
-      txSend.data = bridgeReceiver.methods.receiveTokens(data.address, tokensPending, fee).encodeABI();
+      txSend.data = schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, fee).encodeABI();
       pendingTransactions[data.address] = txSend;
     }
 
@@ -116,10 +116,10 @@ app.post('/ReceiveTokens', async (request, reply) => {
   const privateKey = decrypted.toString(CryptoJS.enc.Utf8);
 
   try {
-    const web3 = getWeb3(data.targetNetwork);
+    const web3 = getWeb3(data.network);
     const txSend = pendingTransactions[data.address];
 
-    web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction)
+    await web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction)
       .on('transactionHash', async function (hash) {
         let transactionReceipt = null;
         while (transactionReceipt == null) {
@@ -129,9 +129,6 @@ app.post('/ReceiveTokens', async (request, reply) => {
 
         console.log('>>>>>>>> Transaction Successful <<<<<<<<');
         sendReply(reply, 'ok');
-      })
-      .on('error', error => {
-        throw(error);
       });
   } catch (err) {
     console.log(err);
@@ -146,16 +143,16 @@ function getWeb3(network) {
     case 'BSC':
       return web3Bsc;
     default:
-      throw `Network not supported: ${data.targetNetwork}`;
+      throw `Network not supported: ${network}`;
   }
 }
 
-function getBridge(network) {
+function getContract(network) {
   switch (network) {
     case 'Ethereum':
-      return bridgeEthereum;
+      return schnoodleEth;
     case 'BSC':
-      return bridgeBsc;
+      return schnoodleBsc;
     default:
       throw `Network not supported: ${data.targetNetwork}`;
   }

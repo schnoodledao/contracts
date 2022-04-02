@@ -4,6 +4,8 @@ Schnoodle X is a DApp to allow interaction with the Schnoodle smart contracts vi
 # Prerequisites
 - [Node.js](https://nodejs.org/)
 - [Visual Studio 2022 Preview](https://visualstudio.microsoft.com/vs/preview/)
+    - Workloads 'ASP.NET and web development', 'Desktop development with C++'.
+    - Component '.NET Core 2.1 Runtime' (see [here](https://docs.nethereum.com/en/latest/nethereum.autogen.contractapi/#prerequisites)).
 - Local blockchain (use [Truffle Develop](https://www.trufflesuite.com/docs/truffle/getting-started/using-truffle-develop-and-the-console#truffle-develop) or [Ganache](https://www.trufflesuite.com/ganache))
 
 The following shared services should be set up **only once** per environment:
