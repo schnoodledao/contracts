@@ -16,11 +16,7 @@ const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi, schnoodleEthDeploye
 const schnoodleBscDeployedNetwork = SchnoodleV1.networks[process.env.NETID_BSC];
 const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi, schnoodleBscDeployedNetwork && schnoodleBscDeployedNetwork.address);
 
-const pendingTransactions = {};
-
-function sleep(milliseconds) {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-}
+let latestFee = 0;
 
 let app = fastify();
 app.listen(process.env.PORT, process.env.URL, (err, address) => listen(err, address));
@@ -61,45 +57,14 @@ app.post('/WriteSecretMessage', async (request, reply) => {
   });
 });
 
-app.post('/GetFee', async (request, reply) => {
+app.post('/GetReceiptDetails', async (request, reply) => {
   var data = JSON.parse(request.body);
-  console.log('====================================================================');
-  console.log(Date.now().toString());
-  console.log('Data: ', data);
-
-  const decrypted = decryptMessage();
-  const privateKey = decrypted.toString(CryptoJS.enc.Utf8);
-  const account = web3Eth.eth.accounts.privateKeyToAccount(privateKey);
+  console.log('-'.repeat(60));
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Data:', data);
 
   try {
-    const senderNetwork = data.network === 'Ethereum' ? 'BSC' : 'Ethereum';
-    const web3 = getWeb3(data.network);
-    const schnoodleReceiver = getContract(data.network);
-    const schnoodleSender = getContract(senderNetwork);
-
-    const tokensSent = new BigNumber(await schnoodleSender.methods.tokensSent(data.address).call());
-    const tokensReceived = new BigNumber(await schnoodleReceiver.methods.tokensReceived(data.address).call());
-    const tokensPending = tokensSent.minus(tokensReceived);
-    let fee = 0;
-
-    if (tokensPending > 0) {
-      console.log(`${tokensPending} tokens pending to bridge from ${senderNetwork} to ${data.network} (${tokensSent} sent less ${tokensReceived} received).`);
-
-      // Build transaction to call receiveTokens, and store it for later execution
-      const txSend = {
-        from: account.address,
-        to: schnoodleReceiver.options.address,
-        gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(2.2).toFixed(0),
-        data: schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, 0).encodeABI()
-      };
-
-      txSend.gasLimit = await web3.eth.estimateGas(txSend) * 2;
-      fee = txSend.gasLimit * txSend.gasPrice;
-      txSend.data = schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, fee).encodeABI();
-      pendingTransactions[data.address] = txSend;
-    }
-
-    sendReply(reply, 'ok', { tokensPending, fee });
+    sendReply(reply, 'ok', { tokensPending: await getTokensPending(data), fee: latestFee });
   } catch (err) {
     console.log(err);
     sendReply(reply, 'error', { err });
@@ -108,33 +73,58 @@ app.post('/GetFee', async (request, reply) => {
 
 app.post('/ReceiveTokens', async (request, reply) => {
   var data = JSON.parse(request.body);
-  console.log('====================================================================');
-  console.log(Date.now().toString());
-  console.log('Data: ', data);
+  console.log('-'.repeat(60));
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Data:', data);
 
-  const decrypted = decryptMessage();
-  const privateKey = decrypted.toString(CryptoJS.enc.Utf8);
+  let message;
 
   try {
     const web3 = getWeb3(data.network);
-    const txSend = pendingTransactions[data.address];
+    const privateKey = decryptMessage().toString(CryptoJS.enc.Utf8);
+    const schnoodleReceiver = getContract(data.network);
+    const tokensPending = await getTokensPending(data);
 
-    await web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction)
-      .on('transactionHash', async function (hash) {
-        let transactionReceipt = null;
-        while (transactionReceipt == null) {
-          transactionReceipt = await web3.eth.getTransactionReceipt(hash);
-          await sleep(1000);
-        }
+    // Build transaction to call receiveTokens
+    const txSend = {
+      from: web3.eth.accounts.privateKeyToAccount(privateKey).address,
+      to: schnoodleReceiver.options.address,
+      gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
+      data: schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, 0).encodeABI()
+    };
 
-        console.log('>>>>>>>> Transaction Successful <<<<<<<<');
-        sendReply(reply, 'ok');
-      });
+    txSend.gasLimit = await web3.eth.estimateGas(txSend) * 2;
+    txSend.data = schnoodleReceiver.methods.receiveTokens(data.address, tokensPending, latestFee).encodeABI();
+
+    const receipt = await web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction);
+    
+    if (receipt.status) {
+      latestFee = receipt.gasUsed * txSend.gasPrice;
+      sendReply(reply, 'ok');
+    }
   } catch (err) {
     console.log(err);
-    sendReply(reply, 'error', { err });
+    message = err.message;
   }
+
+  sendReply(reply, 'error', { message });
 });
+
+async function getTokensPending(data) {
+  const senderNetwork = data.network === 'Ethereum' ? 'BSC' : 'Ethereum';
+  const schnoodleReceiver = getContract(data.network);
+  const schnoodleSender = getContract(senderNetwork);
+
+  const tokensSent = new BigNumber(await schnoodleSender.methods.tokensSent(data.address).call());
+  const tokensReceived = new BigNumber(await schnoodleReceiver.methods.tokensReceived(data.address).call());
+  const tokensPending = tokensSent.minus(tokensReceived);
+
+  if (tokensPending > 0) {
+    console.log(`${tokensPending} tokens pending to bridge from ${senderNetwork} to ${data.network} (${tokensSent} sent less ${tokensReceived} received).`);
+  }
+
+  return tokensPending;
+}
 
 function getWeb3(network) {
   switch (network) {

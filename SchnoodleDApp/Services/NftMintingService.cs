@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using Nethereum.Hex.HexConvertors.Extensions;
+using Nethereum.JsonRpc.WebSocketClient;
 using Nethereum.Signer;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
@@ -34,7 +35,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
     public async Task<NftAssetItem> GenerateAsset(string assetName, string configName, IEnumerable<string> components, string to, int chainId, string paymentTxHash, CancellationToken cancellationToken = default)
     {
         // Validate the payment transaction.
-        var transaction = await GetWeb3(GetChainOptions(chainId)).Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash);
+        var transaction = await GetChainResult(chainId, async w => await w.Eth.Transactions.GetTransactionByHash.SendRequestAsync(paymentTxHash));
         ValidateAddresses(transaction.To, ServiceAccount, $"Payment transaction recipient (${transaction.To}) does not match the service account (${ServiceAccount}).");
         ValidateAddresses(transaction.From, to, $"Payment transaction sender (${transaction.From}) does not match the address being minted to (${to}).");
 
@@ -50,7 +51,7 @@ public sealed class NftMintingService : ISelfScopedLifetime
         await using var stream = await _assetService.Create3DAsset(assetName, configName, components, cancellationToken);
         var hash = await _filePinningService.CreateNftAsset(stream, $"{assetName}.glb", "model/gltf-binary", cancellationToken);
 
-        var nftAssetItem = new NftAssetItem {Id = Guid.NewGuid().ToString(), ChainId = chainId, To = to, AssetHash = hash};
+        var nftAssetItem = new NftAssetItem { Id = Guid.NewGuid().ToString(), ChainId = chainId, To = to, AssetHash = hash };
         await _nftMintDbService.AddItemAsync(nftAssetItem);
         return nftAssetItem;
     }
@@ -65,9 +66,8 @@ public sealed class NftMintingService : ISelfScopedLifetime
         var metadataHash = await _filePinningService.CreateNftMetadata(imageHash, nftMintItem.AssetHash, "Krypto", "This is Krypto, Schnoodle's venerable mascot.", cancellationToken);
 
         // Mint the NFT.
-        var chainOptions = GetChainOptions(nftMintItem.ChainId);
-        var moontronService = new MoontronService(GetWeb3(chainOptions), chainOptions.MoontronContractAddress);
-        var mintTxHash = await moontronService.SafeMintRequestAsync(nftMintItem.To, metadataHash);
+        var chainOptions = _blockchainOptions.Chains.Single(c => c.Id == nftMintItem.ChainId);
+        var mintTxHash = await GetChainResult(chainOptions, async w => await (new MoontronService(w, chainOptions.MoontronContractAddress)).SafeMintRequestAsync(nftMintItem.To, metadataHash));
 
         // Delete the item from the database so it can no longer be minted against.
         await _nftMintDbService.DeleteItemAsync(id);
@@ -75,21 +75,39 @@ public sealed class NftMintingService : ISelfScopedLifetime
         return mintTxHash;
     }
 
-    private BlockchainOptions.ChainOptions GetChainOptions(int chainId)
+    private async Task<T> GetChainResult<T>(int chainId, Func<Web3, Task<T>> func)
     {
-        return _blockchainOptions.Chains.Single(c => c.Id == chainId);
+        return await GetChainResult<T>(_blockchainOptions.Chains.Single(c => c.Id == chainId), func);
     }
 
-    private Web3 GetWeb3(BlockchainOptions.ChainOptions chainOptions)
+    private async Task<T> GetChainResult<T>(BlockchainOptions.ChainOptions chainOptions, Func<Web3, Task<T>> resultFactory)
     {
-        var web3 = new Web3(new Account(_blockchainOptions.PrivateKey, chainOptions.Id), chainOptions.Web3Url);
+        var web3Uri = new Uri(chainOptions.Web3Url);
+        var account = new Account(_blockchainOptions.PrivateKey, chainOptions.Id);
 
-        // Possible issue with EIP-1559. See: https://discord.com/channels/765580668327034880/765580668327034886/945867847513554994
-        if (chainOptions.Id == (int)Chain.Private)
+        if (web3Uri.Scheme == Uri.UriSchemeHttp || web3Uri.Scheme == Uri.UriSchemeHttps)
         {
-            web3.TransactionManager.UseLegacyAsDefault = true;
+            return await getWeb3Result(new Web3(account, web3Uri.ToString()));
+        }
+        else if (web3Uri.Scheme == Uri.UriSchemeWss)
+        {
+            using var client = new WebSocketClient(chainOptions.Web3Url);
+            return await getWeb3Result(new Web3(account, client));
+        }
+        else
+        {
+            throw new ArgumentOutOfRangeException(nameof(chainOptions), chainOptions, $"Scheme {web3Uri.Scheme} in chain options not supported.");
         }
 
-        return web3;
+        async Task<T> getWeb3Result(Web3 web3)
+        {
+            // Possible issue with EIP-1559. See: https://discord.com/channels/765580668327034880/765580668327034886/945867847513554994
+            if (chainOptions.Id == (int)Chain.Private)
+            {
+                web3.TransactionManager.UseLegacyAsDefault = true;
+            }
+
+            return await resultFactory(web3);
+        }
     }
 }

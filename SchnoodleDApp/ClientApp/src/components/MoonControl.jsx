@@ -58,9 +58,6 @@ export class MoonControl extends Component {
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 60000);
         this.setState({ getInfoIntervalId });
       });
-    
-      window.ethereum.on('accountsChanged', () => window.location.reload(true));
-      window.ethereum.on('networkChanged', () => window.location.reload(true));
 
       // Set up Moon globe
       const globeElControls = this.globeEl.current.controls();
