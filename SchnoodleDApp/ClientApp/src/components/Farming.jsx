@@ -5,7 +5,7 @@ import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
-import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
+import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks, handleError } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -58,6 +58,7 @@ export class Farming extends Component {
       helpDetails: ''
     };
 
+    this.handleError = handleError.bind(this);
     this.addDeposit = this.addDeposit.bind(this);
     this.updateDepositAmount = this.updateDepositAmount.bind(this);
     this.maxDepositAmount = this.maxDepositAmount.bind(this);
@@ -86,9 +87,6 @@ export class Farming extends Component {
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
-
-      window.ethereum.on('accountsChanged', () => window.location.reload(true));
-      window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
       alert('Load error. Please check you are connected to the correct network in MetaMask.');
       console.error(err);
@@ -160,26 +158,11 @@ export class Farming extends Component {
     });
   }
 
-  //#region Error handling
+  //#region Handling
 
-  async handleResponse(response) {
-    if (response.status) {
-      this.setState({ success: true, message: response.transactionHash });
-    }
-
+  async handleReceipt(receipt) {
+    this.setState({ success: receipt.status, message: receipt.transactionHash });
     await this.getInfo();
-  }
-
-  handleError(err) {
-    console.error(err);
-    let message = err.message;
-
-    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
-    }
-
-    this.setState({ success: false, message });
-    alert(message);
   }
 
   //#endregion
@@ -191,8 +174,8 @@ export class Farming extends Component {
       const { schnoodleFarming, selectedAddress, depositAmount, availableAmount } = this.state;
 
       const depositAmountValue = this.preventDust(depositAmount, availableAmount);
-      const response = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), this.vestingBlocks(), this.unbondingBlocks()).send({ from: selectedAddress });
-      await this.handleResponse(response);
+      const receipt = await schnoodleFarming.methods.addDeposit(depositAmountValue.toString(), this.vestingBlocks(), this.unbondingBlocks()).send({ from: selectedAddress });
+      await this.handleReceipt(receipt);
     } catch (err) {
       await this.handleError(err);
     }
@@ -204,8 +187,8 @@ export class Farming extends Component {
 
       const depositInfo = farmingSummary[i];
       const amountToWithdraw = this.preventDust(withdrawAmounts[i], depositInfo.deposit.amount);
-      const response = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
-      await this.handleResponse(response);
+      const receipt = await schnoodleFarming.methods.withdraw(depositInfo.deposit.id, amountToWithdraw.toString()).send({ from: selectedAddress });
+      await this.handleReceipt(receipt);
     } catch (err) {
       await this.handleError(err);
     }

@@ -4,8 +4,7 @@ import './Bridge.css'
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import getWeb3 from '../getWeb3';
-import { ConnectWallet } from './ConnectWallet';
-import { initializeHelpers, scaleUpUnits, scaleDownUnits, waitForTransaction, createEnum } from '../helpers';
+import { initializeHelpers, scaleUpUnits, scaleDownUnits, handleError, createEnum } from '../helpers';
 
 // Third-party libraries
 import Web3 from 'web3';
@@ -32,6 +31,7 @@ export class Bridge extends Component {
       showClose: false
     }
 
+    this.handleError = handleError.bind(this);
     this.sendTokens = this.sendTokens.bind(this);
     this.receiveTokens = this.receiveTokens.bind(this);
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
@@ -90,8 +90,8 @@ export class Bridge extends Component {
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
       if (selectedAddress && sourceNetwork) {
-        // Get the fee to call receiveTokens from the server so that this can be paid beforehand
-        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetFee`, {
+        // Get the tokens pending and the fee to be paid before receiving tokens on the blockchain
+        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetReceiptDetails`, {
           method: 'POST',
           body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
         });
@@ -124,9 +124,6 @@ export class Bridge extends Component {
       }, () => {
         this.getFeesData();
       });
-
-      window.ethereum.on('accountsChanged', () => window.location.reload(true));
-      window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
       alert('Load error. Please check you are connected to the correct network in MetaMask.');
       console.error(err);
@@ -140,7 +137,7 @@ export class Bridge extends Component {
     });
   }
 
-  //#region Error handling
+  //#region Handling
 
   async fetch(input, init) {
     const result = await fetch(input, init);
@@ -153,12 +150,12 @@ export class Bridge extends Component {
     throw new Error(result.statusText);
   }
 
-  handleResponse(response) {
-    if (typeof response.status !== 'undefined' && response.status) {
-      this.setState({ success: true, message: response.transactionHash });
-      return true;
-    }
+  handleReceipt(receipt) {
+    this.setState({ success: receipt.status, message: receipt.transactionHash });
+    return receipt.status;
+  }
 
+  handleResponse(response) {
     if (typeof response.ok !== 'undefined' && response.ok) {
       return true;
     } else {
@@ -171,60 +168,53 @@ export class Bridge extends Component {
   //#endregion
 
   async sendTokens() {
-    const { amount, database, schnoodle, selectedAddress, sourceNetwork } = this.state;
+    try {
+      const { amount, database, schnoodle, selectedAddress, sourceNetwork } = this.state;
+      this.setState({ busySwap: true });
 
-    this.setState({ busySwap: true });
+      const receipt = await schnoodle.methods.sendTokens(scaleUpUnits(amount).toString()).send({ from: selectedAddress });
 
-    const response = await schnoodle.methods.sendTokens(scaleUpUnits(amount).toString()).send({ from: selectedAddress })
-      .on('receipt', function (receipt) {
+      if (this.handleReceipt(receipt)) {
         set(ref(database, `fees/${sourceNetwork.toLowerCase()}/sendFee`), receipt.gasUsed);
-      })
-      .on('transactionHash', async (hash) => {
-        await waitForTransaction(hash);
-        this.setState({ busySwap: false });
-      }).catch(err => {
-        if (err.code === 4001) {
-          this.setState({ busySwap: false });
-        }
-      });
+      }
+    } catch (err) {
+      await this.handleError(err);
+    }
 
-    this.handleResponse(response);
+    this.setState({ busySwap: false });
   }
 
   async receiveTokens() {
-    const { schnoodle, selectedAddress, sourceNetwork, database, web3, fee } = this.state;
-    this.checkServerStatus();
+    try {
+      const { schnoodle, selectedAddress, sourceNetwork, database, web3, fee } = this.state;
+      this.setState({ busyReceive: true });
 
-    this.setState({ busyReceive: true });
+      // Pay the fee (suggested by the server) to the Schnoodle contract
+      const receipt = await schnoodle.methods.payFee().send({ from: selectedAddress, value: fee });
 
-    // Pay the fee (suggested by the server) to the Schnoodle contract
-    await schnoodle.methods.payFee().send({ from: selectedAddress, value: fee })
-      .on('receipt', async function (receipt) {
+      if (this.handleReceipt(receipt)) {
         set(ref(database, `fees/${sourceNetwork.toLowerCase()}/receiveFee`), receipt.gasUsed + fee / await web3.eth.getGasPrice());
-      })
-      .on('transactionHash', async (hash) => {
-        await waitForTransaction(hash);
-        this.setState({ hash: hash, busyReceive: false, showClose: true });
-      }).catch(err => {
-        if (err.code === 4001) {
-          this.setState({ busyReceive: false });
+
+        // Request the server to call receiveTokens on the Schnoodle contract
+        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+          method: 'POST',
+          body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
+        });
+
+        if (this.handleResponse(response)) {
+          const json = await response.json();
+
+          if (json.status !== 'ok') {
+            this.setState({ serverError: json.body.message });
+          }
         }
-      });
-
-    // Request the server to call receiveTokens on the Schnoodle contract
-    const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
-      method: 'POST',
-      body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
-    });
-
-    if (this.handleResponse(response)) {
-      const json = await response.json();
-
-      if (json.status !== 'ok') {
-        this.setState({ serverError: json.body.err.message });
       }
+    } catch (err) {
+      await this.handleError(err);
     }
-  }
+
+    this.setState({ busyReceive: false });
+}
 
   async checkServerStatus() {
     this.setState({ serverStatus: false });
@@ -241,21 +231,22 @@ export class Bridge extends Component {
   async changeSourceNetwork(e) {
     const { web3, schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
     const sourceNetwork = e.value;
-    let schnoodle;
+    let address;
 
     switch (sourceNetwork) {
       case Network.Ethereum:
       {
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork.address);
+        address = schnoodleEthNetwork.address;
         break;
       }
       case Network.BSC:
       {
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork.address);
+        address = schnoodleBscNetwork.address;
         break;
       }
     }
 
+    const schnoodle = new web3.eth.Contract(Schnoodle.abi, address);
     this.setState({ sourceNetwork, schnoodle, typeSwap: '' });
   }
 
@@ -393,16 +384,6 @@ export class Bridge extends Component {
 
     return (
       <div className="font-Roboto flex flex-col min-h-screen bg-body">
-        <header className="bg-header relative z-50">
-          <div className="container">
-            <div className="flex justify-between py-3 items-center w-full">
-              <div className="relative w-8 h-8 lg:hidden"><button className="burger outline-none focus:outline-none"></button></div>
-              <a href="/"><img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="" /></a>
-              <ConnectWallet checkNetwork={this.checkNetwork} clearMessage={this.clearMessage} />
-            </div>
-          </div>
-        </header>
-
         <div className="lg:py-16 py-10 flex-grow">
           <div className="container">
             <div className="lg:grid grid-cols-12 block">
