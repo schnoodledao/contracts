@@ -58,9 +58,6 @@ export class Moontron extends Component {
       this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee, assetConfigs });
 
       this.viewer = new Viewer(this.viewerRef.current, this.options);
-
-      window.ethereum.on('accountsChanged', () => window.location.reload(true));
-      window.ethereum.on('networkChanged', () => window.location.reload(true));
     } catch (err) {
       alert('Load error. Please check you are connected to the correct network in MetaMask.');
       console.error(err);

@@ -54,18 +54,21 @@ export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNu
   return Math.max(0, parseInt(startBlockNumber) + parseInt(vestingBlocks) - currentBlockNumber);
 }
 
-export async function waitForTransaction(hash, delay = 1000) {
-  const web3 = await getWeb3();
-  let transactionReceipt = null;
-  while (transactionReceipt == null) { // Waiting until the transaction is mined
-    transactionReceipt = await web3.eth.getTransactionReceipt(hash);
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
-}
-
 //#endregion
 
 //#region General Helpers
+
+export function handleError(err) {
+  console.error(err);
+  let message = err.message;
+
+  if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
+    message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
+  }
+
+  this.setState({ success: false, message });
+  alert(message);
+}
 
 export function createEnum(values) {
   const enumObject = {};
