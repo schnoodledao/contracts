@@ -31,12 +31,12 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-
+import VENICE_SUNSET from './environments/venice_sunset_1k.hdr';
+import FOOTPRINT_COURT from './environments/footprint_court_2k.hdr';
 import { GUI } from 'dat.gui';
 
 import { environments } from './environments/index.js';
 import { createBackground } from './lib/three-vignette.js';
-
 const DEFAULT_CAMERA = '[default]';
 
 const MANAGER = new LoadingManager();
@@ -172,7 +172,7 @@ export class Viewer {
 
   }
 
-  render () {
+    render () {
 
     this.renderer.render( this.scene, this.activeCamera );
     if (this.state.grid) {
@@ -461,7 +461,6 @@ export class Viewer {
       } else {
         this.scene.remove(this.vignette);
       }
-
       this.scene.environment = envMap;
       this.scene.background = this.state.background ? envMap : null;
 
@@ -470,16 +469,16 @@ export class Viewer {
   }
 
   getCubeMapTexture ( environment ) {
-    const { path } = environment;
-
+    const { id, path } = environment;
+    const background = (id == 'venice-sunset') ? VENICE_SUNSET : FOOTPRINT_COURT;
+   
     // no envmap
     if ( ! path ) return Promise.resolve( { envMap: null } );
-
     return new Promise( ( resolve, reject ) => {
-
       new RGBELoader()
-        .setDataType( UnsignedByteType )
-        .load( path, ( texture ) => {
+        //.setDataType( UnsignedByteType )
+
+        .load(background, (texture) => {
 
           const envMap = this.pmremGenerator.fromEquirectangular( texture ).texture;
           this.pmremGenerator.dispose();
@@ -524,7 +523,7 @@ export class Viewer {
         this.gridHelper = null;
         this.axesHelper = null;
         this.axesRenderer.clear();
-      }
+      } 
     }
   }
 

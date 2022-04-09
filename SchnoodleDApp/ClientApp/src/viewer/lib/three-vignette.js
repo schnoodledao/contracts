@@ -12,15 +12,15 @@ import {
   Vector2
 } from 'three';
 
-import vert from './three-vignette.vert';
-import frag from './three-vignette.frag';
+import vert from './three-vignette-vert';
+import frag from './three-vignette-frag';
 
 function createBackground (opt) {
   opt = opt || {}
   var geometry = opt.geometry || new PlaneGeometry(2, 2, 1)
   var material = new RawShaderMaterial({
-    vertexShader: vert,
-    fragmentShader: frag,
+      vertexShader: vert,
+      fragmentShader: frag,
     side: DoubleSide,
     uniforms: {
       aspectCorrection: { type: 'i', value: false },
