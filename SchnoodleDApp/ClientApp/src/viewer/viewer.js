@@ -172,7 +172,7 @@ export class Viewer {
 
   }
 
-    render () {
+  render () {
 
     this.renderer.render( this.scene, this.activeCamera );
     if (this.state.grid) {
