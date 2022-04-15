@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Source: https://github.com/mattdesl/three-vignette-background
  * License: MIT
  */
@@ -12,8 +12,8 @@ import {
   Vector2
 } from 'three';
 
-import vert from './three-vignette-vert';
-import frag from './three-vignette-frag';
+import vert from './three-vignette.vert';
+import frag from './three-vignette.frag';
 
 function createBackground (opt) {
   opt = opt || {}

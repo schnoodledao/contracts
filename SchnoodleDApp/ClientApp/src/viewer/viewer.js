@@ -476,8 +476,6 @@ export class Viewer {
     if ( ! path ) return Promise.resolve( { envMap: null } );
     return new Promise( ( resolve, reject ) => {
       new RGBELoader()
-        //.setDataType( UnsignedByteType )
-
         .load(background, (texture) => {
 
           const envMap = this.pmremGenerator.fromEquirectangular( texture ).texture;
@@ -523,7 +521,7 @@ export class Viewer {
         this.gridHelper = null;
         this.axesHelper = null;
         this.axesRenderer.clear();
-      } 
+      }
     }
   }
 
