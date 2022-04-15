@@ -24,7 +24,6 @@ export class Farming extends Component {
 
     this.state = {
       success: false,
-      getInfoIntervalId: 0,
       farmingFundBalance: 0,
       blockNumber: 0,
       operativeFeeRate: 0,

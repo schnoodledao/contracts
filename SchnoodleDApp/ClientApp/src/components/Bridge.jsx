@@ -12,6 +12,8 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import Select from 'react-select';
 
+// global fetch: false
+
 const Network = createEnum(['Ethereum', 'BSC']);
 
 export class Bridge extends Component {
@@ -42,8 +44,6 @@ export class Bridge extends Component {
 
   async componentDidMount() {
     try {
-      await this.checkServerStatus();
-
       // Firebase
       const firebaseConfig = {
         apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -85,27 +85,10 @@ export class Bridge extends Component {
           sourceNetwork = Network.BSC;
           break;
         default:
+          throw new Error(`Chain ID ${chainId} unsupported.`);
       }
 
       await initializeHelpers(await schnoodle.methods.decimals().call());
-
-      if (selectedAddress && sourceNetwork) {
-        // Get the tokens pending and the fee to be paid before receiving tokens on the blockchain
-        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetReceiptDetails`, {
-          method: 'POST',
-          body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
-        });
-
-        if (this.handleResponse(response)) {
-          const json = await response.json();
-
-          if (json.status === 'ok') {
-            this.setState({ tokensPending: json.body.tokensPending, fee: json.body.fee });
-          } else {
-            this.setState({ serverError: json.body.err.message });
-          }
-        }
-      }
 
       this.setState({
         database,
@@ -121,13 +104,48 @@ export class Bridge extends Component {
         schnoodleBscNetwork,
         schnoodleBsc,
         selectedAddress
-      }, () => {
+      }, async () => {
+        await this.getInfo();
+        const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
+        this.setState({ getInfoIntervalId });
         this.getFeesData();
       });
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.getInfoIntervalId);
+  }
+
+  async getInfo() {
+    let serverStatus = false;
+    try {
+      serverStatus = (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/Alive`)).ok;
+
+      if (serverStatus) {
+        const { selectedAddress, sourceNetwork } = this.state;
+
+        if (selectedAddress && sourceNetwork) {
+          // Get the tokens pending and the fee to be paid before receiving tokens on the blockchain
+          const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetReceiptDetails`, {
+            method: 'POST',
+            body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
+          })).json();
+
+          if (json.status === 'ok') {
+            this.setState({ tokensPending: json.body.tokensPending, fee: json.body.fee });
+          } else {
+            this.setState({ serverError: json.body.err.message });
+          }
+        }
+      }
+    } catch (err) {
+      this.handleError(err);
+    }
+
+    this.setState({ serverStatus });
   }
 
   async getFeesData() {
@@ -139,30 +157,9 @@ export class Bridge extends Component {
 
   //#region Handling
 
-  async fetch(input, init) {
-    const result = await fetch(input, init);
-
-    if (result.ok) {
-      this.setState({ success: true, message: 'Operation successful' });
-      return result;
-    }
-
-    throw new Error(result.statusText);
-  }
-
   handleReceipt(receipt) {
     this.setState({ success: receipt.status, message: receipt.transactionHash });
     return receipt.status;
-  }
-
-  handleResponse(response) {
-    if (typeof response.ok !== 'undefined' && response.ok) {
-      return true;
-    } else {
-      console.log(`HTTP Error: ${response.status}`);
-    }
-
-    return false;
   }
 
   //#endregion
@@ -178,7 +175,7 @@ export class Bridge extends Component {
         set(ref(database, `fees/${sourceNetwork.toLowerCase()}/sendFee`), receipt.gasUsed);
       }
     } catch (err) {
-      await this.handleError(err);
+      this.handleError(err);
     }
 
     this.setState({ busySwap: false });
@@ -196,36 +193,20 @@ export class Bridge extends Component {
         set(ref(database, `fees/${sourceNetwork.toLowerCase()}/receiveFee`), receipt.gasUsed + fee / await web3.eth.getGasPrice());
 
         // Request the server to call receiveTokens on the Schnoodle contract
-        const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+        const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
           method: 'POST',
           body: JSON.stringify({ address: selectedAddress, network: sourceNetwork })
-        });
+        })).json();
 
-        if (this.handleResponse(response)) {
-          const json = await response.json();
-
-          if (json.status !== 'ok') {
-            this.setState({ serverError: json.body.message });
-          }
+        if (json.status !== 'ok') {
+          this.setState({ serverError: json.body.message });
         }
       }
     } catch (err) {
-      await this.handleError(err);
+      this.handleError(err);
     }
 
     this.setState({ busyReceive: false });
-}
-
-  async checkServerStatus() {
-    this.setState({ serverStatus: false });
-
-    const response = await fetch(`http://${process.env.REACT_APP_SERVER_URL}/Alive`).catch(function (err) {
-      console.log(err);
-    });
-
-    if (this.handleResponse(response)) {
-      this.setState({ serverStatus: true });
-    }
   }
 
   async changeSourceNetwork(e) {
@@ -330,7 +311,7 @@ export class Bridge extends Component {
       </div>;
     } else if (!serverStatus) {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
-        <div className="text-2xl lg:text-3xl leading-snug text-white text-center">Service is now unavailable</div>
+        <div className="text-2xl lg:text-3xl leading-snug text-white text-center">Server offline</div>
       </div>;
     } else if (serverError != null) {
       bridge = <div className="col-span-7 lg:px-6 lg:bg-tutu lg:py-10 rounded-xl lg:bg-main-bg bg-transparent flex items-center flex-col justify-center mt-14 lg:mt-0">
