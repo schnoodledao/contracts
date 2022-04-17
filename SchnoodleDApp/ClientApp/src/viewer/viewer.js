@@ -1,4 +1,4 @@
-// ReSharper disable IdentifierTypo
+﻿// ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 // ReSharper disable StringLiteralTypo
 // ReSharper disable CommentTypo
@@ -469,15 +469,12 @@ export class Viewer {
   }
 
   getCubeMapTexture ( environment ) {
-    const { id, path } = environment;
-    const background = (id == 'venice-sunset') ? VENICE_SUNSET : FOOTPRINT_COURT;
-   
+    const { path } = environment;
     // no envmap
     if ( ! path ) return Promise.resolve( { envMap: null } );
     return new Promise( ( resolve, reject ) => {
       new RGBELoader()
-        .load(background, (texture) => {
-
+        .load(path, (texture) => {
           const envMap = this.pmremGenerator.fromEquirectangular( texture ).texture;
           this.pmremGenerator.dispose();
 
