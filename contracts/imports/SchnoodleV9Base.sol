@@ -76,6 +76,11 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         super._spendAllowance(owner, spender, _getStandardAmount(amount));
     }
 
+    function _mint(address account, uint256 amount) internal {
+        super._mint(account, _getReflectedAmount(amount), "", "");
+        _totalSupply += amount;
+    }
+
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
         _totalSupply -= amount;

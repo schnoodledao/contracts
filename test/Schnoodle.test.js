@@ -66,16 +66,9 @@ describe('Burning', () => {
   });
 
   async function testBurning(amount) {
-    const totalSupply = BigInt(await schnoodle.totalSupply());
-    const balance = await getBalance(serviceAccount);
-    
-    await schnoodle.burn(amount, data, { from: serviceAccount });
-
-    const newTotalSupply = BigInt(await schnoodle.totalSupply());
-    assert.equal(newTotalSupply, totalSupply - amount, 'Total supply wasn\'t affected correctly by burning');
-
-    const newBalance = await getBalance(serviceAccount);
-    assert.equal(newBalance, balance - amount, 'Service account wasn\'t affected correctly by burning');
+    await testTotalSupplyDelta(serviceAccount, -amount, async() => {
+      await schnoodle.burn(amount, data, { from: serviceAccount });
+    });
   }
 });
 
@@ -318,9 +311,12 @@ describe('Bridge', () => {
 
   it('should increase the tokens sent by the specified amount', async() => {
     const amount = await getRandomBalance(holder);
-    const networkId = chance.integer({ min: 1 }); 
-    await schnoodle.sendTokens(networkId, amount, { from: holder });
-    assert.equal(amount, BigInt(await schnoodle.tokensSent(holder, networkId)), 'Sending tokens did not increase the tokens sent by the specified amount');
+
+    await testTotalSupplyDelta(holder, -amount, async() => {
+      const networkId = chance.integer({ min: 1 }); 
+      await schnoodle.sendTokens(networkId, amount, { from: holder });
+      assert.equal(amount, BigInt(await schnoodle.tokensSent(holder, networkId)), 'Sending tokens did not increase the tokens sent by the specified amount');
+    });
   }); 
 
   it('should increase the tokens received by the specified amount when the exact fee is paid', async() => {
@@ -336,14 +332,33 @@ describe('Bridge', () => {
   });
 
   async function payFeeAndReceiveTokens(feeDelta) {
-    const fee = chance.integer({ min: 1 });
-    const amount = BigInt(chance.integer({ min: 1 }));
-    const networkId = chance.integer({ min: 1 }); 
-    await schnoodle.payFee(networkId, { from: holder, value: fee + feeDelta });
-    await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: serviceAccount });
-    assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder, networkId)), 'Receiving tokens did not increase the tokens received by the specified amount');
+    const amount = BigInt(chance.integer({ min: 1, max: await schnoodle.totalSupply() }));
+
+    // Pre-burn the amount to prevent an overflow error on the reflected amount during minting
+    await schnoodle.burn(amount, data, { from: serviceAccount });
+
+    await testTotalSupplyDelta(holder, amount, async() => {
+      const fee = chance.integer({ min: 1 });
+      const networkId = chance.integer({ min: 1 }); 
+      await schnoodle.payFee(networkId, { from: holder, value: fee + feeDelta });
+      await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: serviceAccount });
+      assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder, networkId)), 'Receiving tokens did not increase the tokens received by the specified amount');
+    });
   }
-})
+});
+
+async function testTotalSupplyDelta(account, amount, testCallback) {
+  const totalSupply = BigInt(await schnoodle.totalSupply());
+  const balance = await getBalance(account);
+
+  await testCallback();
+
+  const newTotalSupply = BigInt(await schnoodle.totalSupply());
+  assert.equal(newTotalSupply, totalSupply + amount, 'Total supply didn\'t change by the expected amount');
+
+  const newBalance = await getBalance(account);
+  assert.equal(newBalance, balance + amount, 'Account balance didn\'t change by the expected amount');
+}
 
 async function getRandomBalance(account) {
   return BigInt(bigInt.randBetween(1, await getBalance(account)));

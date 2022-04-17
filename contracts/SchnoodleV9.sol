@@ -102,7 +102,7 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         _avoidReentrancy = true;
         _feesPaid[account][networkId] -= fee;
 
-        _mint(account, amount, "", "");
+        _mint(account, amount);
         _tokensReceived[account][networkId] += amount;
 
         _avoidReentrancy = false;

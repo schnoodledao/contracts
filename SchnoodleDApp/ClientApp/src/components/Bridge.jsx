@@ -180,13 +180,13 @@ export class Bridge extends Component {
       this.handleReceipt(await schnoodle.methods.payFee(networks[sourceNetwork].id).send({ from: selectedAddress, value: await this.getFee(targetNetwork) }));
 
       // Request the server to call receiveTokens on the Schnoodle contract
-      const jsonTokens = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+      const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
         method: 'POST',
         body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
       })).json();
 
-      if (jsonTokens.status !== 'ok') {
-        this.setState({ serverError: jsonTokens.body.message });
+      if (json.status !== 'ok') {
+        this.setState({ serverError: json.body.message });
       }
     } catch (err) {
       this.handleError(err);
@@ -271,7 +271,6 @@ export class Bridge extends Component {
         ? resources.BUSY_MESSAGE_RECEIVE
         : null;
 
-    //const displayFee = (fee, symbol) => `~ ${((fee ?? 0) * gasPrice).toFixed(6).toString()} ${symbol}`;
     const displayAccount = selectedAddress ? selectedAddress.slice(0, 6) + '...' + selectedAddress.slice(-6) : '';
 
     let bridge;
