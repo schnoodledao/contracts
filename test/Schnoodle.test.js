@@ -318,17 +318,31 @@ describe('Bridge', () => {
 
   it('should increase the tokens sent by the specified amount', async() => {
     const amount = await getRandomBalance(holder);
-    await schnoodle.sendTokens(amount, { from: holder });
-    assert.equal(amount, BigInt(await schnoodle.tokensSent(holder)));
+    const networkId = chance.integer({ min: 1 }); 
+    await schnoodle.sendTokens(networkId, amount, { from: holder });
+    assert.equal(amount, BigInt(await schnoodle.tokensSent(holder, networkId)), 'Sending tokens did not increase the tokens sent by the specified amount');
   }); 
 
   it('should increase the tokens received by the specified amount when the exact fee is paid', async() => {
+    await payFeeAndReceiveTokens(0);
+  });
+
+  it('should increase the tokens received by the specified amount when the fee is overpaid', async() => {
+    await payFeeAndReceiveTokens(1);
+  });
+
+  it('should revert on attempt to receive tokens when the fee is underpaid', async() => {
+    await truffleAssert.reverts(payFeeAndReceiveTokens(-1), 'Schnoodle: Insufficient fee paid', 'Receiving of tokens for which the fee was underpaid did not correctly revert');
+  });
+
+  async function payFeeAndReceiveTokens(feeDelta) {
     const fee = chance.integer({ min: 1 });
     const amount = BigInt(chance.integer({ min: 1 }));
-    await schnoodle.payFee({ from: holder, value: fee });
-    await schnoodle.receiveTokens(holder, amount, fee, { from: serviceAccount });
-    assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder)));
-  });
+    const networkId = chance.integer({ min: 1 }); 
+    await schnoodle.payFee(networkId, { from: holder, value: fee + feeDelta });
+    await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: serviceAccount });
+    assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder, networkId)), 'Receiving tokens did not increase the tokens received by the specified amount');
+  }
 })
 
 async function getRandomBalance(account) {

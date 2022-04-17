@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
@@ -14,6 +15,7 @@ import 'react-responsive-modal/styles.css';
 import Plot from 'react-plotly.js';
 import Loader from 'react-loader-spinner';
 const bigInt = require('big-integer');
+// ReSharper restore InconsistentNaming
 
 export class Farming extends Component {
   static displayName = Farming.name;
@@ -737,7 +739,7 @@ export class Farming extends Component {
                     </div>
                     <div className="tw-grid tw-mt-4">
 
-                      {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
+                      {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 &&
                         <div className="tw-overlay tw-z-20">
                           <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
@@ -748,12 +750,12 @@ export class Farming extends Component {
                             </div>
                           </div>
                         </div>
-                      )}
+                      }
                       
                       <div className="plotcontainer tw-z-10">
                         <div className="tw-flex tw-flex-col xl:tw-flex-row">
 
-                          {this.state.vestiplotReward.length > 0 && (
+                          {this.state.vestiplotReward.length > 0 &&
                             <Plot
                               data={this.state.vestiplotReward}
                               layout={{
@@ -767,9 +769,9 @@ export class Farming extends Component {
                                 plot_bgcolor: 'rgba(0,0,0,0)'
                               }}
                             />
-                          )}
+                          }
 
-                          {this.state.vestiplotApy.length > 0 && (
+                          {this.state.vestiplotApy.length > 0 &&
                             <Plot
                               data={this.state.vestiplotApy}
                               layout={{
@@ -783,30 +785,30 @@ export class Farming extends Component {
                                 plot_bgcolor: 'rgba(0,0,0,0)'
                               }}
                             />
-                          )}
+                          }
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {this.state.farmingSummary.length > 0 && (
+                {this.state.farmingSummary.length > 0 &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_SUMMARY.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderFarmingSummaryTable(this.state.farmingSummary)}
                     </div>
                   </div>
-                )}
+                }
 
-                {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
+                {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 tw-headingfont tw-sectiontitle tw-mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                     </div>
                   </div>
-                )}
+                }
 
                 <div className="my-5">
                   <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>

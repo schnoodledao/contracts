@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { general, farming as resources } from '../resources';
@@ -14,6 +15,7 @@ import 'react-responsive-modal/styles.css';
 import chroma from 'chroma-js';
 import Globe from 'react-globe.gl';
 const bigInt = require('big-integer');
+// ReSharper restore InconsistentNaming
 
 export class MoonControl extends Component {
   static displayName = MoonControl.name;
@@ -367,14 +369,14 @@ export class MoonControl extends Component {
 
                 {this.renderMoonFarms()}
 
-                {this.state.farmingOverview.length > 0 && (
+                {this.state.farmingOverview.length > 0 &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
                       {this.renderFarmingOverviewTable(this.state.farmingOverview)}
                     </div>
                   </div>
-                )}
+                }
 
                 <div className="tw-my-5">
                   <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>

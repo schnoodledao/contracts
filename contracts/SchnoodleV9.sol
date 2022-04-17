@@ -18,9 +18,9 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     bytes32 public constant BRIDGE = keccak256("BRIDGE");
 
     bool private _avoidReentrancy;
-    mapping(address => uint256) private _tokensSent;
-    mapping(address => uint256) private _tokensReceived;
-    mapping(address => uint256) private _feesPaid;
+    mapping(address => mapping (uint256 => uint256)) private _tokensSent;
+    mapping(address => mapping (uint256 => uint256)) private _tokensReceived;
+    mapping(address => mapping (uint256 => uint256)) private _feesPaid;
 
     function configure(bool testnet, address liquidityToken, address schnoodleFarming, address bridgeOwner) external onlyOwner {
         if (testnet) {
@@ -85,35 +85,35 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
     // Bridge functions
 
-    function sendTokens(uint256 amount) external {
+    function sendTokens(uint256 networkId, uint256 amount) external {
         burn(amount, "");
-        _tokensSent[_msgSender()] += amount;
+        _tokensSent[_msgSender()][networkId] += amount;
     }
 
-    function payFee() external payable {
-        _feesPaid[_msgSender()] += msg.value;
+    function payFee(uint256 networkId) external payable {
+        _feesPaid[_msgSender()][networkId] += msg.value;
     }
 
-    function receiveTokens(address account, uint256 amount, uint256 fee) external {
+    function receiveTokens(address account, uint256 networkId, uint256 amount, uint256 fee) external {
         require(!_avoidReentrancy);
         require(hasRole(BRIDGE, _msgSender()));
-        require(_feesPaid[account] >= fee, "Schnoodle: Insufficient fee paid");
+        require(_feesPaid[account][networkId] >= fee, "Schnoodle: Insufficient fee paid");
 
         _avoidReentrancy = true;
-        _feesPaid[account] -= fee;
+        _feesPaid[account][networkId] -= fee;
 
         _mint(account, amount, "", "");
-        _tokensReceived[account] += amount;
+        _tokensReceived[account][networkId] += amount;
 
         _avoidReentrancy = false;
     }
 
-    function tokensSent(address account) external view returns (uint256) {
-        return _tokensSent[account];
+    function tokensSent(address account, uint256 networkId) external view returns (uint256) {
+        return _tokensSent[account][networkId];
     }
 
-    function tokensReceived(address account) external view returns (uint256) {
-        return _tokensReceived[account];
+    function tokensReceived(address account, uint256 networkId) external view returns (uint256) {
+        return _tokensReceived[account][networkId];
     }
 
     // Calls to the SchnoodleFarming proxy contract

@@ -1,9 +1,11 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
 import { bridge, farming, moontron } from '../resources';
 import getWeb3 from '../getWeb3';
+// ReSharper restore InconsistentNaming
 
 export class NavMenu extends Component {
   static displayName = NavMenu.name;

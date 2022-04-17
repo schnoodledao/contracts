@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
@@ -10,6 +11,7 @@ import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import Loader from 'react-loader-spinner';
 import queryString from 'query-string';
+// ReSharper restore InconsistentNaming
 
 // global fetch: false
 

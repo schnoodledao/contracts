@@ -1,7 +1,9 @@
-import getWeb3 from "./getWeb3";
-const { Duration } = require("luxon");
-const humanizeDuration = require("humanize-duration");
-const bigInt = require("big-integer");
+// ReSharper disable InconsistentNaming
+import getWeb3 from './getWeb3';
+const { Duration } = require('luxon');
+const humanizeDuration = require('humanize-duration');
+const bigInt = require('big-integer');
+// ReSharper restore InconsistentNaming
 
 let decimals = 0;
 let averageBlockTime = 0;
@@ -12,6 +14,10 @@ export async function initializeHelpers(decimalsValue) {
 }
 
 //#region Web3 Helpers
+
+export function scaleDownPrecise(amount, precision) {
+  return (amount / 10 ** decimals).toPrecision(precision);
+}
 
 export function scaleDownUnits(amount) {
   return bigInt(amount).divide(10 ** decimals).toJSNumber();
@@ -58,16 +64,19 @@ export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNu
 
 //#region General Helpers
 
-export function handleError(err) {
+export function handleError(err, display = true) {
   console.error(err);
-  let message = err.message;
 
-  if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
-    message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
+  if (display) {
+    let message = err.message;
+
+    if (err.message.includes('[ethjs-query] while formatting outputs from RPC')) {
+      message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
+    }
+
+    this.setState({ success: false, message });
+    alert(message);
   }
-
-  this.setState({ success: false, message });
-  alert(message);
 }
 
 export function createEnum(values) {
