@@ -31,8 +31,6 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-import VENICE_SUNSET from './environments/venice_sunset_1k.hdr';
-import FOOTPRINT_COURT from './environments/footprint_court_2k.hdr';
 import { GUI } from 'dat.gui';
 
 import { environments } from './environments/index.js';
