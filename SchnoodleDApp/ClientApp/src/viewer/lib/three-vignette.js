@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Source: https://github.com/mattdesl/three-vignette-background
  * License: MIT
  */

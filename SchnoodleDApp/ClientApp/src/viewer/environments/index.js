@@ -1,4 +1,4 @@
-﻿export const environments = [
+export const environments = [
   {
     id: '',
     name: 'None',
