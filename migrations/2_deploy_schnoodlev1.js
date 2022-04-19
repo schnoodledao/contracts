@@ -7,7 +7,7 @@ require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider
 const { singletons } = require('@openzeppelin/test-helpers');
 
 module.exports = async function (deployer, network, accounts) {
-  const { initialization } = require(`../migrations-config.${network}.js`);
+  const { initialBurn, initialization } = require(`../migrations-config.${network}.js`);
   let serviceAccount = initialization.serviceAccount;
   let eleemosynary = initialization.eleemosynary;
 
@@ -19,10 +19,11 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   const Contract = artifacts.require(contractName);
-  const proxy = await deployProxy(Contract, [initialization.initialTokens, serviceAccount], { deployer });
-  await proxy.changeFeePercent(initialization.feePercent);
-  await proxy.changeEleemosynary(eleemosynary, initialization.donationPercent);
+  const instance = await deployProxy(Contract, [initialization.initialTokens, serviceAccount], { deployer });
+  await instance.changeFeePercent(initialization.feePercent);
+  await instance.changeEleemosynary(eleemosynary, initialization.donationPercent);
+  if (initialBurn) await instance.burn(BigInt((initialization.initialTokens - 1) * 10 ** await instance.decimals()), 0);
 
   const { appendList } = require('../scripts/contracts.js');
-  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`, network);
+  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(instance.address)}`, network);
 };

@@ -12,7 +12,7 @@ module.exports = async function (deployer, network) {
 
   // Deploy proxy contract
   const Contract = artifacts.require(contractName);
-  const proxy = await deployProxy(Contract, [proxyRegistryAddress], { deployer });
+  const instance = await deployProxy(Contract, [proxyRegistryAddress], { deployer });
 
   // Determine the chain ID for the network being deployed to
   const chainId = { mainnet: 1, rinkeby: 4, chapel: 97, bsc: 56, develop: 1337 }[network];
@@ -30,7 +30,7 @@ module.exports = async function (deployer, network) {
       if (id === chainId) {
         switch (key) {
           case 'Web3Url': return deployer.provider.host ?? deployer.provider.engine._providers.find(provider => provider._url)?._url ?? deployer.provider.engine._providers.find(provider => provider.rpcUrl).rpcUrl
-          case 'MoontronContractAddress': return proxy.address;
+          case 'MoontronContractAddress': return instance.address;
         }
       }
 
@@ -47,6 +47,5 @@ module.exports = async function (deployer, network) {
   //(await Contract.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
 
   const { appendList } = require('../scripts/contracts.js');
-  erc1967.getImplementationAddress(proxy.address);
-  appendList(`${contractName}@${await erc1967.getImplementationAddress(proxy.address)}`, network);
+  appendList(`${contractName}@${await erc1967.getImplementationAddress(instance.address)}`, network);
 };

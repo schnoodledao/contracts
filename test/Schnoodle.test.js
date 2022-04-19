@@ -332,7 +332,7 @@ describe('Bridge', () => {
   });
 
   async function payFeeAndReceiveTokens(feeDelta) {
-    const amount = BigInt(chance.integer({ min: 1, max: await schnoodle.totalSupply() }));
+    const amount = BigInt(bigInt.randBetween(1, await getBalance(serviceAccount)));
 
     // Pre-burn the amount to prevent an overflow error on the reflected amount during minting
     await schnoodle.burn(amount, data, { from: serviceAccount });
@@ -340,7 +340,10 @@ describe('Bridge', () => {
     await testTotalSupplyDelta(holder, amount, async() => {
       const fee = chance.integer({ min: 1 });
       const networkId = chance.integer({ min: 1 }); 
+
       await schnoodle.payFee(networkId, { from: holder, value: fee + feeDelta });
+      assert.equal(fee + feeDelta, BigInt(await schnoodle.feesPaid(holder, networkId)), 'Paying the fee did not increase the fees paid by the specified amount');
+
       await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: serviceAccount });
       assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder, networkId)), 'Receiving tokens did not increase the tokens received by the specified amount');
     });

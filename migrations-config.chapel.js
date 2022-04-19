@@ -1,1 +1,4 @@
-module.exports = require("./migrations-config.testnet.js");
+module.exports = {
+  ...require("./migrations-config.testnet.js"),
+  initialBurn: true
+};

@@ -30,10 +30,7 @@ export class NavMenu extends Component {
 
   async componentDidMount() {
     const web3 = await getWeb3();
-
     window.ethereum.on('accountsChanged', () => window.location.reload(true));
-    window.ethereum.on('networkChanged', () => window.location.reload(true));
-
     this.setState({ account: web3.currentProvider.selectedAddress });
   }
 

@@ -61,6 +61,8 @@ export class Moontron extends Component {
       const mintFee = await (await fetch('nft/mintfee')).text();
       const assetConfigs = await (await fetch('nft/assetconfigs')).json();
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee, assetConfigs });
 
       this.viewer = new Viewer(this.viewerRef.current, this.options);

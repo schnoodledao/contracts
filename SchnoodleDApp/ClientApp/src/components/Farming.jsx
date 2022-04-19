@@ -6,7 +6,7 @@ import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
-import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks, handleError } from '../helpers';
+import { initializeHelpers, handleError, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -83,14 +83,15 @@ export class Farming extends Component {
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({ web3, schnoodle, schnoodleFarming, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
         await this.getInfo();
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
   }
 

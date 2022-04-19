@@ -116,6 +116,10 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         return _tokensReceived[account][networkId];
     }
 
+    function feesPaid(address account, uint256 networkId) external view returns (uint256) {
+        return _feesPaid[account][networkId];
+    }
+
     // Calls to the SchnoodleFarming proxy contract
 
     function lockedBalanceOf(address account) private returns(uint256) {

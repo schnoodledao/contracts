@@ -9,7 +9,7 @@ module.exports = async function (deployer, network) {
 
   // Deploy proxy contract
   const Contract = artifacts.require(contractName);
-  const proxy = await deployProxy(Contract, [schnoodle.address], { deployer });
+  const instance = await deployProxy(Contract, [schnoodle.address], { deployer });
   if (network === 'develop') return;
 
   // Transfer ownership of contract to SchnoodleGovernance
@@ -17,5 +17,5 @@ module.exports = async function (deployer, network) {
   await (await Contract.deployed()).transferOwnership((await SchnoodleGovernance.deployed()).address);
 
   const { appendList } = require('../scripts/contracts.js');
-  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(proxy.address)}`, network);
+  appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(instance.address)}`, network);
 };

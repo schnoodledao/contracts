@@ -5,26 +5,30 @@ module.exports = {
     const NewContract = artifacts.require(newContract);
     const ProxyContract = artifacts.require(proxyContract);
 
-    const proxy = await ProxyContract.deployed();
+    const instance = await ProxyContract.deployed();
+    let address;
 
     if (module.exports.isProduction(network)) {
       const { prepareUpgrade, admin } = require('@openzeppelin/truffle-upgrades');
       // Use unsafeAllowRenames until resolved: https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/73#issuecomment-968532028
-      const address = await prepareUpgrade(proxy.address, NewContract, { unsafeAllowRenames: true });
+      address = await prepareUpgrade(instance.address, NewContract, { unsafeAllowRenames: true });
 
-      const proxyAdmin = await admin.getInstance();
-      console.log("Write 'upgrade' at ProxyAdmin address:", proxyAdmin.address);
-      console.log("Proxy address:", proxy.address);
+      const instanceAdmin = await admin.getInstance();
+      module.exports.appendList(`${newContract}@${address}`, network);
+
+      console.log("Write 'upgrade' at ProxyAdmin address:", instanceAdmin.address);
+      console.log("Proxy address:", instance.address);
       console.log("Implementation address:", address);
 
-      module.exports.appendList(`${newContract}@${address}`, network);
+      return instance;
     } else {
-      const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+      const { upgradeProxy, erc1967 } = require('@openzeppelin/truffle-upgrades');
       // Use unsafeAllowRenames until resolved: https://github.com/OpenZeppelin/openzeppelin-upgrades/issues/73#issuecomment-968532028
-      return await upgradeProxy(proxy.address, NewContract, { deployer, call, unsafeAllowRenames: true });
-    }
+      const upgraded = await upgradeProxy(instance.address, NewContract, { deployer, call, unsafeAllowRenames: true });
+      module.exports.appendList(`${newContract}@${await erc1967.getImplementationAddress(upgraded.address)}`, network);
 
-    return proxy;
+      return upgraded;
+    }
   },
 
   appendList: (contractName, network) => {

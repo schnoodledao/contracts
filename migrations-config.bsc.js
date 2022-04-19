@@ -1,1 +1,4 @@
-module.exports = require("./migrations-config.mainnet.js");
+module.exports = {
+  ...require("./migrations-config.mainnet.js"),
+  initialBurn: true
+};

@@ -78,11 +78,13 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function _mint(address account, uint256 amount) internal {
         super._mint(account, _getReflectedAmount(amount), "", "");
+        emit Transfer(address(0), account, amount);
         _totalSupply += amount;
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
+        emit Transfer(account, address(0), amount);
         _totalSupply -= amount;
     }
 
@@ -115,7 +117,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function _getReflectRate() private view returns(uint256) {
         uint256 reflectedTotalSupply = super.totalSupply();
-        return reflectedTotalSupply == 0 ? 0 : super.totalSupply() / totalSupply();
+        return reflectedTotalSupply == 0 ? 0 : reflectedTotalSupply / totalSupply();
     }
 
     // Taxation functions

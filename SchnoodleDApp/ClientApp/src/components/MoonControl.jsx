@@ -7,7 +7,7 @@ import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
-import { initializeHelpers, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
+import { initializeHelpers, handleError, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
@@ -39,6 +39,7 @@ export class MoonControl extends Component {
       helpDetails: ''
     };
 
+    this.handleError = handleError.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
     this.globeRef = React.createRef();
     this.globeEl = React.createRef();
@@ -55,20 +56,21 @@ export class MoonControl extends Component {
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({ web3, schnoodle, schnoodleFarming }, async () => {
         await this.getInfo();
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 60000);
         this.setState({ getInfoIntervalId });
       });
 
-      // Set up Moon globe
+      // Set up the moon globe
       const globeElControls = this.globeEl.current.controls();
       globeElControls.autoRotate = true;
       globeElControls.autoRotateSpeed = 0.5;
 
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
   }
 
