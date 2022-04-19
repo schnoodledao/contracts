@@ -4,8 +4,8 @@ module.exports = {
   webpack: {
     configure: function (webpackConfig) {
       const fragLoader = {
-          test: /\.(vert|frag)$/,
-          use: ['raw-loader', 'glslify-loader']
+        test: /\.(vert|frag)$/,
+        use: ['raw-loader', 'glslify-loader']
       };
 
       addBeforeLoader(webpackConfig, loaderByName("file-loader"), fragLoader);
