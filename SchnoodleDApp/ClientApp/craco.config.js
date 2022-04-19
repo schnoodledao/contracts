@@ -1,18 +1,18 @@
 ﻿const { addBeforeLoader, loaderByName } = require("@craco/craco");
 
 module.exports = {
-    webpack: {
-        configure: function (webpackConfig) {
-            const fragLoader = {
-                test: /\.(vert|frag)$/,
-                use: ['raw-loader', 'glslify-loader']
-            };
+  webpack: {
+    configure: function (webpackConfig) {
+      const fragLoader = {
+          test: /\.(vert|frag)$/,
+          use: ['raw-loader', 'glslify-loader']
+      };
 
-            addBeforeLoader(webpackConfig, loaderByName("file-loader"), fragLoader);
+      addBeforeLoader(webpackConfig, loaderByName("file-loader"), fragLoader);
 
-            return webpackConfig;
-        }
-    },
+      return webpackConfig;
+    }
+  },
   style: {
     postcss: {
       plugins: [
