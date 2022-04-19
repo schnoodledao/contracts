@@ -31,12 +31,10 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-
 import { GUI } from 'dat.gui';
 
 import { environments } from './environments/index.js';
 import { createBackground } from './lib/three-vignette.js';
-
 const DEFAULT_CAMERA = '[default]';
 
 const MANAGER = new LoadingManager();
@@ -461,7 +459,6 @@ export class Viewer {
       } else {
         this.scene.remove(this.vignette);
       }
-
       this.scene.environment = envMap;
       this.scene.background = this.state.background ? envMap : null;
 
@@ -471,16 +468,11 @@ export class Viewer {
 
   getCubeMapTexture ( environment ) {
     const { path } = environment;
-
     // no envmap
     if ( ! path ) return Promise.resolve( { envMap: null } );
-
     return new Promise( ( resolve, reject ) => {
-
       new RGBELoader()
-        .setDataType( UnsignedByteType )
-        .load( path, ( texture ) => {
-
+        .load(path, (texture) => {
           const envMap = this.pmremGenerator.fromEquirectangular( texture ).texture;
           this.pmremGenerator.dispose();
 
