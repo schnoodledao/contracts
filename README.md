@@ -18,10 +18,17 @@ The following shared services should be set up **only once** per blockchain (exc
     - Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
 
 # Setup
+1. Populate the [secrets.json] file (see [Secrets](#secrets) below).
 1. Execute `npm i`.
 1. In Visual Studio Code, open each Solidity file in the [contracts](contracts) folder corresponding to the ABI files listed in [Nethereum.Generator.json](SchnoodleDApp/Nethereum.Generator.json), and press F5 ('Solidity: Compile Contract' command).
 1. If target network is local, execute `truffle develop` in a separate terminal.
 1. Execute `.\Migrate.ps1 <network> $true $true` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
+
+## Secrets
+1. For `mnemonic`, use any account that has some native test tokens.
+1. For `infuraProjectId`,  register an [Infura](https://infura.io/register) account, then create a project and get the project ID.
+1. For `etherscanApiKey`, register an [Etherscan](https://etherscan.io/register) account, then create an API key.
+1. For `bscscanApiKey`, register a [BscScan](https://bscscan.com/register) account, then create an API key.
 
 # Blockchain Launch
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.

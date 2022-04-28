@@ -32,10 +32,10 @@ module.exports = {
   },
 
   appendList: (contractName, network) => {
-    const fs = require('fs');
+    const { appendFile } = require('fs');
     const os = require("os");
 
-    fs.appendFile(`./contracts-${network}.txt`, contractName + os.EOL, (err) => {
+    appendFile(`./contracts-${network}.txt`, contractName + os.EOL, (err) => {
       if (err) {
          console.log(err);
       }

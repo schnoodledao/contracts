@@ -22,17 +22,18 @@ The following shared services should be set up **only once** per environment:
 1. Populate the [secrets.json](secrets.json) file (see [Secrets](#secrets) below), then execute `type .\secrets.json | dotnet user-secrets set`.
 
 ## Secrets
-1. For `bridgePrivateKey`, use any account that has some native test tokens. Ensure this account has the `BRIDGE` role (see [Roles](#roles) below).
-1. For `password`, enter any suitable unique password.
-1. For `Pinata:Jwt`, open a [Pinata](https://app.pinata.cloud) account then create an API key.
+1. For `Pinata:Jwt`, register a [Pinata](https://app.pinata.cloud) account, then create an API key.
 1. For `Blockchain:PrivateKey`, use any account that has some native test tokens. Ensure this account has the `MINTER_ROLE` role (see [Roles](#roles) below).
 1. For `Data:Key`, obtain the read-write primary key for the test Azure Cosmos DB account from the administrator of that account.
 1. For `Files:Key`, obtain one of the access keys for the test Azure storage account from the administrator of that account.
 
-### Roles
-To check that an this account has a role on the smart contract, use the `hasRole` function. To grant the role, the contract owner must grant it using `grantRole`.
-
 # Server
+1. Create `.env*` files with the application settings of the test App Service from the administrator of that account. Make the following amendments:
+    - `URL=localhost`
+    - `BRIDGE_PRIVATE_KEY=`
+        - Assign the private key of any account that has some native test tokens. Ensure this account has the `BRIDGE` role (see [Roles](#roles) below).
+    - `BRIDGE_PASSWORD=`
+        - Assign any suitable unique password.
 1. Execute `.\Server.ps1`.
 
 # Client
@@ -41,3 +42,5 @@ To check that an this account has a role on the smart contract, use the `hasRole
 1. Connect MetaMask to target network (e.g., Rinkeby or http://localhost:8545). You will need to reset MetaMask (in advanced settings) if the network is local and was restarted since the previous run.
 1. Add the first account private key in Truffle Develop to MetaMask, and select this account.
 
+# Roles
+To check if an account has a role on the smart contract, use the `hasRole` function. To grant the role, the contract owner must grant it using `grantRole`.

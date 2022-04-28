@@ -1,19 +1,35 @@
 {
   "name": "schnoodleserver",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Schnoodle Server",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tap --reporter=list --watch",
+    "start": "node -r dotenv/config server",
+    "start:dev": "node -r dotenv/config server dotenv_config_path=./.env.development"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schnoodledao/contracts.git"
+  },
+  "author": "Jason Payne",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/schnoodledao/contracts/issues"
+  },
+  "homepage": "https://github.com/schnoodledao/contracts/SchnoodleDApp#readme",
   "dependencies": {
+    "@azure/identity": "^2.0.4",
+    "@azure/keyvault-secrets": "^4.4.0",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.0",
-    "fastify": "^3.27.4",
+    "fastify": "^3.28.0",
     "firebase": "^9.6.11",
     "node-fetch": "^3.2.3",
-    "web3": "^1.7.1"
+    "web3": "^1.7.3"
+  },
+  "devDependencies": {
+    "pino-pretty": "^7.6.1",
+    "tap": "^16.1.0"
   }
 }
