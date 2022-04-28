@@ -3,8 +3,6 @@ const { mnemonic, infuraProjectId, moralisId, etherscanApiKey, bscscanApiKey } =
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
-  contracts_build_directory: path.join(__dirname, "SchnoodleDApp/ClientApp/src/contracts"),
-
   networks: {
     develop: {
       host: "localhost",
