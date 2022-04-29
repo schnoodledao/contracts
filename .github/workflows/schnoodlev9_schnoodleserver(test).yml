@@ -53,6 +53,9 @@ jobs:
         with:
           name: node-app
 
+      - name: Create folder
+        run: mkdir -p SchnoodleDApp/Server
+
       - name: Unzip artifact for deployment
         run: unzip artifact.zip -d SchnoodleDApp/Server
 
