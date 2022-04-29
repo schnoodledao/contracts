@@ -56,9 +56,9 @@ export class Bridge extends Component {
     this.handleError = handleError.bind(this);
     this.sendTokens = this.sendTokens.bind(this);
     this.receiveTokens = this.receiveTokens.bind(this);
+    this.swapNetworks = this.swapNetworks.bind(this);
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
-    this.swapNetworks = this.swapNetworks.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
     this.close = this.close.bind(this);
   }
@@ -267,8 +267,8 @@ export class Bridge extends Component {
   async swapNetworks(e) {
     const target = this.state.targetNetwork;
     const source = this.state.sourceNetwork;
-    this.setState({ ['sourceNetwork']: target }, async () => await this.getInfo());
-    this.setState({ ['targetNetwork']: source }, async () => await this.getInfo());
+    this.changeNetwork(target, source, 'sourceNetwork', 'targetNetwork');
+    this.changeNetwork(source, target, 'targetNetwork', 'sourceNetwork');
   }
 
   async changeSourceNetwork(e) {
