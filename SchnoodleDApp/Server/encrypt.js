@@ -1,4 +1,4 @@
-require('dotenv').config();
+var argv = require('minimist')(process.argv.slice(2));
 const CryptoJS = require("crypto-js");
 const request = require('request'); // TODO: Replace with Node fetch when available: https://github.com/nodejs/node/pull/41749
 
@@ -12,7 +12,7 @@ const encrypted = CryptoJS.AES.encrypt(process.env.BRIDGE_PRIVATE_KEY.toString(C
 
 request.post({
   headers: {'content-type' : 'application/json'},
-  url: `http://${process.env.URL}:${process.env.PORT}/WriteSecretMessage`,
+  url: `${argv.server}/WriteSecretMessage`,
   body: JSON.stringify({ message: `${salt.toString()}${encrypted.iv.toString()}${encrypted}` })
 }, function(error, response, body) {
   console.log(body);

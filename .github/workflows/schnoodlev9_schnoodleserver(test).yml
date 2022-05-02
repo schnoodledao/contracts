@@ -9,11 +9,14 @@ on:
       - schnoodlev9
   workflow_dispatch:
 
+env:
+  PROJECT: SchnoodleDApp/Server
+
 jobs:
   build:
     defaults:
       run:
-        working-directory: SchnoodleDApp/Server
+        working-directory: ${{ env.PROJECT }}
 
     runs-on: ubuntu-latest
 
@@ -38,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: node-app
-          path: SchnoodleDApp/Server/artifact.zip
+          path: ${{ env.PROJECT }}/artifact.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -54,10 +57,10 @@ jobs:
           name: node-app
 
       - name: Create folder
-        run: mkdir -p SchnoodleDApp/Server
+        run: mkdir -p ${{ env.PROJECT }}
 
       - name: Unzip artifact for deployment
-        run: unzip artifact.zip -d SchnoodleDApp/Server
+        run: unzip artifact.zip -d ${{ env.PROJECT }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp

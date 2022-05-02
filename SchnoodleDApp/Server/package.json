@@ -6,7 +6,9 @@
   "scripts": {
     "test": "tap --reporter=list --watch",
     "start": "node -r dotenv/config server",
-    "start:dev": "node -r dotenv/config server dotenv_config_path=./.env.development"
+    "start:dev": "node -r dotenv/config server dotenv_config_path=./.env.development",
+    "init": "node -r dotenv/config encrypt",
+    "init:dev": "node -r dotenv/config encrypt dotenv_config_path=./.env.development"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,7 @@
     "web3": "^1.7.3"
   },
   "devDependencies": {
+    "minimist": "^1.2.6",
     "pino-pretty": "^7.6.1",
     "tap": "^16.1.0"
   }

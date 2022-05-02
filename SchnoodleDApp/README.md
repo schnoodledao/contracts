@@ -36,6 +36,10 @@ The following shared services should be set up **only once** per environment:
         - Assign any suitable unique password.
 1. Execute `.\Server.ps1`.
 
+> 📘 Info
+>
+> Use `npm run init[:dev] -- --server {server}` to initialise a remote server after deployment where `server` is the base URL (e.g., `https://test.server.schnoodle.finance`).
+
 # Client
 1. Open [Schnoodle.sln](../Schnoodle.sln) in Visual Studio 2022.
 1. Build and run.
