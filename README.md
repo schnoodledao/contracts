@@ -17,6 +17,10 @@ The following shared services should be set up **only once** per blockchain (exc
     - Deploy and enable a SafeSnap DAO module instance with a default template as per the 'Setting up the module' instructions [here](https://github.com/gnosis/dao-module/blob/main/docs/setup_guide.md#setting-up-the-module).
     - Integrate the DAO module instance into Snapshot by adding the SafeSnap plugin to [Snapshot space settings](https://snapshot.org/#/schnoodle.eth/settings) with config `{ "address": "<DAO module address>" }`.
 
+> ⚠️ Important
+>
+> Ensure that [`core.symlinks`](https://git-scm.com/docs/git-config#Documentation/git-config.txt-coresymlinks) is true before cloning the repo. Use `git config --get core.symlinks` to check. Run your Git client in administrator mode to allow symlinks to be created.
+
 # Setup
 1. Populate the [secrets.json] file (see [Secrets](#secrets) below).
 1. Execute `npm i`.

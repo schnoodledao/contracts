@@ -12,7 +12,11 @@
     <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>eac86efe-9656-4983-8419-8df7682aed50</UserSecretsId>
-	<NethereumGenerateCode>true</NethereumGenerateCode>
+    <NethereumGenerateCode>false</NethereumGenerateCode>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <NethereumGenerateCode>true</NethereumGenerateCode>
   </PropertyGroup>
 
   <ItemGroup>
@@ -82,8 +86,8 @@
   </UsingTask>
 
   <Target Name="AfterBuildStep" AfterTargets="PreBuild" Condition="'$(NethereumGenerateCode)' == 'true'">
-	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8618&#xD;&#xA;using System;" />
-	<ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8625&#xD;&#xA;using System;" />
+    <ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronDefinition.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8618&#xD;&#xA;using System;" />
+    <ReplaceFileText FilePath="$(MSBuildProjectDirectory)\Contracts\MoontronService.cs" MatchExpression="using System;" ReplacementText="#pragma warning disable CS8625&#xD;&#xA;using System;" />
   </Target>
 
 </Project>
