@@ -36,7 +36,7 @@ const networks =
   }
 };
 
-export class Bridge extends Component {
+export default class Bridge extends Component {
   static displayName = Bridge.name;
 
   constructor(props) {

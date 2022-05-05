@@ -17,7 +17,7 @@ import Globe from 'react-globe.gl';
 const bigInt = require('big-integer');
 // ReSharper restore InconsistentNaming
 
-export class MoonControl extends Component {
+export default class MoonControl extends Component {
   static displayName = MoonControl.name;
 
   constructor(props) {

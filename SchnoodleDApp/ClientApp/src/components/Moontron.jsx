@@ -15,7 +15,7 @@ import queryString from 'query-string';
 
 // global fetch: false
 
-export class Moontron extends Component {
+export default class Moontron extends Component {
   static displayName = Moontron.name;
 
   constructor(props) {

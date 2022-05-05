@@ -17,7 +17,7 @@ import Loader from 'react-loader-spinner';
 const bigInt = require('big-integer');
 // ReSharper restore InconsistentNaming
 
-export class Farming extends Component {
+export default class Farming extends Component {
   static displayName = Farming.name;
   static vestiplotsCancellationToken;
   
