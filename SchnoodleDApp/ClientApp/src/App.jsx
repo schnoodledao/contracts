@@ -5,10 +5,10 @@ import { Home } from './components/Home';
 
 import './custom.css'
 
-const Bridge = React.lazy(() => import('./components/Bridge'));
-const Farming = React.lazy(() => import('./components/Farming'));
+const Bridge = React.lazy(() => import('./components/BridgeTS'));
+const Farming = React.lazy(() => import('./components/FarmingTS'));
 const MoonControl = React.lazy(() => import('./components/MoonControl'));
-const Moontron = React.lazy(() => import('./components/Moontron'));
+const Moontron = React.lazy(() => import('./components/MoontronTS'));
 
 export default class App extends Component {
   static displayName = App.name;
