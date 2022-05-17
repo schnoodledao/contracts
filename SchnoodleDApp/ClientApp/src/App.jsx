@@ -17,11 +17,11 @@ export default class App extends Component {
     return (
       <Suspense fallback={<div>Loading...</div>}>
         <Layout>
-          <Route exact path='/' component={Home} />
-          <Route path='/bridge' component={Bridge} />
-          <Route path='/farming' component={Farming} />
-          <Route path='/mooncontrol' component={MoonControl} />
-          <Route path='/moontron' component={Moontron} />
+          <Route exact path="/" component={Home} />
+          <Route path="/bridge" component={Bridge} />
+          <Route path="/farming" component={Farming} />
+          <Route path="/mooncontrol" component={MoonControl} />
+          <Route path="/moontron" component={Moontron} />
         </Layout>
       </Suspense>
     );

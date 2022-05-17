@@ -13,7 +13,7 @@ import { debounce, range } from 'lodash';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import Plot from 'react-plotly.js';
-import Loader from 'react-loader-spinner';
+import { Puff } from 'react-loader-spinner';
 const bigInt = require('big-integer');
 // ReSharper restore InconsistentNaming
 
@@ -744,7 +744,7 @@ export default class Farming extends Component {
                         <div className="tw-overlay tw-z-20">
                           <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
-                              <Loader type="Puff" color="#00BFFF" />
+                              <Puff color="#00BFFF" />
                             </div>
                             <div>
                               <p className="approxLabel tw-mt-4">{this.state.vestiplotProgress}%</p>

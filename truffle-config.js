@@ -51,7 +51,7 @@ module.exports = {
     },
     // BSC
     chapel: {
-      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-1-s1.binance.org:8545/'),
+      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-2-s1.binance.org:8545/'),
       websockets: true,
       network_id: 97,
       confirmations: 10,

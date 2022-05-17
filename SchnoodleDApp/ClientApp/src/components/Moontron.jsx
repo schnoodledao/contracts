@@ -9,7 +9,7 @@ import { Viewer } from '../viewer/viewer';
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import Loader from 'react-loader-spinner';
+import { Puff } from 'react-loader-spinner';
 import queryString from 'query-string';
 // ReSharper restore InconsistentNaming
 
@@ -189,7 +189,7 @@ export default class Moontron extends Component {
                         <div className="tw-overlay tw-z-20">
                           <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
-                              <Loader type="Puff" color="#00BFFF" />
+                              <Puff color="#00BFFF" />
                             </div>
                           </div>
                         </div>
