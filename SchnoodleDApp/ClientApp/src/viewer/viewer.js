@@ -19,7 +19,6 @@ import {
   REVISION,
   Scene,
   SkeletonHelper,
-  UnsignedByteType,
   Vector3,
   WebGLRenderer,
   sRGBEncoding,
