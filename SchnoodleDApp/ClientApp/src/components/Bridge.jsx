@@ -366,7 +366,7 @@ export default class Bridge extends Component {
       </div>;
     } else if (!serverStatus) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Server offline</div>
+        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Waiting for server...</div>
       </div>;
     } else if (serverError != null) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">

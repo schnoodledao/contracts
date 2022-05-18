@@ -28,7 +28,7 @@ The following shared services should be set up **only once** per environment:
 1. For `Files:Key`, obtain one of the access keys for the test Azure storage account from the administrator of that account.
 
 # Server
-1. Create `.env*` files with the application settings of the test App Service from the administrator of that account. Make the following amendments:
+1. Create `Server/.env*` files with the application settings of the test App Service from the administrator of that account. Make the following amendments:
     - `URL=localhost`
     - `BRIDGE_PRIVATE_KEY=`
         - Assign the private key of any account that has some native test tokens. Ensure this account has the `BRIDGE` role (see [Roles](#roles) below).
@@ -38,7 +38,7 @@ The following shared services should be set up **only once** per environment:
 
 > 📘 Info
 >
-> Use `npm run init[:dev] -- --server {server}` to initialise a remote server after deployment where `server` is the base URL (e.g., `https://test.server.schnoodle.finance`).
+> From `Server` folder, use `npm run init[:dev] -- --server {server}` to initialise a remote server after deployment where `server` is the base URL (e.g., `https://test.server.schnoodle.finance`).
 
 # Client
 1. Open [Schnoodle.sln](../Schnoodle.sln) in Visual Studio 2022.
