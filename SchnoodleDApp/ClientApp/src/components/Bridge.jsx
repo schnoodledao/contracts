@@ -135,13 +135,13 @@ export default class Bridge extends Component {
   async getInfo() {
     let serverStatus = false;
     try {
-      serverStatus = (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/Alive`)).ok;
+      serverStatus = (await fetch(`${process.env.REACT_APP_SERVER_URL}/Alive`)).ok;
 
       if (serverStatus) {
         const { selectedAddress, sourceNetwork, targetNetwork } = this.state;
 
         if (selectedAddress && sourceNetwork && targetNetwork) {
-          const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetTokensPending`, {
+          const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetTokensPending`, {
             method: 'POST',
             body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
           })).json();
@@ -249,7 +249,7 @@ export default class Bridge extends Component {
       if (fee) this.handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
       // Request the server to call receiveTokens on the Schnoodle contract
-      const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+      const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
         method: 'POST',
         body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
       })).json();
@@ -290,7 +290,7 @@ export default class Bridge extends Component {
 
   async getFee(network) {
     // Get the fee that must be paid before receiving tokens on the blockchain
-    const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/GetFee`, {
+    const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetFee`, {
       method: 'POST',
       body: JSON.stringify({ network })
     })).json();
