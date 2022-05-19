@@ -1,9 +1,9 @@
 // ReSharper disable InconsistentNaming
-import React, { Component, useState } from 'react';
+import React, { Component, useEffect, useState, useRef } from 'react';
 import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
 import getWeb3 from '../getWeb3';
-import { handleError } from '../helpersTS';
+import { handleError } from '../helpers';
 import { Viewer } from '../viewer/viewer';
 
 // Third-party libraries
@@ -50,18 +50,18 @@ interface IConfig {
 }
 
 const Moontron: React.FC<{}> = () => {
-    const [contracts, setContracts] = React.useState<IContractData>();
-    const [status, setStatus] = React.useState<Status>({success: false, message: ""});
-    const [helpModal, setOpenHelpModal] = React.useState(false);
-    const [helpInfo, setHelpInfo] = React.useState<IHelpInfo>();
-    const [busy, setBusy] = React.useState(false);
-    const [selectedComponents, setSelectedComponents] = React.useState([]);
-    const [selectedAsset, setSelectedAsset] = React.useState<string>();
-    const [selectedConfig, setSelectedConfig] = React.useState<string>();
-    const [assetConfigs, setAssetConfigs] = React.useState<IConfig>();
-    const [nftAssetItem, setNftAssetItem] = React.useState<INftAssetItem>();
-    const viewerRef = React.useRef(null);
-    const [viewer, setViewer] = React.useState(null);
+    const [contracts, setContracts] = useState<IContractData>();
+    const [status, setStatus] = useState<Status>({success: false, message: ""});
+    const [helpModal, setOpenHelpModal] = useState(false);
+    const [helpInfo, setHelpInfo] = useState<IHelpInfo>();
+    const [busy, setBusy] = useState(false);
+    const [selectedComponents, setSelectedComponents] = useState([]);
+    const [selectedAsset, setSelectedAsset] = useState<string>();
+    const [selectedConfig, setSelectedConfig] = useState<string>();
+    const [assetConfigs, setAssetConfigs] = useState<IConfig>();
+    const [nftAssetItem, setNftAssetItem] = useState<INftAssetItem>();
+    const viewerRef = useRef(null);
+    const [viewer, setViewer] = useState(null);
 
     const hash = window.location.hash ? queryString.parse(window.location.hash) : {};
     const options = {
@@ -71,7 +71,7 @@ const Moontron: React.FC<{}> = () => {
       cameraPosition: hash.cameraPosition ? (hash as any).cameraPosition.split(',').map(Number) : null
     };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const web3 = await getWeb3();

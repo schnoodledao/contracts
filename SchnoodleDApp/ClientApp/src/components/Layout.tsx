@@ -1,6 +1,7 @@
 // ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
-import NavMenu from './NavMenuTS';
+// @ts-ignore
+import NavMenu from './NavMenu.tsx';
 // ReSharper disable InconsistentNaming
 
 export class Layout extends Component {
@@ -10,7 +11,7 @@ export class Layout extends Component {
     return (
       <div className="">
         <NavMenu />
-        {this.props.children}
+        {(this.props as any).children}
       </div>
     );
   }

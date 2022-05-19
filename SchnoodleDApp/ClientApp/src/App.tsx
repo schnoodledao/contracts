@@ -1,14 +1,19 @@
 import React, { Component, Suspense } from 'react';
+// @ts-ignore
 import { Route } from 'react-router';
 import { Layout } from './components/Layout';
 import { Home } from './components/Home';
 
 import './custom.css'
 
-const Bridge = React.lazy(() => import('./components/BridgeTS'));
-const Farming = React.lazy(() => import('./components/FarmingTS'));
-const MoonControl = React.lazy(() => import('./components/MoonControl'));
-const Moontron = React.lazy(() => import('./components/MoontronTS'));
+// @ts-ignore
+const Bridge = React.lazy(() => import('./components/Bridge.tsx'));
+// @ts-ignore
+const Farming = React.lazy(() => import('./components/Farming.tsx'));
+// @ts-ignore
+const MoonControl = React.lazy(() => import('./components/MoonControl.tsx'));
+// @ts-ignore
+const Moontron = React.lazy(() => import('./components/Moontron.tsx'));
 
 export default class App extends Component {
   static displayName = App.name;

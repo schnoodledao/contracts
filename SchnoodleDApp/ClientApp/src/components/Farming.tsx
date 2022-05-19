@@ -1,12 +1,12 @@
 // ReSharper disable InconsistentNaming
-import React, { Component } from 'react';
+import React, { Component, useState, useRef, useEffect } from 'react';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import getWeb3 from '../getWeb3';
-import { initializeHelpers, handleError, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpersTS';
+import { initializeHelpers, handleError, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -98,10 +98,10 @@ interface IVestiplotData {
 }
 
 const Farming: React.FC<{}> = () => {
-  const [vestiplotsCancellationToken, setVestiplotsCancellationToken] = React.useState<Symbol>();
-  const [contracts, setContracts] = React.useState<IContractData>();
-  const [blockNumber, setBlockNumber] = React.useState<number>();
-  const [factors, setFactors] = React.useState<IFactorData>({
+  const [vestiplotsCancellationToken, setVestiplotsCancellationToken] = useState <Symbol>();
+  const [contracts, setContracts] = useState <IContractData>();
+  const [blockNumber, setBlockNumber] = useState <number>();
+  const [factors, setFactors] = useState <IFactorData>({
     factoredVestingBlocks: 0,
     vestingBlocksFactor: 0,
     factoredVestingBlocksMax: 0,
@@ -109,51 +109,51 @@ const Farming: React.FC<{}> = () => {
     unbondingBlocksFactor: 0,
     factoredUnbondingBlocksMax: 0
   });
-  const [rewards, setRewards] = React.useState<IRewardData>({
+  const [rewards, setRewards] = useState <IRewardData>({
     vestimatedReward: 0,
     vestimatedApy: 0
   });
-  const [optimum, setOptimum] = React.useState<IOptimumData>({
+  const [optimum, setOptimum] = useState <IOptimumData>({
     optimumVestingBlocks: 0,
     optimumUnbondingBlocks: 0
   });
-  const [progress, setProgress] = React.useState<IProgress>();
-  const [vestiplot, setVestiplot] = React.useState<IVestiplotData>({
+  const [progress, setProgress] = useState <IProgress>();
+  const [vestiplot, setVestiplot] = useState <IVestiplotData>({
     vestiplotReward: [],
     vestiplotApy: []
   });
-  const [openModal, setOpenHelpModal] = React.useState(false);
-  const [helpInfo, setHelpInfo] = React.useState<IHelpInfo>({
+  const [openModal, setOpenHelpModal] = useState (false);
+  const [helpInfo, setHelpInfo] = useState <IHelpInfo>({
     helpTitle: "",
     helpInfo: "",
     helpDetails: "",
   });
-  const [rates, setRates] = React.useState<IRateData>({
+  const [rates, setRates] = useState <IRateData>({
     operativeFeeRate: 0,
     donationRate: 0,
     sowRate: 0,
     sellQuota: { blockMetric: 0, amount: 0 }
   });
-  const [balances, setBalances] = React.useState<IBalanceData>({
+  const [balances, setBalances] = useState <IBalanceData>({
     farmingFundBalance: 0,
     balance: 0,
     lockedBalance: 0,
     unbondingBalance: 0
   });
-  const [summaries, setSummaries] = React.useState<ISummaryData>();
-  const [status, setStatus] = React.useState<IStatus>();
-  const [amounts, setAmounts] = React.useState<IAmountData>({
+  const [summaries, setSummaries] = useState <ISummaryData>();
+  const [status, setStatus] = useState <IStatus>();
+  const [amounts, setAmounts] = useState <IAmountData>({
     depositAmount: 0,
     availableAmount: 0,
     withdrawAmounts: [0]
   });
-  const [getInfoIntervalId, setGetInfoIntervalId] = React.useState<NodeJS.Timer | undefined>();
-  const savedCallback = React.useRef<any>(updateVestimates);
-  const savedVestiplots = React.useRef<any>(updateVestimates);
+  const [getInfoIntervalId, setGetInfoIntervalId] = useState <NodeJS.Timer | undefined>();
+  const savedCallback = useRef<any>(updateVestimates);
+  const savedVestiplots = useRef<any>(updateVestimates);
   savedCallback.current = debounce(updateVestimates, 500);
   savedVestiplots.current = debounce(updateVestiplots, 2000);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!contracts) return
     const { schnoodle, selectedAddress, schnoodleFarming } = contracts;
     const fetchData = async () => {
@@ -202,7 +202,7 @@ const Farming: React.FC<{}> = () => {
     fetchData();
   }, [contracts])
 
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const fetchData = async () => {
         const web3: any = await getWeb3();

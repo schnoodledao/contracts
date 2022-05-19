@@ -45,10 +45,6 @@ export async function setAverageBlockTime() {
 }
 
 export function calculateApy(amount: number, reward: any, blocks: number) {
-  console.log(amount);
-  console.log(reward);
-  console.log(blocks);
-  console.log(blocksPerDuration({years: 1}));
   return reward === '0' ? 0 : Number((reward / amount / (blocks / blocksPerDuration({ years: 1 })) * 100).toPrecision(2));
 }
 

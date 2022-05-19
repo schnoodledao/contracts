@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 // @ts-ignore
 import { Link } from 'react-router-dom';
@@ -9,13 +9,13 @@ import getWeb3 from '../getWeb3';
 // ReSharper restore InconsistentNaming
 
 const NavMenu: React.FC<{}> = () => {
-  const [collapsed, setCollapsed] = React.useState(true);
-  const [account, setAccount] = React.useState(null);
+  const [collapsed, setCollapsed] = useState<boolean>(true);
+  const [account, setAccount] = useState<string>(null);
   const toggleNavbar = () => {
     setCollapsed(!collapsed);
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
         const web3 = await getWeb3();
         (window as any).ethereum.on('accountsChanged', () => window.location.reload());
