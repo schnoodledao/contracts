@@ -122,12 +122,13 @@ export default class Bridge extends Component {
 
     await initializeHelpers(await schnoodle.methods.decimals().call());
 
+    await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
+    await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
+
     this.setState({
       web3,
       networkId,
       schnoodle,
-      sourceNetwork: localStorage.getItem('sourceNetwork') ?? sourceNetwork,
-      targetNetwork: localStorage.getItem('targetNetwork'),
       selectedAddress
     }, callback);
   }
@@ -225,15 +226,15 @@ export default class Bridge extends Component {
 
           // Attempt to switch the user's wallet to the target network so they can receive their tokens
           await switchNetwork(targetNetworkInfo);
-        } catch (err) {
-          this.handleError(err);
+        } catch (err1) {
+          this.handleError(err1);
           this.setState({ busySwap: false });
         }
 
         this.setState({ busySwap: false });
       });
-    } catch (err) {
-      this.handleError(err);
+    } catch (err2) {
+      this.handleError(err2);
       this.setState({ busySwap: false });
     }
   }
@@ -256,6 +257,8 @@ export default class Bridge extends Component {
 
       if (json.status !== 'ok') {
         this.setState({ serverError: json.body.message });
+      } else {
+        await this.getInfo();
       }
     } catch (err) {
       this.handleError(err);
@@ -264,11 +267,10 @@ export default class Bridge extends Component {
     this.setState({ busyReceive: false });
   }
 
-  async swapNetworks(e) {
-    const target = this.state.targetNetwork;
-    const source = this.state.sourceNetwork;
-    this.changeNetwork(target, source, 'sourceNetwork', 'targetNetwork');
-    this.changeNetwork(source, target, 'targetNetwork', 'sourceNetwork');
+  async swapNetworks() {
+    const { sourceNetwork, targetNetwork } = this.state;
+    await this.changeSourceNetwork({ value: targetNetwork });
+    await this.changeTargetNetwork({ value: sourceNetwork });
   }
 
   async changeSourceNetwork(e) {
@@ -375,49 +377,48 @@ export default class Bridge extends Component {
     } else {
       bridge =
         <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
-            <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
-                <div className="tw-w-full lg:tw-w-5/12 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-                    <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">From</div>
-                    <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                        <div>
-                            <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                            <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ IndicatorSeparator: () => null }}/>
-                        </div>
-                        <div className="tw-rounded-full tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt=""/></div>
-                    </div>
+          <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
+            <div className="tw-w-full lg:tw-w-5/12 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
+              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">From</div>
+              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                <div>
+                  <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ IndicatorSeparator: () => null }} />
                 </div>
-                <button onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
-                    <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt=""/>
-                </button>
-                <div className="tw-w-full lg:tw-w-5/12 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-                    <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">To</div>
-                    <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-5 tw-bg-neutral tw-rounded-lg">
-                        <div>
-                            <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                            <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ IndicatorSeparator: () => null }}/>
-                        </div>
-                        <div className="tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center tw-rounded-full"><img src="/assets/img/png/logo-krypto.png" alt=""/></div>
-                    </div>
-                </div>
+                <div className="tw-rounded-full tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
+              </div>
             </div>
-            <div className="tw-opacity-50 tw-text-white md:tw-text-base tw-mb-4 tw-tracking-wide tw-text-xs">Details</div>
-            {tokensPending > 0
+            <button onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+              <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
+            </button>
+            <div className="tw-w-full lg:tw-w-5/12 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
+              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">To</div>
+              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-5 tw-bg-neutral tw-rounded-lg">
+                <div>
+                  <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ IndicatorSeparator: () => null }} />
+                </div>
+                <div className="tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center tw-rounded-full"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
+              </div>
+            </div>
+          </div>
+          {tokensPending > 0
             ? <div className="tw-col-span-7 lg:bg-color lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
-                <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
-                </div>
-                <button onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
+              <div className="tw-text-center tw-mb-14 tw-leading-normal">
+                <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
               </div>
-            : <div>
-                <div className="tw-flex tw-flex-col tw-border-solid tw-mb-10 lg:tw-mb-16">
-                  <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="tw-w-full tw-text-white tw-bg-neutral tw-rounded-md tw-text-sm tw-border tw-border-border tw-p-3.5 tw-font-medium tw-outline-none focus:tw-outline-none" />
-                </div>
-                <button onClick={this.sendTokens} disabled={amount === 0} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">SEND</button>
-              </div>
-            }
-            <div className="tw-text-center tw-mt-2.5">
-                <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
+              <button onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
             </div>
+            : <div>
+              <div className="tw-flex tw-flex-col tw-border-solid tw-mb-10 lg:tw-mb-16">
+                <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="tw-w-full tw-text-white tw-bg-neutral tw-rounded-md tw-text-sm tw-border tw-border-border tw-p-3.5 tw-font-medium tw-outline-none focus:tw-outline-none" />
+              </div>
+              <button onClick={this.sendTokens} disabled={amount === 0} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">SEND</button>
+            </div>
+          }
+          <div className="tw-text-center tw-mt-2.5">
+            <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
+          </div>
         </div>;
     }
 
@@ -427,15 +428,10 @@ export default class Bridge extends Component {
           <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
             <div className="lg:tw-grid lg:tw-grid-cols-12 tw-block">
               <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
-                <div className="tw-text-3xl lg:tw-mb-8 tw-mb-4 tw-bg-gradient-to-r tw-from-purple-500 tw-to-purple-500">Schnoodle Bridge</div>
-                <div className="lg:tw-mb-8 tw-mb-4 tw-text-white">The bridge allows to exchange ERC20 tokens for BEP20 tokens as well as BEP20 for ERC20</div>
-                <a className="tw-font-bold text-main-color lg:tw-block tw-mb-8 tw-text-xl tw-transition-all tw-duration-200 hover:tw-text-main-color-hover" href="/info" onClick={() => this.handleGuide()}>Token exchange guide</a>
-                <a className="tw-font-bold text-main-color lg:tw-block tw-mb-8 tw-hidden tw-text-xl tw-transition-all tw-duration-200 hover:tw-text-main-color-hover" href="/info" onClick={() => this.handleFAQ()}>FAQ</a>
                 {fee &&
                   <div>
-                    <div className="tw-flex tw-font-bold tw-text-purple-500 lg:tw-mb-8 tw-mb-2 tw-text-xl tw-items-center">Fees</div>
                     <div className="tw-flex text-main-text tw-mb-7">
-                      Receive:
+                      Receive Fee:
                       <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
                     </div>
                   </div>
@@ -447,13 +443,6 @@ export default class Bridge extends Component {
         </div>
 
         <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
-
-        <div className="tw-hidden tw-bg-violet-900 mr-20 h-auto p-8 pt-24 pb-0 tw-fixed top-0 left-0 z-30 overflow-y-auto h-full">
-          <div className="text-2xl lg:text-3xl mb-16 block tw-text-white">Schnoodle Bridge</div>
-          <a className="tw-font-bold tw-text-xl text-main-color tw-mb-8 tw-block" href="/">Main Page</a>
-          <a href="/info" className="tw=font-bold tw-text-xl tw-text-second-color tw-mb-8 tw-block" onClick={() => this.handleGuide()}>Token exchange guide</a>
-          <a href="/info" className="tw-font-bold tw-text-xl tw-text-second-color tw-mb-8 tw-block" onClick={() => this.handleFAQ()}>FAQ</a>
-        </div>
       </div>
     );
   }
