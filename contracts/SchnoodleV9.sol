@@ -18,6 +18,7 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     bytes32 public constant BRIDGE = keccak256("BRIDGE");
 
     bool private _avoidReentrancy;
+    address private _bridgeOwner;
     mapping(address => mapping (uint256 => uint256)) private _tokensSent;
     mapping(address => mapping (uint256 => uint256)) private _tokensReceived;
     mapping(address => mapping (uint256 => uint256)) private _feesPaid;
@@ -27,12 +28,12 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
             _setupRole(DEFAULT_ADMIN_ROLE, owner());
             _setupRole(LIQUIDITY, liquidityToken);
             _setupRole(FARMING_CONTRACT, schnoodleFarming);
-            _setupRole(BRIDGE, bridgeOwner);
             _schnoodleFarming = schnoodleFarming;
             _farmingFund = address(uint160(uint256(keccak256(abi.encodePacked(block.timestamp, blockhash(block.number - 1))))));
             _sowRate = 40;
         }
 
+        _bridgeOwner = bridgeOwner;
         configure(testnet);
     }
 
@@ -85,6 +86,10 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
     // Bridge functions
 
+    function getBridgeOwner() external view returns (address) {
+        return _bridgeOwner;
+    }
+
     function sendTokens(uint256 networkId, uint256 amount) external {
         burn(amount, "");
         _tokensSent[_msgSender()][networkId] += amount;
@@ -92,11 +97,12 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
     function payFee(uint256 networkId) external payable {
         _feesPaid[_msgSender()][networkId] += msg.value;
+        payable(_bridgeOwner).transfer(msg.value);
     }
 
     function receiveTokens(address account, uint256 networkId, uint256 amount, uint256 fee) external {
         require(!_avoidReentrancy);
-        require(hasRole(BRIDGE, _msgSender()));
+        require(_msgSender() == _bridgeOwner, "Schnoodle: Sender must be the bridge owner");
         require(_feesPaid[account][networkId] >= fee, "Schnoodle: Insufficient fee paid");
 
         _avoidReentrancy = true;

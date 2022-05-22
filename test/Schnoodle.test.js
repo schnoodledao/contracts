@@ -135,7 +135,7 @@ describe('Transfer', () => {
 
   async function transferFrom(schnoodle, sender, recipient, amount) {
     await schnoodle.approve(sender, amount, {from: sender});
-    assert.equal(amount, BigInt(await schnoodle.allowance(sender, sender)));
+    assert.equal(BigInt(await schnoodle.allowance(sender, sender)), amount, 'Amount to be transferred is not approved');
     await schnoodle.transferFrom(sender, recipient, amount, {from: sender});
   }
 
@@ -306,18 +306,18 @@ describe('Bridge', () => {
 
   beforeEach(async function () {
     await populateAccounts();
-    holder = chance.pickone(accounts);
+    holder = chance.pickone(accounts.filter(a => a != serviceAccount));
   });
 
   it('should increase the tokens sent by the specified amount', async() => {
     const amount = await getRandomBalance(holder);
 
     await testTotalSupplyDelta(holder, -amount, async() => {
-      const networkId = chance.integer({ min: 1 }); 
+      const networkId = chance.integer({ min: 1 });
       await schnoodle.sendTokens(networkId, amount, { from: holder });
-      assert.equal(amount, BigInt(await schnoodle.tokensSent(holder, networkId)), 'Sending tokens did not increase the tokens sent by the specified amount');
+      assert.equal(BigInt(await schnoodle.tokensSent(holder, networkId)), amount, 'Sending tokens did not increase the tokens sent by the specified amount');
     });
-  }); 
+  });
 
   it('should increase the tokens received by the specified amount when the exact fee is paid', async() => {
     await payFeeAndReceiveTokens(0);
@@ -339,13 +339,17 @@ describe('Bridge', () => {
 
     await testTotalSupplyDelta(holder, amount, async() => {
       const fee = chance.integer({ min: 1 });
-      const networkId = chance.integer({ min: 1 }); 
+      const networkId = chance.integer({ min: 1 });
+      const bridgeOwner = await schnoodle.getBridgeOwner();
+      const bridgeOwnerStartBalance = BigInt(await web3.eth.getBalance(bridgeOwner));
 
       await schnoodle.payFee(networkId, { from: holder, value: fee + feeDelta });
-      assert.equal(fee + feeDelta, BigInt(await schnoodle.feesPaid(holder, networkId)), 'Paying the fee did not increase the fees paid by the specified amount');
 
-      await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: serviceAccount });
-      assert.equal(amount, BigInt(await schnoodle.tokensReceived(holder, networkId)), 'Receiving tokens did not increase the tokens received by the specified amount');
+      assert.equal(BigInt(await schnoodle.feesPaid(holder, networkId)), fee + feeDelta, 'Paying the fee did not increase the fees paid by the specified amount');
+      assert.equal(BigInt(await web3.eth.getBalance(bridgeOwner)) - bridgeOwnerStartBalance, fee + feeDelta, 'The fee was not transferred to the bridge owner');
+
+      await schnoodle.receiveTokens(holder, networkId, amount, fee, { from: bridgeOwner });
+      assert.equal(BigInt(await schnoodle.tokensReceived(holder, networkId)), amount, 'Receiving tokens did not increase the tokens received by the specified amount');
     });
   }
 });
