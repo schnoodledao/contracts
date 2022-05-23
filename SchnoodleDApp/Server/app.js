@@ -6,7 +6,7 @@ const { writeFile } = require('fs/promises');
 const CryptoJS = require('crypto-js');
 const BigNumber = require('bignumber.js');
 const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, get, set, child, onValue } = require('firebase/database');
+const { getDatabase, ref, get, set, child, increment, onValue } = require('firebase/database');
 
 const { SecretClient } = require("@azure/keyvault-secrets");
 const { DefaultAzureCredential } = require("@azure/identity");
@@ -98,28 +98,30 @@ function build(opts = {}) {
       const privateKey = (await decryptMessage()).toString(CryptoJS.enc.Utf8);
       const schnoodleReceiver = getContract(data.targetNetwork);
       const tokensPending = await getTokensPending(data, true);
+      const sourceNetworkId = await getNetworkId(data.sourceNetwork);
+      const feePaid = await schnoodleReceiver.methods.feesPaid(data.address, sourceNetworkId).call();
 
       // Build transaction to call receiveTokens
-      const txSend = {
+      const txReceive = {
         from: web3.eth.accounts.privateKeyToAccount(privateKey).address,
         to: schnoodleReceiver.options.address,
         gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
-        data: schnoodleReceiver.methods.receiveTokens(data.address, await getNetworkId(data.sourceNetwork), tokensPending, fees[data.targetNetwork]).encodeABI()
+        data: schnoodleReceiver.methods.receiveTokens(data.address, sourceNetworkId, tokensPending, fees[data.targetNetwork]).encodeABI()
       };
 
-      txSend.gasLimit = await web3.eth.estimateGas(txSend) * 2;
-      const receipt = await web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txSend, privateKey)).rawTransaction);
+      txReceive.gasLimit = await web3.eth.estimateGas(txReceive) * 2;
+      const receipt = await web3.eth.sendSignedTransaction((await web3.eth.accounts.signTransaction(txReceive, privateKey)).rawTransaction);
 
       if (receipt.status) {
-        set(child(dbRef, data.targetNetwork), receipt.gasUsed * txSend.gasPrice);
+        // Adjust the fee tally for the network by the cost of the above transaction less that paid by the user
+        await set(child(dbRef, data.targetNetwork), increment(receipt.gasUsed * txReceive.gasPrice - feePaid));
         sendReply(reply, 'ok');
       }
     } catch (err) {
       console.log(err);
       message = err.message;
+      sendReply(reply, 'error', { message });
     }
-
-    sendReply(reply, 'error', { message });
   });
 
   return app;

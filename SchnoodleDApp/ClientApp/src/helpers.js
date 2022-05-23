@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import getWeb3 from './getWeb3';
+import Web3 from 'web3';
 const { Duration } = require('luxon');
 const humanizeDuration = require('humanize-duration');
 const bigInt = require('big-integer');
@@ -14,6 +14,14 @@ export async function initializeHelpers(decimalsValue) {
 }
 
 //#region Web3 Helpers
+
+export function getWeb3() {
+  return window.ethereum
+    ? new Web3(window.ethereum) // Modern DApp browsers
+    : window.web3
+      ? window.web3 // Legacy DApp browsers
+      : new Web3(new Web3.providers.HttpProvider('http://localhost:8545')); // Fallback to localhost; use dev console port by default
+}
 
 export function scaleDownPrecise(amount, precision) {
   return (amount / 10 ** decimals).toPrecision(precision);

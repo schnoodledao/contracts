@@ -5,8 +5,7 @@ import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
-import getWeb3 from '../getWeb3';
-import { initializeHelpers, handleError, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
+import { initializeHelpers, handleError, getWeb3, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
@@ -662,7 +661,7 @@ export default class Farming extends Component {
                                 </span>
                               </label>
                               <div className="tw-relative tw-flex">
-                                <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} className="depositinput" />
+                                <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} className="depositinput" />
                                 <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
                                 <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
                                 <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
@@ -681,7 +680,7 @@ export default class Farming extends Component {
                               </span>
                             </label>
                             <div className="tw-mb-3 tw-flex">
-                              <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={'Max: ' + this.state.factoredVestingBlocksMax} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} className="depositinput w-full" />
+                              <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={`Max: ${this.state.factoredVestingBlocksMax}`} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} className="depositinput w-full" />
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
@@ -700,7 +699,7 @@ export default class Farming extends Component {
                               </span>
                             </label>
                             <div className="tw-mb-3 tw-flex">
-                              <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={'Max: ' + this.state.factoredUnbondingBlocksMax} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} className="depositinput" />
+                              <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={`Max: ${this.state.factoredUnbondingBlocksMax}`} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} className="depositinput" />
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
                               <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>

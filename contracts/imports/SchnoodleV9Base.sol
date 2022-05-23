@@ -46,30 +46,12 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return _getStandardAmount(super.balanceOf(account));
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
-        uint256 reflectedAmount = _getReflectedAmount(amount);
-        bool result = super.transfer(recipient, reflectedAmount);
-        emit Transfer(_msgSender(), recipient, amount);
-        processSwap(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
-
-        return result;
-    }
-
     function allowance(address holder, address spender) public view override returns (uint256) {
         return _getStandardAmount(super.allowance(holder, spender));
     }
 
     function _approve(address holder, address spender, uint256 value) internal override {
         super._approve(holder, spender, _getReflectedAmount(value));
-    }
-
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        uint256 reflectedAmount = _getReflectedAmount(amount);
-        bool result = super.transferFrom(sender, recipient, reflectedAmount);
-        emit Transfer(sender, recipient, amount);
-        processSwap(sender, recipient, amount, reflectedAmount, _transferFromReflected);
-
-        return result;
     }
 
     function _spendAllowance(address owner, address spender, uint256 amount) internal override {

@@ -37,7 +37,7 @@ The following shared services should be set up **only once** per blockchain (exc
 # Blockchain Launch
 1. Note the 'To' contract address of the `create_0_1` internal transaction of the `SchnoodleTimelockFactory` Contract Creation transaction. Verify the `SchnoodleTimelock` contract using this address.
 1. Add liquidity to Uniswap V2, and note the liquidity token address (UNI-V2 token) from the corresponding transaction.
-1. [Create a timelock contract](#create-timelock-contract) to lock the full amount of the liquidity token held by the beneficiary wallet.
+1. [Create a timelock contract](#timelock-tokens) to lock the full amount of the liquidity token held by the beneficiary wallet.
 
 # Operational Procedures
 ## Timelock Tokens
