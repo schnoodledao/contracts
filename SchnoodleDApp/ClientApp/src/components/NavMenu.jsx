@@ -51,7 +51,7 @@ export class NavMenu extends Component {
       <header>
         <Navbar className="navbar-expand-sm navbar-toggleable-sm tw-bg-neutral tw-text-neutral-content tw-font-roboto tw-px-1 md:tw-px-4" dark>
           <NavbarBrand tag={Link} to="/" className="tw-leading-tight tw-uppercase tw-font-bold">
-            <img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
+            <img className="tw-w-40 tw-h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
           </NavbarBrand>
           <NavbarToggler onClick={this.toggleNavbar} className="mr-2" />
           <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!this.state.collapsed} navbar>

@@ -385,7 +385,7 @@ export default class Bridge extends Component {
                   <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
                   <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ IndicatorSeparator: () => null }} />
                 </div>
-                <div className="tw-rounded-full tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
+                <div className="tw-rounded-full tw-w-1/6 lg:tw-w-3/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
               </div>
             </div>
             <button onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
@@ -393,12 +393,12 @@ export default class Bridge extends Component {
             </button>
             <div className="tw-w-full lg:tw-w-5/12 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
               <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">To</div>
-              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-5 tw-bg-neutral tw-rounded-lg">
+              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
                   <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
                   <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ IndicatorSeparator: () => null }} />
                 </div>
-                <div className="tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center tw-rounded-full"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
+                <div className="tw-w-1/6 lg:tw-w-3/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center tw-rounded-full"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
               </div>
             </div>
           </div>
