@@ -2,8 +2,7 @@
 import React, { Component } from 'react';
 import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
-import getWeb3 from '../getWeb3';
-import { handleError } from '../helpers';
+import { handleError, getWeb3 } from '../helpers';
 import { Viewer } from '../viewer/viewer';
 
 // Third-party libraries

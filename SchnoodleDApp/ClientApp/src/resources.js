@@ -154,6 +154,5 @@ export const moontron = {
 export const bridge = {
   BRIDGE: 'Bridge',
   BUSY_MESSAGE_SWAP: 'Token swap in progress...',
-  BUSY_MESSAGE_APPROVE: 'Approval in progress...',
   BUSY_MESSAGE_RECEIVE: 'Token receipt in progress...'
 }

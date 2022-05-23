@@ -1,11 +1,10 @@
 // ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
-import { bridge as resources } from '../resources';
+import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
-import getWeb3 from '../getWeb3';
-import { initializeHelpers, handleError, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
+import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
 
 // Third-party libraries
 import Web3 from 'web3';
@@ -44,13 +43,11 @@ export default class Bridge extends Component {
 
     this.state = {
       success: false,
-      busyApprove: false,
       busySwap: false,
       busyReceive: false,
       tokensPending: 0,
       amount: 0,
-      serverError: null,
-      showClose: false
+      serverError: null
     }
 
     this.handleError = handleError.bind(this);
@@ -60,7 +57,6 @@ export default class Bridge extends Component {
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
-    this.close = this.close.bind(this);
   }
 
   async componentDidMount() {
@@ -100,37 +96,42 @@ export default class Bridge extends Component {
   }
 
   async updateWeb3(callback) {
-    const web3 = await getWeb3();
-    const { schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
+    try {
+      const web3 = await getWeb3();
+      const { schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
 
-    let schnoodle, sourceNetwork;
-    const networkId = await web3.eth.net.getId();
-    const selectedAddress = web3.currentProvider.selectedAddress;
+      let schnoodle, sourceNetwork;
+      const networkId = await web3.eth.net.getId();
+      const selectedAddress = web3.currentProvider.selectedAddress;
 
-    switch (networkId.toString()) {
-      case process.env.REACT_APP_ETH_NET_ID:
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-        sourceNetwork = Network.ethereum;
-        break;
-      case process.env.REACT_APP_BSC_NET_ID:
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-        sourceNetwork = Network.bsc;
-        break;
-      default:
-        throw new Error(`Network ID ${networkId} unsupported.`);
+      switch (networkId.toString()) {
+        case process.env.REACT_APP_ETH_NET_ID:
+          schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
+          sourceNetwork = Network.ethereum;
+          break;
+        case process.env.REACT_APP_BSC_NET_ID:
+          schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
+          sourceNetwork = Network.bsc;
+          break;
+        default:
+          throw new Error(`Network ID ${networkId} unsupported.`);
+      }
+
+      await initializeHelpers(await schnoodle.methods.decimals().call());
+
+      await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
+      await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
+
+      this.setState({
+        web3,
+        networkId,
+        schnoodle,
+        selectedAddress,
+        message: null
+      }, callback);
+    } catch (err) {
+      this.handleError(err);
     }
-
-    await initializeHelpers(await schnoodle.methods.decimals().call());
-
-    await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
-    await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
-
-    this.setState({
-      web3,
-      networkId,
-      schnoodle,
-      selectedAddress
-    }, callback);
   }
 
   async getInfo() {
@@ -310,25 +311,8 @@ export default class Bridge extends Component {
     this.setState({ amount });
   }
 
-  handleFaq() {
-    localStorage.setItem('info', 'faq');
-  }
-
-  handleGuide() {
-    localStorage.setItem('info', 'guide');
-  }
-
-  close() {
-    this.clearMessage();
-    this.setState({ showClose: false, amount: 0, tokensReceived: 0 });
-  }
-
-  clearMessage() {
-    this.setState({ message: null });
-  }
-
   render() {
-    const { networkId, sourceNetwork, targetNetwork, busyApprove, busySwap, busyReceive, showClose, tokensPending, fee, amount, selectedAddress, serverStatus, serverError, hash, message } = this.state;
+    const { networkId, sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
 
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
     const targetNetworks = sourceNetworks;
@@ -342,29 +326,34 @@ export default class Bridge extends Component {
       option: (provided, state) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : '#6f1860', background: '#070c39' })
     }
 
-    const busyMessage = busyApprove
-        ? resources.BUSY_MESSAGE_APPROVE
-        : busySwap
-        ? resources.BUSY_MESSAGE_SWAP
-        : busyReceive
+    const busyMessage = busySwap
+      ? resources.BUSY_MESSAGE_SWAP
+      : busyReceive
         ? resources.BUSY_MESSAGE_RECEIVE
         : null;
 
-    const displayAccount = selectedAddress ? selectedAddress.slice(0, 6) + '...' + selectedAddress.slice(-6) : '';
-
     let bridge;
-    if (busyMessage) {
+
+    if (!this.state.web3) {
+      return (
+        <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
+          <div className="h-noheader md:tw-flex">
+            <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
+              <div className="tw-px-4">
+                <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
+                <div className="maintitles tw-uppercase">{resources.BRIDGE}</div>
+                <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
+                <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
+                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    } else if (busyMessage) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
         <img src="/assets/img/svg/load.svg" alt="" className="tw-w-16 tw-h-16 tw-mb-8 lg:tw-mb-11 tw-animate-spin" />
         <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
-      </div>;
-    } else if (showClose) {
-      bridge = <div className="tw-col-span-7 lg:tw-bg-violet-900 bg-transparent lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl tw-text-white">
-        <div className="tw-flex tw-items-center tw-flex-col tw-text-2xl lg:tw-text-3xl">
-          <div className="tw-text-center tw-mb-9 tw-leading-normal">We sent you <span className="text-main-color tw-font-medium">{tokensPending}</span> <span className="tw-font-bold">{`SNOOD to the ${targetNetwork} network at address ${displayAccount}`}</span></div>
-          <div className="tw-text-lg tw-mb-16 lg:tw-mb-5 tw-text-center">You can track the transaction <a href={sourceNetwork === Network.bsc ? `http://testnet.bscscan.com/tx/${hash}` : (`http://rinkeby.etherscan.io/tx/${hash}`)} target="_blank" rel="noreferrer" className="text-main-color tw-transition-all tw-duration-200 hover:text-main-color hover:tw-underline">here</a></div>
-          <button onClick={this.close} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-color tw-text-white tw-outline-none focus:tw-outline-none">CLOSE</button>
-        </div>
       </div>;
     } else if (!serverStatus) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
@@ -372,7 +361,7 @@ export default class Bridge extends Component {
       </div>;
     } else if (serverError != null) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{`Remote server error: ${serverError}`}</div>
+        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{`Server error: ${serverError}`}</div>
       </div>;
     } else {
       bridge =
@@ -388,7 +377,7 @@ export default class Bridge extends Component {
                 <div className="tw-rounded-full tw-w-1/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
               </div>
             </div>
-            <button onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+            <button type="button" onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
             <div className="tw-w-full lg:tw-w-5/12 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
@@ -404,17 +393,17 @@ export default class Bridge extends Component {
           </div>
           {tokensPending > 0
             ? <div className="tw-col-span-7 lg:bg-color lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
-              <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
+                <div className="tw-text-center tw-mb-14 tw-leading-normal">
+                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
+                </div>
+                <button type="button" onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
               </div>
-              <button onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
-            </div>
             : <div>
-              <div className="tw-flex tw-flex-col tw-border-solid tw-mb-10 lg:tw-mb-16">
-                <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="tw-w-full tw-text-white tw-bg-neutral tw-rounded-md tw-text-sm tw-border tw-border-border tw-p-3.5 tw-font-medium tw-outline-none focus:tw-outline-none" />
+                <div className="tw-flex tw-flex-col tw-border-solid tw-mb-10 lg:tw-mb-16">
+                  <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="tw-w-full tw-text-white tw-bg-neutral tw-rounded-md tw-text-sm tw-border tw-border-border tw-p-3.5 tw-font-medium tw-outline-none focus:tw-outline-none" />
+                </div>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">SEND</button>
               </div>
-              <button onClick={this.sendTokens} disabled={amount === 0} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">SEND</button>
-            </div>
           }
           <div className="tw-text-center tw-mt-2.5">
             <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
@@ -423,27 +412,31 @@ export default class Bridge extends Component {
     }
 
     return (
-      <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900">
-        <div className="lg:tw-py-16 tw-py-10 tw-flex-grow">
-          <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
-            <div className="lg:tw-grid lg:tw-grid-cols-12 tw-block">
-              <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
-                {fee &&
-                  <div>
-                    <div className="tw-flex text-main-text tw-mb-7">
-                      Receive Fee:
-                      <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
-                    </div>
+      <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
+        <fieldset disabled={selectedAddress == null}>
+          <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
+            <div className="lg:tw-py-16 tw-py-10 tw-flex-grow">
+              <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
+                <div className="lg:tw-grid lg:tw-grid-cols-12 tw-block">
+                  <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                    {fee &&
+                      <div>
+                        <div className="tw-flex text-main-text tw-mb-7">
+                          Receive Fee:
+                          <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
+                        </div>
+                      </div>
+                    }
                   </div>
-                }
+                  {bridge}
+                </div>
               </div>
-              {bridge}
             </div>
-          </div>
-        </div>
 
-        <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
-      </div>
+            <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
+          </div>
+        </fieldset>
+      </form>
     );
   }
 }

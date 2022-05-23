@@ -4,7 +4,6 @@ import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from '
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
 import { bridge, farming, moontron } from '../resources';
-import getWeb3 from '../getWeb3';
 // ReSharper restore InconsistentNaming
 
 export class NavMenu extends Component {
@@ -29,21 +28,14 @@ export class NavMenu extends Component {
   }
 
   async componentDidMount() {
-    const web3 = await getWeb3();
     window.ethereum.on('accountsChanged', () => window.location.reload(true));
-    this.setState({ account: web3.currentProvider.selectedAddress });
+    await this.connect();
   }
 
   async connect() {
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    let account = null;
-
-    if (accounts.length > 0) {
-      account = accounts[0];
-      localStorage.setItem('account', account);
-    }
-
-    this.setState({ account });
+    await window.ethereum.enable();
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    this.setState({ account: accounts.length > 0 ? accounts[0] : null });
   }
 
   render() {
