@@ -247,7 +247,7 @@ export default class Bridge extends Component {
       // Pay the fee (suggested by the server) to the Schnoodle contract
       const sourceNetworkId = networks[sourceNetwork].id;
       const fee = await this.getFee(targetNetwork) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
-      if (fee) this.handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
+      if (fee > 0) this.handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
       // Request the server to call receiveTokens on the Schnoodle contract
       const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
