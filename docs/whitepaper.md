@@ -1,5 +1,5 @@
 ---
-description: The world's first dog-themed token whitepaper
+description: Accessible to all, without the compromise
 coverY: 0
 ---
 
@@ -7,23 +7,17 @@ coverY: 0
 
 ## Schnoodle Backstory
 
-> "What's past is prologue." ─ William Shakespeare. _The Tempest._
+Schnoodle was incepted by our founder and CTO, Jason Payne, who decided to build Schnoodle because he was disillusioned with cryptocurrencies being released one after the other that had no real innovation, and were mostly copypasta smart contract clones of other tokens with a few tweaks. And those tweaks were typically convoluted layers of abstraction that usually benefited the dev team rather than the community.
 
-The story behind Schnoodle is unlike any other dog-themed coin. We realised that all the dog coins coming out one after another were just copy-paste contract clones of other tokens with some tweaks to the code to make it more lucrative for the dev team, add convoluted layers of abstraction to hide ruggability, etc.
+_**And who's your development team?**_
 
-_**Cool, so you jumped on the doggy bandwagon?**_
+While we have a small team of frontend and backend developers working on Schnoodle, Jason is the lead developer on the full stack, but the only one who works on the blockchain code - this is for security and quality reasons. He has an extensive track record working for many years in the investment banking industry as a senior software developer (see his [LinkedIn profile](https://www.linkedin.com/in/techjp/)), and currently leads two IT divisions for the largest educational publisher in the Netherlands.
 
-No. Our principal developer investigated what was really going on, and how he could apply his many dog years of experience as an algo programmer for the world's largest investment banks to this new DeFi movement that is taking the world by storm (even Elon Musk is in on it) to shape this into something more sustainable from the beginning, something that differentiates us from the rest in multiple ways that our hodlers would appreciate and understand.
-
-_**And who's your principal developer?**_
-
-His name is Jason Payne – he has a glittering track record as a senior dev for many large British, American and Swiss banks while based in the financial centre of London, and is currently leading two IT divisions for the largest educational provider in the Netherlands.
-
-But his online name is [Neo](https://twitter.com/Neo42), and this is where it gets interesting...
+Jason's online name is [Neo](https://twitter.com/Neo42), and this is where it gets interesting...
 
 _**Tell me more...**_
 
-Last year, a DeFi project known as RFI was incepted by [Reflect Foundation](https://reflect.finance/) for which the contract code was developed by the notorious developer known as Morpheus. Do you see where we're going with this? 😉 The project became controversial as the code was copyrighted, but he eventually [open-sourced](https://github.com/reflectfinance/reflect-contracts/blob/main/contracts/REFLECT.sol) it. The contract can be found [here](https://etherscan.io/address/0xa1afffe3f4d611d252010e3eaf6f4d77088b0cd7#code).
+In 2020, a DeFi project known as RFI was incepted by [Reflect Foundation](https://reflect.finance/) for which the contract code was developed by the notorious developer known as Morpheus. Do you see where we're going with this? 😉 The project became controversial as the code was copyrighted, but he eventually [open-sourced](https://github.com/reflectfinance/reflect-contracts/blob/main/contracts/REFLECT.sol) it. The contract can be found [here](https://etherscan.io/address/0xa1afffe3f4d611d252010e3eaf6f4d77088b0cd7#code).
 
 The key idea behind this code is that it contains a complex algorithm using lots of complex states to "reflect" a different balance to holders that includes a distribution of fees from other transfers. In other words, whenever the token is sold, a fee is charged and distributed algorithmically to all other holders.
 
@@ -33,9 +27,9 @@ _**So, lemme guess. Neo wanted to kick Morpheus' ass?**_
 
 ![Neo dawg vs Morpheus dawg](.gitbook/assets/neo-vs-morpheus.png)
 
-In analysing this code, Neo noticed that there were numerous inexcusable flaws that simply indicated laziness and haste on the part of the devs. Absolutely no care had been taken to ensure hodlers were given the best deal in terms of gas fees and potential ruggability. There are functions that allow the contract owner to include and exclude addresses from the fee process at will. How is this fair to other hodlers? And the code for SAFEMOON was compiled with Solidity 0.6.12 which was already over 7 months old at the time of launch when Solidity was _already_ at version 0.8.1. This may not sound hugely important, but it takes very little effort to use a more recent version, and this would have afforded some code tweaks that would result in less gas fees for hodlers.
+In analysing this code, Neo noticed that there were numerous inexcusable flaws that simply indicated laziness and haste on the part of the devs. Absolutely no care had been taken to ensure holders were given the best deal in terms of gas fees and potential ruggability. There are functions that allow the contract owner to include and exclude addresses from the fee process at will. How is this fair to other holders? And the code for SAFEMOON was compiled with Solidity 0.6.12 which was already over 7 months old at the time of launch when Solidity was _already_ at version 0.8.1. This may not sound hugely important, but it takes very little effort to use a more recent version, and this would have afforded some code tweaks that would result in less gas fees for holders.
 
-Not only that, but the devs didn't even enable optimisation on deployment (as can be seen at the top of the contract page). Again, highly lazy, or just plain incompetence, and it's the hodlers who suffer.
+Not only that, but the devs didn't even enable optimisation on deployment (as can be seen at the top of the contract page). Again, highly lazy, or just plain incompetence, and it's the holders who suffer.
 
 HOKK was released more than a month later and made no such improvements. Just a straight copy of the RFI code, and another marketing campaign to get another batch of unsuspecting dog meme coin hunters aping into their dog poo coin.
 
@@ -55,7 +49,7 @@ _**What if I don't feel charitable, or don't agree with the beneficiary?**_
 
 Well, charity is certainly a deep topic awash with philosophical and political nuances, and not everyone wants to give up a small part of their wealth for benevolent causes; and some may even wish to choose who they donate to.
 
-Part of the ideology behind contributing to a benevolent cause is that people will like it. This will in principle have the effect of promulgating the benefactor (in this case, Schnoodle) further, thereby attracting more hodlers and driving the price up further. This benefits both the eleemosynary fund and hodlers alike which is of course a win-win situation for everybody! In fact, our marketing campaigns will be largely based around this, and will include promoters that are motivated by such altruistic innovations.
+Part of the ideology behind contributing to a benevolent cause is that people will like it. This will in principle have the effect of promulgating the benefactor (in this case, Schnoodle) further, thereby attracting more holders and driving the price up further. This benefits both the eleemosynary fund and holders alike which is of course a win-win situation for everybody! In fact, our marketing campaigns will be largely based around this, and will include promoters that are motivated by such altruistic innovations.
 
 And the beneficiary of the eleemosynary fund is by no means static. This is determined by the community as part of Schnoodle's [timelocked governance](whitepaper.md#timelocked-governance) feature.
 
@@ -67,11 +61,11 @@ As already mentioned, existing RFI-based tokens and dog meme coins use archaic t
 
 ### ERC-777 Standard
 
-This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC777PresetFixedSupplyUpgradeable` which provides OOTB standard [ERC-777](https://eips.ethereum.org/EIPS/eip-777) functionality, namely _operators_ to send tokens on behalf of another address—contract or regular account—and send/receive _hooks_ to offer hodlers more control over their tokens.
+This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC777PresetFixedSupplyUpgradeable` which provides OOTB standard [ERC-777](https://eips.ethereum.org/EIPS/eip-777) functionality, namely _operators_ to send tokens on behalf of another address—contract or regular account—and send/receive _hooks_ to offer holders more control over their tokens.
 
 _**Hold on! Does this make Schnoodle the only ERC-777 dog meme coin in existence?**_
 
-As far as we know, yes. And ERC-777 is fully backward-compatible with the [ERC-20 token standard](https://eips.ethereum.org/EIPS/eip-20), and therefore includes, by way of the OpenZeppelin base contracts, standard ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract (more on that [later](whitepaper.md#upgradeability)). This means that hodlers can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
+As far as we know, yes. And ERC-777 is fully backward-compatible with the [ERC-20 token standard](https://eips.ethereum.org/EIPS/eip-20), and therefore includes, by way of the OpenZeppelin base contracts, standard ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract (more on that [later](whitepaper.md#upgradeability)). This means that holders can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
 
 And the way the contracts are deployed is as separate files under the same contract (not flattened), which makes it easier for you (if you want to) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
 
@@ -79,7 +73,7 @@ _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
 ### Latest Solidity
 
-Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity (0.8.7 at the time of writing) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit (unlikely, but the safety of hodlers' funds is Schnoodle's absolute priority, no matter how remote any given risk is). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
+Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity (0.8.14 at the time of writing the last update) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit (unlikely, but the safety of holders' funds is Schnoodle's absolute priority, no matter how remote any given risk is). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
 
 ```
 x = x.sub(y)
@@ -93,11 +87,11 @@ x -= y
 
 Same outcome, way simpler, far less gas. And quite simply, beautiful, lean and clean.
 
-_**That sounds much better for hodlers. What about the algorithm itself?**_
+_**That sounds much better for holders. What about the algorithm itself?**_
 
 ### BARK Algorithm
 
-The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for hodlers: their true balance (`_tOwned`), and their reflected balance (`_rOwned`). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC777Upgradeable` contract, to store all reflected balances.
+The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for holders: their true balance (`_tOwned`), and their reflected balance (`_rOwned`). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC777Upgradeable` contract, to store all reflected balances.
 
 So, where the original RFI algorithm performed an effective burn on the total reflected supply by doing a subtraction in the code, Neo's code performs a true burn using the OpenZeppelin code directly on the recipient's reflected balance. The BARK algorithm therefore becomes simple but smart, and operates in both the `transfer` and `balanceOf` functions, as thus:
 
@@ -127,15 +121,15 @@ $$
 * `chargeRate` represents the fee or donation charged for every transfer.
 * `reflectedBalance` is the reflected balance of the address requested, as stored in the OpenZeppelin `_balances` mapping state.
 
-The BARK algorithm basically ensures that transfer fees are dynamically redistributed to hodlers proportionate to their respective balances relative to the total supply. The algorithm rewards loyalty, so new hodlers will only benefit from the redistribution of transfer fees _after_ they become a hodler.
+The BARK algorithm basically ensures that transfer fees are dynamically redistributed to holders proportionate to their respective balances relative to the total supply. The algorithm rewards loyalty, so new holders will only benefit from the redistribution of transfer fees _after_ they become a holder.
 
-As the distribution of **rewards** to hodlers is completely **automated** within the smart contract on the **blockchain**, we call this the BARK algorithm. Blockchain Automated Reward Kickbacks. **Kickbacks** because it's the only word we could think of to make it into a dog-related acronym.
+As the distribution of **rewards** to holders is completely **automated** within the smart contract on the **blockchain**, we call this the BARK algorithm. Blockchain Automated Reward Kickbacks. **Kickbacks** because it's the only word we could think of to make it into a dog-related acronym.
 
 _**Very neat indeed, but does that mean liquidity providers are also subject to the same rules?**_
 
 Yes, spot on. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
 
-This effectively results in a completely fair ecosystem where anyone hodling SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail [later](whitepaper.md#schnoodle-dao) as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
+This effectively results in a completely fair ecosystem where anyone holding SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail [later](whitepaper.md#schnoodle-dao) as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
 
 _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won't be rugged?**_
 
@@ -145,7 +139,7 @@ Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustle
 
 This is why we lock the initial liquidity for a minimum of 6 months in our `SchnoodleTimelock` contract which is based on the tried-and-tested OpenZeppelin [`TokenTimelock`](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#TokenTimelock) contract. We hope by that time, there will be enough LPs to make the pool liquid enough for this to no longer be a concern. But if that's not the case, then we will of course lock our liquidity for another 6 months before the first 6 months lapses. And we will advertise this on all our channels including [Telegram](https://t.me/SchnoodleDeFi).
 
-Locked liquidity for 6 months gives peace of mind for hodlers, and eliminates ruggability even further.
+Locked liquidity for 6 months gives peace of mind for holders, and eliminates ruggability even further.
 
 ### Locked Pool Tokens
 
@@ -161,7 +155,7 @@ Yes. Well, the idea is that the state of Schnoodle on launch is not the do all a
 
 We have made it upgradeable.
 
-_**But the blockchain is immutable. Upgrading a smart contract means all hodlers must undergo a token swap, right?**_
+_**But the blockchain is immutable. Upgrading a smart contract means all holders must undergo a token swap, right?**_
 
 Not quite. Using the OpenZeppelin [`TransparentUpgradeableProxy`](https://docs.openzeppelin.com/contracts/4.x/api/proxy#TransparentUpgradeableProxy) contract, Schnoodle leverages the [EIP-1967 Transparent Proxy](https://eips.ethereum.org/EIPS/eip-1967) pattern whereby a proxy contract is deployed. All interactions with Schnoodle go via this proxy, and if you view the proxy contract on Etherscan, you will notice two additional buttons on the _Contract_ tab: _Read as Proxy_ and _Write as Proxy_. These show the ABI of the underlying implementation contract (`Schnoodle`) to which there is a link on the respective 'proxy' pages.
 
@@ -177,7 +171,7 @@ Well, that's where we've gone the extra mile (we're halfway to the moon right no
 
 _**Awesome. How TF does that work?**_
 
-This is basically a smart contract that derives from the OpenZeppelin `TimelockController` base contract. During deployment of `SchnoodleGovernance`, ownership of both the `Schnoodle` contract and the aforementioned `ProxyAdmin` contract is transferred to it so that any changes or upgrades to the `Schnoodle` contract are delayed by a minimum time period so that hodlers can view the change/upgrade on the blockchain before it becomes effective. If hodlers don't like it or find a problem with it, they can take action straight away, or we can cancel the change/upgrade.
+This is basically a smart contract that derives from the OpenZeppelin `TimelockController` base contract. During deployment of `SchnoodleGovernance`, ownership of both the `Schnoodle` contract and the aforementioned `ProxyAdmin` contract is transferred to it so that any changes or upgrades to the `Schnoodle` contract are delayed by a minimum time period so that holders can view the change/upgrade on the blockchain before it becomes effective. If holders don't like it or find a problem with it, they can take action straight away, or we can cancel the change/upgrade.
 
 _**I just buy dog tokens, dude; where do I even go to check pending upgrades?**_
 
@@ -197,7 +191,7 @@ _**Cool. But you can still ignore us if we don't agree with an upgrade, right?**
 
 ### Multisig Protection
 
-We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP\_E).
+We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the holder against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP\_E).
 
 _**This all sounds really complicated. Explain again, like I'm a 2-year-old dog.**_
 
@@ -214,7 +208,7 @@ In the event of an upgrade, the following steps take place:
 3. After the minimum required timelock has elapsed as per `SchnoodleGovernance`, the upgrade is executed at the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599), again requiring sign-off by the multi-signatory wallets, and broadcast to the blockchain.
 4. Any scheduled or executed upgrades can be seen in the transactions of the [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599). The event log of the `SchnoodleGovernance` contract address is also a way to see these events.
 
-With this comprehensive and highly sophisticated process, it now means we have two solid layers of protection for our hodlers: upgrade timelock protection and multisig.
+With this comprehensive and highly sophisticated process, it now means we have two solid layers of protection for our holders: upgrade timelock protection and multisig.
 
 ![Architecture](.gitbook/assets/architecture.svg)
 
@@ -224,13 +218,13 @@ Well, in reality, this would only happen if we were savagely attacked by flesh-e
 
 ### Trustless DAO
 
-Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
+Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the holders vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
 This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
 
 _**Wow! Three more blockchain platforms in the mix. Schnoodle really is the dog's bollocks, right?**_
 
-Right. But they all serve an important purpose. Our [Snapshot space](https://snapshot.org/#/schnoodle.eth) is where any hodler over a defined threshold can make a proposal for anything (not just upgrades), and then the proposal can be voted on by hodlers. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
+Right. But they all serve an important purpose. Our [Snapshot space](https://snapshot.org/#/schnoodle.eth) is where any holder over a defined threshold can make a proposal for anything (not just upgrades), and then the proposal can be voted on by holders. This voting mechanism is off-chain thus saving you gas. Voting is free unlike many other quasi-DAO platforms such as Aragon, DAOstack, Colony and Compound.
 
 _**Free as in beer? But doesn't that come at the expense of a measure of decentralization?**_
 
@@ -246,15 +240,15 @@ Yes! Proposals to execute an upgrade (on `ProxyAdmin`), which can be done by any
 
 If the vote is in favour and the reality.eth question confirms this, reality.eth can then be triggered (via a button in Snapshot, by anyone) to execute the upgrade via Gnosis Safe (which, as explained earlier, is connected to `ProxyAdmin` via `SchnoodleGovernance` which is the owner of `ProxyAdmin` which can therefore only be interacted with by our Gnosis Safe account).
 
-_**This sounds brilliant! But aren't you worried about hodlers making a dog's dinner of everything?**_
+_**This sounds brilliant! But aren't you worried about holders making a dog's dinner of everything?**_
 
-Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen (e.g., an upgrade with a serious flaw that no one noticed, or some sort of hodler 51% attack), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade. The admins of the Snapshot space may also delete proposals at any time.
+Well, with great power comes great responsibility. But that power needs to be earned. So, in the beginning, while everything is autonomous, if we could see that something really bad was about to happen (e.g., an upgrade with a serious flaw that no one noticed, or some sort of holder 51% attack), then the multisig owners can step in and intervene during the 24-hour cooldown period and prevent execution of the upgrade. The admins of the Snapshot space may also delete proposals at any time.
 
-Conversely, if we noticed something bad could happen due to a bug or a sour agreement with a community member or partner, for example, the multisig owners can deploy an emergency upgrade to prevent this and protect the community.
+Conversely, if we noticed something bad could happen due to a bug or a sour agreement with a community member or partner, for example, the multisig owners can interact with the contract or deploy an emergency upgrade to prevent this and protect the community.
 
 _**Phew! OK, but then it's still not really fully decentralised then, is it?**_
 
-Not fully, but once the team are confident that the hodlers are responsible, and there are enough of them to prevent malicious attacks, then the team will increase the multisig requirement and invite trusted and impartial community members to be additional multisig owners in Gnosis Safe to act as stewards. And also introduce a community-driven mechanism to change multisig ownership at any time via the DAO process. The team will also remove themselves as individual admins from the Snapshot space, and make the admin into a single multisig community account.
+Not fully, but once the team are confident that the holders are responsible, and there are enough of them to prevent malicious attacks, then the team will increase the multisig requirement and invite trusted and impartial community members to be additional multisig owners in Gnosis Safe to act as stewards. And also introduce a community-driven mechanism to change multisig ownership at any time via the DAO process. The team will also remove themselves as individual admins from the Snapshot space, and make the admin into a single multisig community account.
 
 At this point, Schnoodle becomes the world's first truly progressive DeFi DAO, and we really put the 'D' in DAO.
 
@@ -276,6 +270,4 @@ This whitepaper primarily covers the core fundamentals of Schnoodle including it
 [mfp.md](features/mfp.md)
 {% endcontent-ref %}
 
-As if that isn't enough, we many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance/). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.
-
-_**WOOF!!**_ 🐶
+As if that isn't enough, we have many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance/). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.
