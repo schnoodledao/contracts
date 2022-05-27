@@ -1,6 +1,6 @@
 # Table of contents
 
-* [🐶 Schnoodle](README.md)
+* [🐶 Introduction](README.md)
 * [📝 Whitepaper](whitepaper.md)
 
 ## 📚 Features

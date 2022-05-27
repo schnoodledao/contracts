@@ -23,7 +23,7 @@ But his online name is [Neo](https://twitter.com/Neo42), and this is where it ge
 
 _**Tell me more...**_
 
-Last year, a DeFi project known as RFI was incepted by [Reflect Foundation](https://reflect.finance) for which the contract code was developed by the notorious developer known as Morpheus. Do you see where we're going with this? 😉 The project became controversial as the code was copyrighted, but he eventually [open-sourced](https://github.com/reflectfinance/reflect-contracts/blob/main/contracts/REFLECT.sol) it. The contract can be found [here](https://etherscan.io/address/0xa1afffe3f4d611d252010e3eaf6f4d77088b0cd7#code).
+Last year, a DeFi project known as RFI was incepted by [Reflect Foundation](https://reflect.finance/) for which the contract code was developed by the notorious developer known as Morpheus. Do you see where we're going with this? 😉 The project became controversial as the code was copyrighted, but he eventually [open-sourced](https://github.com/reflectfinance/reflect-contracts/blob/main/contracts/REFLECT.sol) it. The contract can be found [here](https://etherscan.io/address/0xa1afffe3f4d611d252010e3eaf6f4d77088b0cd7#code).
 
 The key idea behind this code is that it contains a complex algorithm using lots of complex states to "reflect" a different balance to holders that includes a distribution of fees from other transfers. In other words, whenever the token is sold, a fee is charged and distributed algorithmically to all other holders.
 
@@ -197,7 +197,7 @@ _**Cool. But you can still ignore us if we don't agree with an upgrade, right?**
 
 ### Multisig Protection
 
-We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP\_E).
+We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the hodler against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP\_E).
 
 _**This all sounds really complicated. Explain again, like I'm a 2-year-old dog.**_
 
@@ -226,7 +226,7 @@ Well, in reality, this would only happen if we were savagely attacked by flesh-e
 
 Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the hodlers vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
-This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io).
+This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
 
 _**Wow! Three more blockchain platforms in the mix. Schnoodle really is the dog's bollocks, right?**_
 
@@ -276,6 +276,6 @@ This whitepaper primarily covers the core fundamentals of Schnoodle including it
 [mfp.md](features/mfp.md)
 {% endcontent-ref %}
 
-As if that isn't enough, we many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.
+As if that isn't enough, we many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance/). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.
 
 _**WOOF!!**_ 🐶
