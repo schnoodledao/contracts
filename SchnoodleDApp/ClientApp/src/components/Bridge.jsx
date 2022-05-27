@@ -4,12 +4,15 @@ import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
+import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
+import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
 
 // Third-party libraries
 import Web3 from 'web3';
 import Select from 'react-select';
 
+const bigInt = require('big-integer');
 const Network = createEnum(['ethereum', 'bsc']);
 // ReSharper restore InconsistentNaming
 
@@ -57,6 +60,8 @@ export default class Bridge extends Component {
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
+    this.setDepositAmount = this.setDepositAmount.bind(this);
+    this.updateDepositAmount = this.updateDepositAmount.bind(this);
   }
 
   async componentDidMount() {
@@ -100,18 +105,27 @@ export default class Bridge extends Component {
       const web3 = await getWeb3();
       const { schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
 
-      let schnoodle, sourceNetwork;
+      let schnoodle, sourceNetwork, availableAmount;
       const networkId = await web3.eth.net.getId();
       const selectedAddress = web3.currentProvider.selectedAddress;
+      
 
       switch (networkId.toString()) {
         case process.env.REACT_APP_ETH_NET_ID:
           schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
+          const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
+          const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
           sourceNetwork = Network.ethereum;
+          const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
+          const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
+          availableAmount = balance.subtract(lockedBalance);
+  
           break;
         case process.env.REACT_APP_BSC_NET_ID:
           schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
           sourceNetwork = Network.bsc;
+          availableAmount = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
+
           break;
         default:
           throw new Error(`Network ID ${networkId} unsupported.`);
@@ -121,12 +135,12 @@ export default class Bridge extends Component {
 
       await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
       await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
-
       this.setState({
         web3,
         networkId,
         schnoodle,
         selectedAddress,
+        availableAmount,
         message: null
       }, callback);
     } catch (err) {
@@ -239,6 +253,16 @@ export default class Bridge extends Component {
       this.setState({ busySwap: false });
     }
   }
+  
+  async setDepositAmount(amount) {
+    this.setState({ amount: amount });
+  }
+
+  async updateDepositAmount(e) {
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    this.setDepositAmount(value);
+  }
 
   async receiveTokens() {
     try {
@@ -312,18 +336,18 @@ export default class Bridge extends Component {
   }
 
   render() {
-    const { networkId, sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
+    const { networkId, sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message, availableAmount } = this.state;
 
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
     const targetNetworks = sourceNetworks;
 
     const styles = {
-      valueContainer: () => ({ width: 60 }),
-      singleValue: base => ({ ...base, color: '#dc20bc' }),
-      control: (base, state) => ({ ...base, background: '#070c39', border: 'none' }),
-      dropdownIndicator: base => ({ ...base, color: '#dc20bc' }),
-      menuList: base => ({ ...base, background: '#070c39', color: '#dc20bc' }),
-      option: (provided, state) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : '#6f1860', background: '#070c39' })
+      valueContainer: () => ({ width: 100, border: 'none', display: 'grid'}),
+      singleValue: base => ({ ...base, color: 'white', }),
+      control: (base, state) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
+      dropdownIndicator: base => ({ ...base, color: 'white', }),
+      menuList: base => ({ ...base, background: '#070c39', color: 'white' }),
+      option: (provided, state) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : 'white', background: '#070c39' })
     }
 
     const busyMessage = busySwap
@@ -365,29 +389,28 @@ export default class Bridge extends Component {
       </div>;
     } else {
       bridge =
-        <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
+      <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
+        <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 lg:tw-py-10 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
           <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
-            <div className="tw-w-full lg:tw-w-5/12 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">From</div>
+            <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
+              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
-                  <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
                   <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ IndicatorSeparator: () => null }} />
                 </div>
-                <div className="tw-rounded-full tw-w-1/6 lg:tw-w-3/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
               </div>
             </div>
-            <button type="button" onClick={this.swapNetworks} className="tw-p-2 bg-color tw-w-10 tw-h-10 lg:tw-mx-6 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative tw-z-20 lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+            <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 bg-color lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
-            <div className="tw-w-full lg:tw-w-5/12 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 text-main-color">To</div>
+            <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 tw-w-full lg:tw-mt-0 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
+              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
-                  <div className="tw-text-gray-400 tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
                   <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ IndicatorSeparator: () => null }} />
                 </div>
-                <div className="tw-w-1/6 lg:tw-w-3/6 tw-h-1/6 tw-flex tw-justify-center tw-items-center tw-rounded-full"><img src="/assets/img/png/logo-krypto.png" alt="" /></div>
               </div>
             </div>
           </div>
@@ -399,35 +422,44 @@ export default class Bridge extends Component {
                 <button type="button" onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
               </div>
             : <div>
-                <div className="tw-flex tw-flex-col tw-border-solid tw-mb-10 lg:tw-mb-16">
-                  <input type="number" min="1" placeholder="Amount" value={amount || ''} onChange={this.updateAmount} className="tw-w-full tw-text-white tw-bg-neutral tw-rounded-md tw-text-sm tw-border tw-border-border tw-p-3.5 tw-font-medium tw-outline-none focus:tw-outline-none" />
+                <div className="tw-relative tw-mb-10 tw-flex">
+                  <input type="number" min="1" max={amount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateDepositAmount} className="depositinput" />
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                  <button type="button" className="maxbuttons" onClick={() => this.maxDepositAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">SEND</button>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">SEND</button>
+                <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                  {fee &&
+                    <div>
+                      <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
+                        Receive Fee:
+                        <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
+                      </div>
+                    </div>
+                  }
+                  </div>
               </div>
           }
           <div className="tw-text-center tw-mt-2.5">
             <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
           </div>
         </div>;
+      </div>
     }
 
     return (
-      <form className="tw-justify-center fullhalfwidth tw-mx-auto tw-mt-5">
+      <form className="tw-justify-center tw-mx-auto tw-mt-5">
         <fieldset disabled={selectedAddress == null}>
           <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
             <div className="lg:tw-py-16 tw-py-10 tw-flex-grow">
               <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
-                <div className="lg:tw-grid lg:tw-grid-cols-12 tw-block">
-                  <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
-                    {fee &&
-                      <div>
-                        <div className="tw-flex text-main-text tw-mb-7">
-                          Receive Fee:
-                          <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
-                        </div>
-                      </div>
-                    }
-                  </div>
+                <div className="lg:tw-grid tw-p-9 tw-block">
+                  <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
                   {bridge}
                 </div>
               </div>
