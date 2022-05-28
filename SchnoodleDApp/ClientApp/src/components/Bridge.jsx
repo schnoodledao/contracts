@@ -418,7 +418,7 @@ export default class Bridge extends Component {
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                  <button type="button" className="maxbuttons" onClick={() => this.maxDepositAmount(availableAmount)}>Max</button>
+                  <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
                 <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">SEND</button>
                 <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
