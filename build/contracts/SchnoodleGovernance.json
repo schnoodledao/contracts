@@ -19236,13 +19236,304 @@
     ],
     "src": "71:314:50"
   },
+  "legacyAST": {
+    "absolutePath": "project:/contracts/SchnoodleGovernance.sol",
+    "exportedSymbols": {
+      "AccessControl": [
+        5495
+      ],
+      "Context": [
+        7334
+      ],
+      "ERC165": [
+        7561
+      ],
+      "IAccessControl": [
+        5568
+      ],
+      "IERC1155Receiver": [
+        6581
+      ],
+      "IERC165": [
+        7573
+      ],
+      "IERC721Receiver": [
+        7017
+      ],
+      "SchnoodleGovernance": [
+        13228
+      ],
+      "Strings": [
+        7537
+      ],
+      "TimelockController": [
+        6460
+      ]
+    },
+    "id": 13229,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 13207,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "71:23:50"
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts/governance/TimelockController.sol",
+        "file": "@openzeppelin/contracts/governance/TimelockController.sol",
+        "id": 13208,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 13229,
+        "sourceUnit": 6461,
+        "src": "98:67:50",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 13209,
+              "name": "TimelockController",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 6460,
+              "src": "201:18:50"
+            },
+            "id": 13210,
+            "nodeType": "InheritanceSpecifier",
+            "src": "201:18:50"
+          }
+        ],
+        "canonicalName": "SchnoodleGovernance",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 13228,
+        "linearizedBaseContracts": [
+          13228,
+          6460,
+          6581,
+          7017,
+          5495,
+          7561,
+          7573,
+          5568,
+          7334
+        ],
+        "name": "SchnoodleGovernance",
+        "nameLocation": "178:19:50",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 13226,
+              "nodeType": "Block",
+              "src": "378:2:50",
+              "statements": []
+            },
+            "id": 13227,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [
+              {
+                "arguments": [
+                  {
+                    "id": 13221,
+                    "name": "minDelay",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 13212,
+                    "src": "341:8:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  {
+                    "id": 13222,
+                    "name": "proposers",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 13215,
+                    "src": "351:9:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                      "typeString": "address[] memory"
+                    }
+                  },
+                  {
+                    "id": 13223,
+                    "name": "executors",
+                    "nodeType": "Identifier",
+                    "overloadedDeclarations": [],
+                    "referencedDeclaration": 13218,
+                    "src": "362:9:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                      "typeString": "address[] memory"
+                    }
+                  }
+                ],
+                "id": 13224,
+                "kind": "baseConstructorSpecifier",
+                "modifierName": {
+                  "id": 13220,
+                  "name": "TimelockController",
+                  "nodeType": "IdentifierPath",
+                  "referencedDeclaration": 6460,
+                  "src": "322:18:50"
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "322:50:50"
+              }
+            ],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 13219,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 13212,
+                  "mutability": "mutable",
+                  "name": "minDelay",
+                  "nameLocation": "247:8:50",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 13227,
+                  "src": "239:16:50",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 13211,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "239:7:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 13215,
+                  "mutability": "mutable",
+                  "name": "proposers",
+                  "nameLocation": "274:9:50",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 13227,
+                  "src": "257:26:50",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 13213,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "257:7:50",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 13214,
+                    "nodeType": "ArrayTypeName",
+                    "src": "257:9:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 13218,
+                  "mutability": "mutable",
+                  "name": "executors",
+                  "nameLocation": "302:9:50",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 13227,
+                  "src": "285:26:50",
+                  "stateVariable": false,
+                  "storageLocation": "memory",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 13216,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "285:7:50",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 13217,
+                    "nodeType": "ArrayTypeName",
+                    "src": "285:9:50",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "238:74:50"
+            },
+            "returnParameters": {
+              "id": 13225,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "378:0:50"
+            },
+            "scope": 13228,
+            "src": "227:153:50",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 13229,
+        "src": "169:214:50",
+        "usedErrors": []
+      }
+    ],
+    "src": "71:314:50"
+  },
   "compiler": {
     "name": "solc",
     "version": "0.8.14+commit.80d49f37.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.7",
-  "updatedAt": "2022-05-22T21:58:16.088Z",
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2022-05-28T00:18:34.189Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

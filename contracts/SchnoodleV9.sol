@@ -84,6 +84,10 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         _burn(_farmingFund, grossReward - netReward, "", "");
     }
 
+    function unlockedBalanceOf(address account) external returns (uint256) {
+        return balanceOf(account) - lockedBalanceOf(account);
+    }
+
     // Bridge functions
 
     function getBridgeOwner() external view returns (address) {

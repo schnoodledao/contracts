@@ -190,68 +190,62 @@ export default class Bridge extends Component {
   
   //#endregion
 
-  async sendTokens() {
-    const switchNetwork = async (network, callback) => {
-      try {
-        // Attempt to switch the user's wallet to the target network so they can receive their tokens
-        if (Number(window.ethereum.networkVersion) !== network.id) {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: this.state.web3.utils.toHex(network.id) }]
-          });
+  async switchNetwork(network, callback) {
+    try {
+      // Attempt to switch the user's wallet to the target network so they can receive their tokens
+      if (Number(window.ethereum.networkVersion) !== network.id) {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: this.state.web3.utils.toHex(network.id) }]
+        });
 
-          await this.updateWeb3(callback);
-        } else {
-          await callback();
-        }
-      } catch (err) {
-        // This error code indicates that the chain has not been added to the wallet
-        if (err.code === 4902) {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [
-              {
-                chainName: network.name,
-                chainId: this.state.web3.utils.toHex(network.id),
-                nativeCurrency: {
-                  name: network.symbol,
-                  symbol: network.symbol,
-                  decimals: 18
-                },
-                rpcUrls: network.rpcUrls
-              }
-            ]
-          });
-        } else {
-          throw err;
-        }
+        await this.updateWeb3(callback);
+      } else {
+        await callback();
+      }
+    } catch (err) {
+      // This error code indicates that the chain has not been added to the wallet
+      if (err.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            {
+              chainName: network.name,
+              chainId: this.state.web3.utils.toHex(network.id),
+              nativeCurrency: {
+                name: network.symbol,
+                symbol: network.symbol,
+                decimals: 18
+              },
+              rpcUrls: network.rpcUrls
+            }
+          ]
+        });
+      } else {
+        throw err;
       }
     }
+  }
 
+  async sendTokens() {
     try {
       this.setState({ busySwap: true });
 
       // Ensure the user's wallet is set to the source network so they can send their tokens
-      await switchNetwork(networks[this.state.sourceNetwork], async () => {
-        try {
-          const { amount, schnoodle, selectedAddress, targetNetwork } = this.state;
-          const targetNetworkInfo = networks[targetNetwork];
+      await this.switchNetwork(networks[this.state.sourceNetwork], async () => {
+        const { amount, schnoodle, selectedAddress, targetNetwork } = this.state;
+        const targetNetworkInfo = networks[targetNetwork];
 
-          this.handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }));
+        this.handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }));
 
-          // Attempt to switch the user's wallet to the target network so they can receive their tokens
-          await switchNetwork(targetNetworkInfo);
-        } catch (err1) {
-          this.handleError(err1);
-          this.setState({ busySwap: false });
-        }
-
-        this.setState({ busySwap: false });
+        // Attempt to switch the user's wallet to the target network so they can receive their tokens
+        await this.switchNetwork(targetNetworkInfo);
       });
-    } catch (err2) {
-      this.handleError(err2);
-      this.setState({ busySwap: false });
+    } catch (err) {
+      this.handleError(err);
     }
+
+    this.setState({ busySwap: false });
   }
   
   async setDepositAmount(amount) {
@@ -266,27 +260,31 @@ export default class Bridge extends Component {
 
   async receiveTokens() {
     try {
-      const { schnoodle, selectedAddress, sourceNetwork, targetNetwork } = this.state;
       this.setState({ busyReceive: true });
 
-      // Pay the fee (suggested by the server) to the Schnoodle contract
-      const sourceNetworkId = networks[sourceNetwork].id;
-      const fee = await this.getFee(targetNetwork) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
-      if (fee > 0) this.handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
+      // Ensure the user's wallet is set to the target network so they can receive their tokens
+      await this.switchNetwork(networks[this.state.targetNetwork], async () => {
+        const { schnoodle, selectedAddress, sourceNetwork, targetNetwork } = this.state;
 
-      // Request the server to call receiveTokens on the Schnoodle contract
-      const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
-        method: 'POST',
-        body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
-      })).json();
+        // Pay the fee (suggested by the server) to the Schnoodle contract
+        const sourceNetworkId = networks[sourceNetwork].id;
+        const fee = await this.getFee(targetNetwork) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
+        if (fee > 0) this.handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
-      if (json.status !== 'ok') {
-        this.setState({ serverError: json.body.message });
-      } else {
-        await this.getInfo();
-      }
-    } catch (err) {
-      this.handleError(err);
+        // Request the server to call receiveTokens on the Schnoodle contract
+        const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+          method: 'POST',
+          body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
+        })).json();
+
+        if (json.status !== 'ok') {
+          this.setState({ serverError: json.body.message });
+        } else {
+          await this.getInfo();
+        }
+      });
+    } catch (err2) {
+      this.handleError(err2);
     }
 
     this.setState({ busyReceive: false });
@@ -419,7 +417,7 @@ export default class Bridge extends Component {
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
                   <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} disabled={networkId !== networks[targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
               </div>
             : <div>
                 <div className="tw-relative tw-mb-10 tw-flex">
