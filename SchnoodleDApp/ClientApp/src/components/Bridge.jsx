@@ -9,8 +9,6 @@ import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, 
 // Third-party libraries
 import Web3 from 'web3';
 import Select from 'react-select';
-
-
 const bigInt = require('big-integer');
 const Network = createEnum(['ethereum', 'bsc']);
 // ReSharper restore InconsistentNaming
@@ -58,8 +56,6 @@ export default class Bridge extends Component {
     this.swapNetworks = this.swapNetworks.bind(this);
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
-    this.updateAmount = this.updateAmount.bind(this);
-    this.setAmount = this.setAmount.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
   }
 
