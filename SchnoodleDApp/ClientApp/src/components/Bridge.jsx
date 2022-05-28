@@ -10,6 +10,7 @@ import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, 
 import Web3 from 'web3';
 import Select from 'react-select';
 const bigInt = require('big-integer');
+
 const Network = createEnum(['ethereum', 'bsc']);
 // ReSharper restore InconsistentNaming
 
