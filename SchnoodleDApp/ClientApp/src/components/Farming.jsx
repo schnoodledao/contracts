@@ -115,7 +115,7 @@ export default class Farming extends Component {
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
       const unbondingBalance = bigInt(await schnoodleFarming.methods.unbondingBalanceOf(selectedAddress).call());
-      const availableAmount = balance.subtract(lockedBalance);
+      const availableAmount = bigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call());
       const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
       const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
       const factoredVestingBlocksMax = Math.floor(blocksPerDuration({ years: 1 }) * vestingBlocksFactor);

@@ -4127,7 +4127,7 @@
         1505
       ],
       "SchnoodleTimelock": [
-        17970
+        17986
       ],
       "TokenTimelock": [
         6999
@@ -4136,12 +4136,12 @@
         1650
       ]
     },
-    "id": 17971,
+    "id": 17987,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 17945,
+        "id": 17961,
         "literals": [
           "solidity",
           "^",
@@ -4154,10 +4154,10 @@
       {
         "absolutePath": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
         "file": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
-        "id": 17946,
+        "id": 17962,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 17971,
+        "scope": 17987,
         "sourceUnit": 1068,
         "src": "104:75:62",
         "symbolAliases": [],
@@ -4166,10 +4166,10 @@
       {
         "absolutePath": "@openzeppelin/contracts/token/ERC20/utils/TokenTimelock.sol",
         "file": "@openzeppelin/contracts/token/ERC20/utils/TokenTimelock.sol",
-        "id": 17947,
+        "id": 17963,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 17971,
+        "scope": 17987,
         "sourceUnit": 7000,
         "src": "181:69:62",
         "symbolAliases": [],
@@ -4178,10 +4178,10 @@
       {
         "absolutePath": "@openzeppelin/contracts-upgradeable/token/ERC20/utils/TokenTimelockUpgradeable.sol",
         "file": "@openzeppelin/contracts-upgradeable/token/ERC20/utils/TokenTimelockUpgradeable.sol",
-        "id": 17948,
+        "id": 17964,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 17971,
+        "scope": 17987,
         "sourceUnit": 1651,
         "src": "252:92:62",
         "symbolAliases": [],
@@ -4192,13 +4192,13 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 17949,
+              "id": 17965,
               "name": "TokenTimelockUpgradeable",
               "nodeType": "IdentifierPath",
               "referencedDeclaration": 1650,
               "src": "378:24:62"
             },
-            "id": 17950,
+            "id": 17966,
             "nodeType": "InheritanceSpecifier",
             "src": "378:24:62"
           }
@@ -4207,9 +4207,9 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 17970,
+        "id": 17986,
         "linearizedBaseContracts": [
-          17970,
+          17986,
           1650,
           1067
         ],
@@ -4219,7 +4219,7 @@
         "nodes": [
           {
             "body": {
-              "id": 17968,
+              "id": 17984,
               "nodeType": "Block",
               "src": "516:72:62",
               "statements": [
@@ -4227,11 +4227,11 @@
                   "expression": {
                     "arguments": [
                       {
-                        "id": 17963,
+                        "id": 17979,
                         "name": "token",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 17953,
+                        "referencedDeclaration": 17969,
                         "src": "548:5:62",
                         "typeDescriptions": {
                           "typeIdentifier": "t_contract$_IERC20Upgradeable_$1281",
@@ -4239,11 +4239,11 @@
                         }
                       },
                       {
-                        "id": 17964,
+                        "id": 17980,
                         "name": "beneficiary",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 17955,
+                        "referencedDeclaration": 17971,
                         "src": "555:11:62",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
@@ -4251,11 +4251,11 @@
                         }
                       },
                       {
-                        "id": 17965,
+                        "id": 17981,
                         "name": "releaseTime",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 17957,
+                        "referencedDeclaration": 17973,
                         "src": "568:11:62",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -4278,7 +4278,7 @@
                           "typeString": "uint256"
                         }
                       ],
-                      "id": 17962,
+                      "id": 17978,
                       "name": "__TokenTimelock_init",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -4289,7 +4289,7 @@
                         "typeString": "function (contract IERC20Upgradeable,address,uint256)"
                       }
                     },
-                    "id": 17966,
+                    "id": 17982,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -4304,22 +4304,22 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 17967,
+                  "id": 17983,
                   "nodeType": "ExpressionStatement",
                   "src": "527:53:62"
                 }
               ]
             },
             "functionSelector": "1794bb3c",
-            "id": 17969,
+            "id": 17985,
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
-                "id": 17960,
+                "id": 17976,
                 "kind": "modifierInvocation",
                 "modifierName": {
-                  "id": 17959,
+                  "id": 17975,
                   "name": "initializer",
                   "nodeType": "IdentifierPath",
                   "referencedDeclaration": 969,
@@ -4333,17 +4333,17 @@
             "nameLocation": "419:10:62",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 17958,
+              "id": 17974,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 17953,
+                  "id": 17969,
                   "mutability": "mutable",
                   "name": "token",
                   "nameLocation": "448:5:62",
                   "nodeType": "VariableDeclaration",
-                  "scope": 17969,
+                  "scope": 17985,
                   "src": "430:23:62",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4352,10 +4352,10 @@
                     "typeString": "contract IERC20Upgradeable"
                   },
                   "typeName": {
-                    "id": 17952,
+                    "id": 17968,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 17951,
+                      "id": 17967,
                       "name": "IERC20Upgradeable",
                       "nodeType": "IdentifierPath",
                       "referencedDeclaration": 1281,
@@ -4372,12 +4372,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 17955,
+                  "id": 17971,
                   "mutability": "mutable",
                   "name": "beneficiary",
                   "nameLocation": "463:11:62",
                   "nodeType": "VariableDeclaration",
-                  "scope": 17969,
+                  "scope": 17985,
                   "src": "455:19:62",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4386,7 +4386,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 17954,
+                    "id": 17970,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "455:7:62",
@@ -4400,12 +4400,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 17957,
+                  "id": 17973,
                   "mutability": "mutable",
                   "name": "releaseTime",
                   "nameLocation": "484:11:62",
                   "nodeType": "VariableDeclaration",
-                  "scope": 17969,
+                  "scope": 17985,
                   "src": "476:19:62",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4414,7 +4414,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 17956,
+                    "id": 17972,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "476:7:62",
@@ -4429,19 +4429,365 @@
               "src": "429:67:62"
             },
             "returnParameters": {
-              "id": 17961,
+              "id": 17977,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "516:0:62"
             },
-            "scope": 17970,
+            "scope": 17986,
             "src": "410:178:62",
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 17971,
+        "scope": 17987,
+        "src": "348:243:62",
+        "usedErrors": []
+      }
+    ],
+    "src": "77:516:62"
+  },
+  "legacyAST": {
+    "absolutePath": "project:/contracts/imports/SchnoodleTimelock.sol",
+    "exportedSymbols": {
+      "Address": [
+        7312
+      ],
+      "AddressUpgradeable": [
+        4562
+      ],
+      "IERC20": [
+        6659
+      ],
+      "IERC20Upgradeable": [
+        1281
+      ],
+      "Initializable": [
+        1067
+      ],
+      "SafeERC20": [
+        6883
+      ],
+      "SafeERC20Upgradeable": [
+        1505
+      ],
+      "SchnoodleTimelock": [
+        17986
+      ],
+      "TokenTimelock": [
+        6999
+      ],
+      "TokenTimelockUpgradeable": [
+        1650
+      ]
+    },
+    "id": 17987,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 17961,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "77:23:62"
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "file": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol",
+        "id": 17962,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 17987,
+        "sourceUnit": 1068,
+        "src": "104:75:62",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts/token/ERC20/utils/TokenTimelock.sol",
+        "file": "@openzeppelin/contracts/token/ERC20/utils/TokenTimelock.sol",
+        "id": 17963,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 17987,
+        "sourceUnit": 7000,
+        "src": "181:69:62",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "absolutePath": "@openzeppelin/contracts-upgradeable/token/ERC20/utils/TokenTimelockUpgradeable.sol",
+        "file": "@openzeppelin/contracts-upgradeable/token/ERC20/utils/TokenTimelockUpgradeable.sol",
+        "id": 17964,
+        "nameLocation": "-1:-1:-1",
+        "nodeType": "ImportDirective",
+        "scope": 17987,
+        "sourceUnit": 1651,
+        "src": "252:92:62",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 17965,
+              "name": "TokenTimelockUpgradeable",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 1650,
+              "src": "378:24:62"
+            },
+            "id": 17966,
+            "nodeType": "InheritanceSpecifier",
+            "src": "378:24:62"
+          }
+        ],
+        "canonicalName": "SchnoodleTimelock",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 17986,
+        "linearizedBaseContracts": [
+          17986,
+          1650,
+          1067
+        ],
+        "name": "SchnoodleTimelock",
+        "nameLocation": "357:17:62",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 17984,
+              "nodeType": "Block",
+              "src": "516:72:62",
+              "statements": [
+                {
+                  "expression": {
+                    "arguments": [
+                      {
+                        "id": 17979,
+                        "name": "token",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 17969,
+                        "src": "548:5:62",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_contract$_IERC20Upgradeable_$1281",
+                          "typeString": "contract IERC20Upgradeable"
+                        }
+                      },
+                      {
+                        "id": 17980,
+                        "name": "beneficiary",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 17971,
+                        "src": "555:11:62",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        }
+                      },
+                      {
+                        "id": 17981,
+                        "name": "releaseTime",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 17973,
+                        "src": "568:11:62",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_contract$_IERC20Upgradeable_$1281",
+                          "typeString": "contract IERC20Upgradeable"
+                        },
+                        {
+                          "typeIdentifier": "t_address",
+                          "typeString": "address"
+                        },
+                        {
+                          "typeIdentifier": "t_uint256",
+                          "typeString": "uint256"
+                        }
+                      ],
+                      "id": 17978,
+                      "name": "__TokenTimelock_init",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 1543,
+                      "src": "527:20:62",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_internal_nonpayable$_t_contract$_IERC20Upgradeable_$1281_$_t_address_$_t_uint256_$returns$__$",
+                        "typeString": "function (contract IERC20Upgradeable,address,uint256)"
+                      }
+                    },
+                    "id": 17982,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "527:53:62",
+                    "tryCall": false,
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 17983,
+                  "nodeType": "ExpressionStatement",
+                  "src": "527:53:62"
+                }
+              ]
+            },
+            "functionSelector": "1794bb3c",
+            "id": 17985,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [
+              {
+                "id": 17976,
+                "kind": "modifierInvocation",
+                "modifierName": {
+                  "id": 17975,
+                  "name": "initializer",
+                  "nodeType": "IdentifierPath",
+                  "referencedDeclaration": 969,
+                  "src": "504:11:62"
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "504:11:62"
+              }
+            ],
+            "name": "initialize",
+            "nameLocation": "419:10:62",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 17974,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 17969,
+                  "mutability": "mutable",
+                  "name": "token",
+                  "nameLocation": "448:5:62",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 17985,
+                  "src": "430:23:62",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_contract$_IERC20Upgradeable_$1281",
+                    "typeString": "contract IERC20Upgradeable"
+                  },
+                  "typeName": {
+                    "id": 17968,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 17967,
+                      "name": "IERC20Upgradeable",
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 1281,
+                      "src": "430:17:62"
+                    },
+                    "referencedDeclaration": 1281,
+                    "src": "430:17:62",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_contract$_IERC20Upgradeable_$1281",
+                      "typeString": "contract IERC20Upgradeable"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 17971,
+                  "mutability": "mutable",
+                  "name": "beneficiary",
+                  "nameLocation": "463:11:62",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 17985,
+                  "src": "455:19:62",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 17970,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "455:7:62",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 17973,
+                  "mutability": "mutable",
+                  "name": "releaseTime",
+                  "nameLocation": "484:11:62",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 17985,
+                  "src": "476:19:62",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 17972,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "476:7:62",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "429:67:62"
+            },
+            "returnParameters": {
+              "id": 17977,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "516:0:62"
+            },
+            "scope": 17986,
+            "src": "410:178:62",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 17987,
         "src": "348:243:62",
         "usedErrors": []
       }
@@ -4453,8 +4799,8 @@
     "version": "0.8.14+commit.80d49f37.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.7",
-  "updatedAt": "2022-05-22T21:58:16.227Z",
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2022-05-28T00:18:34.424Z",
   "devdoc": {
     "kind": "dev",
     "methods": {
