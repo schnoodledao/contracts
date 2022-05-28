@@ -4,8 +4,6 @@ import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
-import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
-import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
 
 // Third-party libraries
@@ -60,8 +58,8 @@ export default class Bridge extends Component {
     this.changeSourceNetwork = this.changeSourceNetwork.bind(this);
     this.changeTargetNetwork = this.changeTargetNetwork.bind(this);
     this.updateAmount = this.updateAmount.bind(this);
-    this.setDepositAmount = this.setDepositAmount.bind(this);
-    this.updateDepositAmount = this.updateDepositAmount.bind(this);
+    this.setAmount = this.setAmount.bind(this);
+    this.updateAmount = this.updateAmount.bind(this);
   }
 
   async componentDidMount() {
@@ -105,32 +103,24 @@ export default class Bridge extends Component {
       const web3 = await getWeb3();
       const { schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
 
-      let schnoodle, sourceNetwork, availableAmount;
+      let schnoodle, sourceNetwork;
       const networkId = await web3.eth.net.getId();
       const selectedAddress = web3.currentProvider.selectedAddress;
-      
 
       switch (networkId.toString()) {
         case process.env.REACT_APP_ETH_NET_ID:
           schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-          const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
-          const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
           sourceNetwork = Network.ethereum;
-          const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
-          const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
-          availableAmount = balance.subtract(lockedBalance);
-  
           break;
         case process.env.REACT_APP_BSC_NET_ID:
           schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
           sourceNetwork = Network.bsc;
-          availableAmount = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
-
           break;
         default:
           throw new Error(`Network ID ${networkId} unsupported.`);
       }
 
+      const availableAmount = bigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call());
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
       await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
@@ -248,14 +238,14 @@ export default class Bridge extends Component {
     this.setState({ busySwap: false });
   }
   
-  async setDepositAmount(amount) {
+  async setAmount(amount) {
     this.setState({ amount: amount });
   }
 
-  async updateDepositAmount(e) {
+  async updateAmount(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    this.setDepositAmount(value);
+    this.setAmount(value);
   }
 
   async receiveTokens() {
@@ -421,13 +411,13 @@ export default class Bridge extends Component {
               </div>
             : <div>
                 <div className="tw-relative tw-mb-10 tw-flex">
-                  <input type="number" min="1" max={amount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateDepositAmount} className="depositinput" />
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                  <input type="number" min="1" max={amount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
+                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
+                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
                   <button type="button" className="maxbuttons" onClick={() => this.maxDepositAmount(availableAmount)}>Max</button>
                 </div>
                 <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">SEND</button>
