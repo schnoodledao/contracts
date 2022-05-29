@@ -238,13 +238,13 @@ export default class Bridge extends Component {
   }
   
   async setAmount(amount) {
-    this.setState({ amount: amount });
+    this.setState({ amount: scaleDownUnits(amount) });
   }
 
   async updateAmount(e) {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    this.setAmount(value);
+    this.setState({amount: Math.min(Math.floor(value), scaleDownUnits(this.state.availableAmount))});
   }
 
   async receiveTokens() {
@@ -316,14 +316,8 @@ export default class Bridge extends Component {
     }
   }
 
-  async updateAmount(e) {
-    const amount = Number(e.target.value);
-    if (!Number.isInteger(amount)) return;
-    this.setState({ amount });
-  }
-
   render() {
-    const { networkId, sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message, availableAmount } = this.state;
+    const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message, availableAmount } = this.state;
 
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
     const targetNetworks = sourceNetworks;
@@ -377,7 +371,7 @@ export default class Bridge extends Component {
     } else {
       bridge =
       <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
-        <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 lg:tw-py-10 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
+        <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
           <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
               <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
@@ -410,7 +404,7 @@ export default class Bridge extends Component {
               </div>
             : <div>
                 <div className="tw-relative tw-mb-10 tw-flex">
-                  <input type="number" min="1" max={amount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
+                  <input type="number" min="1" max={scaleDownUnits(availableAmount)} placeholder={`Max: ${scaleDownUnits(availableAmount)}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
@@ -440,12 +434,12 @@ export default class Bridge extends Component {
     }
 
     return (
-      <form className="tw-justify-center tw-mx-auto tw-mt-5">
+      <form className="tw-justify-center tw-mx-auto">
         <fieldset disabled={selectedAddress == null}>
           <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
-            <div className="lg:tw-py-16 tw-py-10 tw-flex-grow">
+            <div className="tw-flex-grow">
               <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
-                <div className="lg:tw-grid tw-p-9 tw-block">
+                <div className="lg:tw-grid tw-block">
                   <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
                   {bridge}
                 </div>
