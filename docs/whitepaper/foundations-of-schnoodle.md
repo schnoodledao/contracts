@@ -11,7 +11,7 @@ Most DAOs use a governance voting system such as Snapshot for the community to v
 
 ### Trustless Autonomous Governance (TAG)
 
-The first Cornerstone of Schnoodle is its Trustless Autonomous Governance (TAG) system which is a smart contract ecosystem that consists of a complex array of decentralised services and smart contracts for fully trustless and autonomous interaction with and upgradeability of the SNOOD token contract.
+The first Cornerstone of Schnoodle is its Trustless Autonomous Governance (TAG) system which is a smart contract ecosystem that consists of a complex array of decentralised services, smart contracts, and oracles for fully trustless and autonomous interaction with and upgradeability of the SNOOD ERC-777 token contract.
 
 <details>
 
@@ -29,7 +29,7 @@ Learn more about the architecture of TAG [here](architecture.md#trustless-autono
 
 ### Blockchain Automated Reward Kickbacks (BARK)
 
-The second Cornerstone of Schnoodle is its sophisticated automated wealth distribution system (inspired by [RFI](https://reflect.finance/)) known as Blockchain Automated Reward Kickbacks (BARK). This means that holders receive rewards constantly (without even farming) whenever any sell swap takes place on the network. This has been a tremendous success and garnered exceedingly bullish sentiment from the community that Schnoodle is unlike any other rewards-based coin.
+The second Cornerstone of Schnoodle is its sophisticated automated wealth distribution system (inspired by [RFI](https://reflect.finance/)) known as Blockchain Automated Reward Kickbacks (BARK). Holders receive rewards constantly (without even farming) whenever there's a sell swap. This has been a tremendous success and garnered exceedingly bullish sentiment from the community that Schnoodle is unlike any other rewards-based coin.
 
 Learn more about BARK [here](architecture.md#bark-algorithm).
 
@@ -47,7 +47,7 @@ Learn more about it here:
 
 ### Moon Farming Platform (MFP)
 
-Our sophisticated Moon Farming Platform (MFP) is like yield farming, but far more advanced. It completely breaks the mould of traditional yield farming, and differentiates us from other yield farming platforms with fully flexible opportunities for farmers.
+Our sophisticated and neoteric Moon Farming Platform (MFP) is like yield farming, but far more advanced and fully decentralised. It is the first of its kind with automated regulation of rewards, a gamified yield system, flexible options, and unlimited strategies. It completely breaks the mould of traditional yield farming.
 
 Learn more about it here:
 
@@ -57,16 +57,23 @@ Learn more about it here:
 
 ### Fully Autonomous Bridge (FAB)
 
-Schnoodle's goal was always to be EVM-compatible chain agnostic. We have developed a system that allows it to be deployed by anyone on any EVM-compatible chain, and value will automatically be transferable between any two chains. This is known as PIMP (Polybridge Infinichain Meshnet Protocol), with FAB (Fully Autonomous Bridge) being the centralised part of this interoperability.
+Schnoodle's goal was always to be EVM-compatible chain agnostic. We have developed a system that allows it to be deployed by anyone on any EVM-compatible chain, and value will automatically be transferable between any two chains. This Fully Autonomous Bridge (FAB) is driven by the Polybridge Infinichain Meshnet Protocol (PIMP), with allows unlimited multichain interoperability.
 
 Learn more about it here:
 
 {% embed url="https://schnoodledao.medium.com/building-a-sustainable-token-bridge-40adc33fd9c7" %}
 
-### NFT Platform (Moontron)
+### 3D NFT Platform (Moontron)
+
+Still in active development, with our game art partner [Kevuru Games](https://kevurugames.com/) developing the 3D artwork, Schnoodle's 3D NFT platform (codename 'Moontron') will literally be a sight to behold. It uses a unique concept of backend rendering and dynamic IPFS persistence to allow dynamic minting of fully-customisable 3D NFTs including algorithmic rarity traits.
+
+<details>
+
+<summary>Overview</summary>
 
 All existing NFT platforms typically require a centralised group of people to mint NFTs. This means there will always be a limited number of them. Rarity traits will be implied during the minting of these NFTs as they will be apportioned manually at that time. However, this also means the NFTs are not scalable. For example, an NFT with 10,000 minted tokens doesn't scale well to a million people. Sure, the tokens themselves are rare, and the tokens' value will change depending on demand. But why not allow more to be minted while maintaining the distribution of rarity traits, and allow the value to depend on those rarity traits rather than a hard limit on the number of tokens? Of course, the NFT smart contract could allow the centralised group to mint more, but that then creates a dangerous precedent whereby tokens could be minted with the rarest traits, and then they profit from them.
 
-Schnoodle's NFT platform (working name 'Moontron' after our Mascot's ultimate form) solves the above problem with a unique concept that allows dynamic minting of fully-customisable 3D NFTs. This is a system whereby tokens may be minted directly to a user's account at the time they pay for it. Moreover, they may customise it how they wish within the boundaries of the rarity traits. For example, they may choose to favour one rarity trait more than another, then the algorithm will favour that trait when randomly configuring the traits. The algorithm will also ensure the distribution of rarity traits stays within defined boundaries.
+Schnoodle's unique system allows tokens to be minted directly to a user's account at the time they pay for it. Moreover, they may customise it how they wish within the boundaries of the rarity traits. For example, they may choose to favour one rarity trait more than another, then the algorithm will favour that trait when randomly configuring the traits. The algorithm will also ensure the distribution of rarity traits stays within defined boundaries.
 
-[Kevuru Games](https://kevurugames.com/) is our game art partner who is building the assets for Moontron.
+</details>
+
