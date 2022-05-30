@@ -3,9 +3,9 @@ description: Accessible to all, without the compromise
 coverY: 0
 ---
 
-# 📝 Whitepaper
+# 🏗 Architecture
 
-## Schnoodle Backstory
+## Technical Backstory
 
 Schnoodle was incepted by our founder and CTO, Jason Payne, who decided to build Schnoodle because he was disillusioned with cryptocurrencies being released one after the other that had no real innovation, and were mostly copypasta smart contract clones of other tokens with a few tweaks. And those tweaks were typically convoluted layers of abstraction that usually benefited the dev team rather than the community.
 
@@ -25,7 +25,7 @@ Copies of this code were then used as the basis of [SAFEMOON](https://www.bscsca
 
 _**So, lemme guess. Neo wanted to kick Morpheus' ass?**_
 
-![Neo dawg vs Morpheus dawg](.gitbook/assets/neo-vs-morpheus.png)
+![Neo dawg vs Morpheus dawg](../.gitbook/assets/neo-vs-morpheus.png)
 
 In analysing this code, Neo noticed that there were numerous inexcusable flaws that simply indicated laziness and haste on the part of the devs. Absolutely no care had been taken to ensure holders were given the best deal in terms of gas fees and potential ruggability. There are functions that allow the contract owner to include and exclude addresses from the fee process at will. How is this fair to other holders? And the code for SAFEMOON was compiled with Solidity 0.6.12 which was already over 7 months old at the time of launch when Solidity was _already_ at version 0.8.1. This may not sound hugely important, but it takes very little effort to use a more recent version, and this would have afforded some code tweaks that would result in less gas fees for holders.
 
@@ -37,27 +37,9 @@ _**OK, sounds like a gravy chain, but dogs love gravy on their food, right?**_
 
 Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to revise Morpheus' reflective algorithm stripping out any superfluous code, and ensuring that he would use the best techniques, practices and leading-edge technologies the blockchain space has to offer. And so, Schnoodle was born, like a cute little puppy ready to take on the world.
 
-_**Well, the world's a big place filled with many dogs. What makes Schnoodle so different?**_
-
-### Eleemosynary Fund
-
-Not a word you hear every day. But as part of Schnoodle's benevolent approach to crypto, we don't want to jump on the dog charity bandwagon, or indeed any other arbitrary charity as some sort of thinly-veiled guise to appear magnanimous.
-
-So, Schnoodle includes an eleemosynary fund as part of its encoding. This can be a charity, but also any worthy cause that the community feels passionate towards. Perhaps carbon offsetting to advocate clean energy usage in blockchain, especially proof-of-work (PoW) blockchains such as Ethereum. Or, humanitarian causes such as the unbanked of the world due to corrupt governments or poor economies.
-
-_**What if I don't feel charitable, or don't agree with the beneficiary?**_
-
-Well, charity is certainly a deep topic awash with philosophical and political nuances, and not everyone wants to give up a small part of their wealth for benevolent causes; and some may even wish to choose who they donate to.
-
-Part of the ideology behind contributing to a benevolent cause is that people will like it. This will in principle have the effect of promulgating the benefactor (in this case, Schnoodle) further, thereby attracting more holders and driving the price up further. This benefits both the eleemosynary fund and holders alike which is of course a win-win situation for everybody! In fact, our marketing campaigns will be largely based around this, and will include promoters that are motivated by such altruistic innovations.
-
-And the beneficiary of the eleemosynary fund is by no means static. This is determined by the community as part of Schnoodle's [timelocked governance](whitepaper.md#timelocked-governance) feature.
-
-_**Philanthropy and becoming rich at the same time. Awesome. Now show me the contract!**_
-
 ## Smart Contracts
 
-As already mentioned, existing RFI-based tokens and dog meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
+As already mentioned, existing RFI-based tokens and meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
 
 ### ERC-777 Standard
 
@@ -65,7 +47,7 @@ This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppe
 
 _**Hold on! Does this make Schnoodle the only ERC-777 dog meme coin in existence?**_
 
-As far as we know, yes. And ERC-777 is fully backward-compatible with the [ERC-20 token standard](https://eips.ethereum.org/EIPS/eip-20), and therefore includes, by way of the OpenZeppelin base contracts, standard ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract (more on that [later](whitepaper.md#upgradeability)). This means that holders can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
+As far as we know, yes. And ERC-777 is fully backward-compatible with the [ERC-20 token standard](https://eips.ethereum.org/EIPS/eip-20), and therefore includes, by way of the OpenZeppelin base contracts, standard ERC-20 functionality such as transfer, approval, balance, total supply, and basic token details functionality, as well as burning and upgradeability of the contract (more on that [later](architecture.md#upgradeability)). This means that holders can be sure that the base contracts that Schnoodle subclasses are tried, tested and even audited.
 
 And the way the contracts are deployed is as separate files under the same contract (not flattened), which makes it easier for you (if you want to) to focus on the actual business logic of the Schnoodle smart contract, and not have to worry about the basic standard functionality containing a potential exploit or other hidden "easter egg". What you see is what you get, basically.
 
@@ -129,7 +111,7 @@ _**Very neat indeed, but does that mean liquidity providers are also subject to 
 
 Yes, spot on. The lack of exclusion functions means that even the LPs and the liquidity tokens themselves are subject to the exact same fees and rewards system.
 
-This effectively results in a completely fair ecosystem where anyone holding SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail [later](whitepaper.md#schnoodle-dao) as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
+This effectively results in a completely fair ecosystem where anyone holding SNOOD tokens for as long as Schnoodle remains a going concern continues to be rewarded. And we will cover that in more detail [later](architecture.md#schnoodle-dao) as we talk about it becoming a true DAO in its future roadmap to ensure that Schnoodle grows for as long as the community wants it to.
 
 _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won't be rugged?**_
 
@@ -163,11 +145,15 @@ The beauty of this is that the `Schnoodle` smart contract can be upgraded in the
 
 And the linchpin to the proxy contract and the implementation contract is a third contract known as the `ProxyAdmin` contract. It is through this contract that all upgrades are conducted.
 
-_**Wow; sounds great. But doesn't that mean you could change Schnoodle into a less desirable dog, such as a Poodle or a yappy Chihuahua?**_
+_**Wow; sounds great. But doesn't that mean you could change Schnoodle under the community's feet, aka a rug pull?**_
+
+Well, that's where we've gone the extra mile (we're halfway to the moon right now, to be fair). Read on to learn about our Trustless Autonomous Governance (TAG) system.
+
+## Trustless Autonomous Governance
 
 ### Timelocked Governance
 
-Well, that's where we've gone the extra mile (we're halfway to the moon right now, to be fair), and implemented governance into Schnoodle in the form of `SchnoodleGoverance` smart contract which implements the ERC-165 standard.
+Governance has been implemented into Schnoodle in the form of the `SchnoodleGovernance` smart contract which implements the ERC-165 standard.
 
 _**Awesome. How TF does that work?**_
 
@@ -210,13 +196,13 @@ In the event of an upgrade, the following steps take place:
 
 With this comprehensive and highly sophisticated process, it now means we have two solid layers of protection for our holders: upgrade timelock protection and multisig.
 
-![Architecture](.gitbook/assets/architecture.svg)
+![Architecture](../.gitbook/assets/architecture.svg)
 
 _**I love it. But I still have a niggle. What if the whole team mutinies or goes rogue?**_
 
 Well, in reality, this would only happen if we were savagely attacked by flesh-eating dog zombies, and we turned into said dog zombies ourselves bent on destroying all humans. But we hear you. Enter, Schnoodle DAO...
 
-### Trustless DAO
+### Trustless Autonomy
 
 Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the holders vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
@@ -257,17 +243,3 @@ _**Oh, wow. I'm so excited, my tail is wagging like a metronome!**_
 For comparison, there are several well-known projects such as Yearn, Sushi, Balancer, Aave, DIA and Synthetix that use Gnosis Safe and Snapshot to gather off-chain votes, with a team "promise" that they will execute proposals voted for.
 
 By using SafeSnap on top of this, Schnoodle becomes completely autonomous once a proposal goes in. This puts Schnoodle technologically way ahead of all the aforementioned projects, not to mention other meme coins. We are the first truly trustless and progressive DeFi DAO on the blockchain! And once multisig ownership becomes completely community-driven, then Schnoodle becomes truly decentralised and autonomous. 🚀
-
-## Feature Roadmap
-
-This whitepaper primarily covers the core fundamentals of Schnoodle including its architecture. Schnoodle has always had an ambitious roadmap and we continue to deliver on this constantly. Since launching Schnoodle, we have already delivered some major features and you can find details on these in this documentation, or use the following links:
-
-{% content-ref url="features/psm.md" %}
-[psm.md](features/psm.md)
-{% endcontent-ref %}
-
-{% content-ref url="features/mfp.md" %}
-[mfp.md](features/mfp.md)
-{% endcontent-ref %}
-
-As if that isn't enough, we have many other plans for Schnoodle, and you can find our updated roadmap on our [website](http://schnoodle.finance/). For example, we intend to eventually offer NFT rewards to yield farmers just for farming your SNOOD tokens.

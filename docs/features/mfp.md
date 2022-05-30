@@ -9,6 +9,7 @@ Schnoodle's revolutionary new yield farming concept, introduced in SchnoodleV7, 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
 * **Vestiplier:** This is a function of the deposit amounts, vesting blocks and unbonding blocks of all yield farmers which is used to calculate a multiplier based on a [logistic function](https://en.wikipedia.org/wiki/Logistic\_function).
 * **Gamified Yield Incentivator (GYI):** This is the sister functionality of the Gamified HODL Incentivator (GHI) that is part of the Price Support Mechanism (PSM). It is a mechanism whereby the farming fund that is used to reward yield farmers is effectively supplied from a 4% fee (the sow rate) on all sells.
+* **Lock Factor Governor (LFG):** This comprises two settings on the smart contract, namely `_vestingBlocksFactor` and `_unbondingBlocksFactor` which are permil (‰) values. These may be changed via the `changeVestingBlocksFactor` and `changeUnbondingBlocksFactor` functions. The effect of these is to adjust the vesting blocks and unbonding blocks settings of all deposits dynamically at the point of withdrawal (`withdraw` function).
 
 ![MFP Components](../.gitbook/assets/mfp-components.svg)
 
