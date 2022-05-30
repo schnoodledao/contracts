@@ -328,24 +328,25 @@ export default class Bridge extends Component {
   }
 
   async setAmount(amount) {
-    console.log(amount);
     this.setState({ amount: Math.min(Math.floor(amount), scaleDownUnits(this.state.availableAmount)) });
   }
 
   render() {
     const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
+
     const availableAmount = scaleDownUnits(this.state.availableAmount);
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
     const targetNetworks = sourceNetworks;
 
     const styles = {
-      valueContainer: () => ({ width: 100, border: 'none', display: 'grid'}),
+      valueContainer: () => ({ width: 100, border: 'none', display: 'grid' }),
       singleValue: base => ({ ...base, color: 'white', }),
       control: (base, state) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
-      dropdownIndicator: (base, state) => ({ ...base, color: 'white'}),
+      dropdownIndicator: (base, state) => ({ ...base, color: 'white' }),
       menuList: base => ({ ...base, background: '#070c39', color: 'white' }),
       option: (provided, state) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : 'white', background: '#070c39' })
     }
+
     const { Option, SingleValue } = components;  
 
     const option = props => (
