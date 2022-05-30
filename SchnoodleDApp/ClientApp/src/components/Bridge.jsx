@@ -8,7 +8,7 @@ import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, 
 
 // Third-party libraries
 import Web3 from 'web3';
-import Select from 'react-select';
+import Select, { components } from 'react-select';
 const bigInt = require('big-integer');
 
 const Network = createEnum(['ethereum', 'bsc']);
@@ -118,20 +118,19 @@ export default class Bridge extends Component {
           throw new Error(`Network ID ${networkId} unsupported.`);
       }
 
-      const availableAmount = bigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call());
       await initializeHelpers(await schnoodle.methods.decimals().call());
-
-      await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
-      await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
 
       this.setState({
         web3,
         networkId,
         schnoodle,
         selectedAddress,
-        availableAmount,
         message: null
-      }, callback);
+      }, async () => {
+        await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
+        await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
+        if (callback) await callback();
+      });
     } catch (err) {
       this.handleError(err);
     }
@@ -236,16 +235,6 @@ export default class Bridge extends Component {
 
     this.setState({ busySwap: false });
   }
-  
-  async setAmount(amount) {
-    this.setState({ amount: scaleDownUnits(amount) });
-  }
-
-  async updateAmount(e) {
-    const value = Number(e.target.value);
-    if (!Number.isInteger(value)) return;
-    this.setState({amount: Math.min(Math.floor(value), scaleDownUnits(this.state.availableAmount))});
-  }
 
   async receiveTokens() {
     try {
@@ -287,6 +276,22 @@ export default class Bridge extends Component {
 
   async changeSourceNetwork(e) {
     await this.changeNetwork(e.value, this.state.targetNetwork, 'sourceNetwork', 'targetNetwork');
+
+    const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = this.state;
+    let schnoodleSource;
+
+    switch (sourceNetwork) {
+      case Network.ethereum:
+        schnoodleSource = schnoodleEth;
+        break;
+      case Network.bsc:
+        schnoodleSource = schnoodleBsc;
+        break;
+      default:
+        throw new Error(`Source network ${sourceNetwork} unsupported.`);
+    }
+
+    this.setState({ availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) });
   }
 
   async changeTargetNetwork(e) {
@@ -316,9 +321,20 @@ export default class Bridge extends Component {
     }
   }
 
-  render() {
-    const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message, availableAmount } = this.state;
+  async updateAmount(e) {
+    const value = Number(e.target.value);
+    if (!Number.isInteger(value)) return;
+    this.setAmount(value);
+  }
 
+  async setAmount(amount) {
+    console.log(amount);
+    this.setState({ amount: Math.min(Math.floor(amount), scaleDownUnits(this.state.availableAmount)) });
+  }
+
+  render() {
+    const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
+    const availableAmount = scaleDownUnits(this.state.availableAmount);
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
     const targetNetworks = sourceNetworks;
 
@@ -326,10 +342,34 @@ export default class Bridge extends Component {
       valueContainer: () => ({ width: 100, border: 'none', display: 'grid'}),
       singleValue: base => ({ ...base, color: 'white', }),
       control: (base, state) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
-      dropdownIndicator: base => ({ ...base, color: 'white', }),
+      dropdownIndicator: (base, state) => ({ ...base, color: 'white'}),
       menuList: base => ({ ...base, background: '#070c39', color: 'white' }),
       option: (provided, state) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : 'white', background: '#070c39' })
     }
+    const { Option, SingleValue } = components;  
+
+    const option = props => (
+      <div className="tw-flex">
+        <img
+          src={`/assets/img/svg/${props.data.value}.svg`}
+          className="tw-w-1/4 tw-mr-2"
+          alt={props.data.label}
+        />
+        <span>{props.data.label}</span>
+      </div>
+    )
+
+    const singleValue = props => (
+      <SingleValue {...props}>
+        {option(props)}
+      </SingleValue>
+    );
+
+    const singleOption = props => (
+      <Option {...props}>
+        {option(props)}
+      </Option>
+    );
 
     const busyMessage = busySwap
       ? resources.BUSY_MESSAGE_SWAP
@@ -378,19 +418,19 @@ export default class Bridge extends Component {
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
                   <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ IndicatorSeparator: () => null }} />
+                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
             </div>
             <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 bg-color lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
-            <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 tw-w-full lg:tw-mt-0 tw-relative -mt-3 lg:tw-static tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
+            <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
               <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
                   <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ IndicatorSeparator: () => null }} />
+                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
             </div>
@@ -402,9 +442,9 @@ export default class Bridge extends Component {
                 </div>
                 <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
               </div>
-            : <div>
+            : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
-                  <input type="number" min="1" max={scaleDownUnits(availableAmount)} placeholder={`Max: ${scaleDownUnits(availableAmount)}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
+                  <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
                   <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
@@ -414,7 +454,7 @@ export default class Bridge extends Component {
                   <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
                 <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">SEND</button>
-                <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-py-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
                       <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
