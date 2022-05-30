@@ -73,6 +73,8 @@ Ultimately, we want to expand the scope of truly decentralised technology and wo
 
 We believe that decentralising organisations will increase innovation and creativity, allowing members to communicate effectively while working remotely. We aim to set an example of how fair working within a DAO can be, and showcase how powerful it can be to others worldwide.
 
+![](.gitbook/assets/golden-krypto-chart.png)
+
 ## Philosophy
 
 ### What is a DAO?
@@ -99,11 +101,11 @@ But don't forget, the membership of the trusted group is effectively governed by
 
 Schnoodle aims to fully respect the DATA equation, and this is enshrined in its technical architecture, which is the first of its four pillars, which we call the Cornerstone of Schnoodle.
 
-![](.gitbook/assets/golden-krypto-chart.png)
-
 ## Community Ecosystem
 
 The Schnoodle Community Ecosystem (SCE) is comprehensive, but is structured in such a way as to be easily understandable and digestible by any would-be investor in SNOOD. The following block diagram shows this structure followed by a brief overview of the main parts.
+
+![The Schnoodle Community Ecosystem structure](.gitbook/assets/ecosystem.svg)
 
 ### Technology
 
