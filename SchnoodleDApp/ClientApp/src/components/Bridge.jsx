@@ -118,20 +118,19 @@ export default class Bridge extends Component {
           throw new Error(`Network ID ${networkId} unsupported.`);
       }
 
-      const availableAmount = bigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call());
       await initializeHelpers(await schnoodle.methods.decimals().call());
-
-      await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
-      await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
 
       this.setState({
         web3,
         networkId,
         schnoodle,
         selectedAddress,
-        availableAmount,
         message: null
-      }, callback);
+      }, async () => {
+        await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
+        await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
+        if (callback) await callback();
+      });
     } catch (err) {
       this.handleError(err);
     }
@@ -287,6 +286,22 @@ export default class Bridge extends Component {
 
   async changeSourceNetwork(e) {
     await this.changeNetwork(e.value, this.state.targetNetwork, 'sourceNetwork', 'targetNetwork');
+
+    const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = this.state;
+    let schnoodleSource;
+
+    switch (sourceNetwork) {
+      case Network.ethereum:
+        schnoodleSource = schnoodleEth;
+        break;
+      case Network.bsc:
+        schnoodleSource = schnoodleBsc;
+        break;
+      default:
+        throw new Error(`Source network ${sourceNetwork} unsupported.`);
+    }
+
+    this.setState({ availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) });
   }
 
   async changeTargetNetwork(e) {
