@@ -2,7 +2,7 @@
 
 ## 📝 Whitepaper
 
-* [🐶 Introduction](README.md)
+* [🐶 Overview](README.md)
 * [🏛 Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md)
 * [🏭 Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md)
 * [🏗 Architecture](whitepaper/architecture.md)

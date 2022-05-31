@@ -80,7 +80,7 @@ Sometimes the light-hearted side dominates the communication to lighten the mood
 
 Krypto’s passion in life is to make truly incredible things happen. He’s fascinated by the possibilities of technology and is a firm believer in blockchain and cryptocurrency as the future of global finance. He believes that true democratization and accessibility - whether in art, money or other assets - lies in these revolutionizing new fields. And he wants to be a driving force in that journey.
 
-![](../.gitbook/assets/krypto-shades.png)
+![](../.gitbook/assets/mascot-front.png)
 
 ## How does Krypto communicate on the website?
 

@@ -1,21 +1,15 @@
 ---
-description: Introduction to Schnoodle
+description: Your simple guide to understanding Schnoodle
 coverY: 0
 ---
 
-# 🐶 Introduction
+# 🐶 Overview
 
-## TL;DR
+## Introduction
 
 Schnoodle is a true trustless and progressive DeFi DAO that bridges key cryptocurrency concepts including meme, yield farming, NFTs, and multichain interoperability.
 
-It was launched in July 2021, and uses bleeding edge decentralised technologies to form a fully trustless and permissionless governance ecosystem. Trustless Autonomous Governance (TAG) is the first Cornerstone of Schnoodle which you can read more about [here](whitepaper/foundations-of-schnoodle.md#trustless-autonomous-governance-tag).
-
-The [Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md) comprise our Price Support Mechanism (PSM), Moon Farming Platform (MFP), Fully Autonomous Bridge (FAB), and our NFT Platform (Moontron).
-
-The [Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md) are growing constantly, and including an eleemosynary feature and our SaaS systems which are in development. Our ultimate goal is to help other DAO projects utilise our innovative technology, and grow our DAO platforms through our SaaS systems.
-
-As an investor or community member of Schnoodle, there are many opportunities for you within the [Schnoodle Community Ecosystem](./#ecosystem) to earn SNOOD tokens:
+As an investor in Schnoodle, there are many opportunities for you to gain SNOOD tokens. Simply buy and hold (BARK algorithm), farm via the Moon Farming Platform, or earn via Dework.
 
 <details>
 
@@ -46,6 +40,16 @@ Earn by completing tasks. This is where Schnoodle as a DAO really comes into its
 Go to our Dework space [here](https://app.dework.xyz/schnoodle-dao-1).
 
 </details>
+
+Schnoodle was launched in July 2021 by a team classically trained in software engineering and financial markets, and who have extensive commercial and corporate experience in marketing, engineering, and financial industries. Fully based across Europe (from UK to Georgia), most of us are married and have young children, and we're fully doxed.
+
+Schnoodle uses bleeding edge decentralised technologies to form a fully trustless and permissionless ecosystem which we call the [Schnoodle Community Ecosystem](./#community-ecosystem) (SCE).
+
+The [Cornerstones of Schnoodle](whitepaper/foundations-of-schnoodle.md#cornerstones-of-schnoodle-cos) (CoS) are the Trustless Autonomous Governance (TAG) and Blockchain Automated Reward Kickbacks (BARK).
+
+The [Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md) (FoS) comprise our Price Support Mechanism (PSM), Moon Farming Platform (MFP), Fully Autonomous Bridge (FAB), and our NFT Platform (Moontron).
+
+The [Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md) (UoS) are growing constantly, and including an eleemosynary feature and our SaaS systems which are in development. Our ultimate goal is to help other DAO projects utilise our innovative technology, and grow our DAO platforms through our SaaS systems.
 
 ## Our Story
 
@@ -105,7 +109,7 @@ Schnoodle aims to fully respect the DATA equation, and this is enshrined in its 
 
 The Schnoodle Community Ecosystem (SCE) is comprehensive, but is structured in such a way as to be easily understandable and digestible by any would-be investor in SNOOD. The following block diagram shows this structure followed by a brief overview of the main parts.
 
-![The Schnoodle Community Ecosystem structure](.gitbook/assets/ecosystem.svg)
+![The Schnoodle Community Ecosystem structure](.gitbook/assets/community-ecosystem.svg)
 
 ### Technology
 
