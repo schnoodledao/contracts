@@ -1,4 +1,5 @@
 ---
+cover: ../.gitbook/assets/moon-banner.jpg
 coverY: 0
 ---
 

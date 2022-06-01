@@ -1,5 +1,6 @@
 ---
 description: Accessible to all, without the compromise
+cover: ../.gitbook/assets/brand-background.jpg
 coverY: 0
 ---
 

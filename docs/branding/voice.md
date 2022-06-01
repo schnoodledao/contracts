@@ -1,5 +1,7 @@
 ---
 description: The voice and tone of Schnoodle communications
+cover: ../.gitbook/assets/brand-background.jpg
+coverY: 0
 ---
 
 # 🗣 Voice

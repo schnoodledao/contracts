@@ -1,5 +1,6 @@
 ---
 description: The Cornerstones and Four Pillars of Schnoodle
+cover: ../.gitbook/assets/brand-background.jpg
 coverY: 0
 ---
 

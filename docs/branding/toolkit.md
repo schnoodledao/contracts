@@ -1,5 +1,7 @@
 ---
 description: Everything you need for Schnoodle branding
+cover: ../.gitbook/assets/brand-background.jpg
+coverY: 0
 ---
 
 # 🧰 Toolkit

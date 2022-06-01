@@ -1,5 +1,7 @@
 ---
 description: What are Schnoodle's use cases?
+cover: ../.gitbook/assets/brand-background.jpg
+coverY: 0
 ---
 
 # 🏭 Utilities of Schnoodle

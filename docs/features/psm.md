@@ -1,4 +1,5 @@
 ---
+cover: ../.gitbook/assets/cogs-tech-banner.jpg
 coverY: 0
 ---
 

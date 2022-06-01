@@ -1,5 +1,6 @@
 ---
 description: Your simple guide to understanding Schnoodle
+cover: .gitbook/assets/brand-background.jpg
 coverY: 0
 ---
 
