@@ -1,5 +1,7 @@
 ---
 description: Schnoodle's greatest strength is its community
+cover: ../.gitbook/assets/brand-background.jpg
+coverY: 0
 ---
 
 # 🫂 Community Ecosystem
