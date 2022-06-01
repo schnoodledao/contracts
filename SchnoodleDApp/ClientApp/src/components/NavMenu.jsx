@@ -60,9 +60,9 @@ export class NavMenu extends Component {
               <NavItem>
                 <NavLink tag={Link} className="text-light tw-uppercase" to="/mooncontrol" onClick={this.toggleNavbar}>{farming.MOON_CONTROL}</NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink tag={Link} className="text-light tw-uppercase" to="/moontron" onClick={this.toggleNavbar}>{moontron.MOONTRON}</NavLink>
-              </NavItem>
+            {/*  <NavItem>*/}
+            {/*    <NavLink tag={Link} className="text-light tw-uppercase" to="/moontron" onClick={this.toggleNavbar}>{moontron.MOONTRON}</NavLink>*/}
+            {/*  </NavItem>*/}
             </ul>
           </Collapse>
           {this.state.account == null

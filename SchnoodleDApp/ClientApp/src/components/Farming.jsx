@@ -61,7 +61,6 @@ export default class Farming extends Component {
     this.handleError = handleError.bind(this);
     this.addDeposit = this.addDeposit.bind(this);
     this.updateDepositAmount = this.updateDepositAmount.bind(this);
-    this.maxDepositAmount = this.maxDepositAmount.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.maxVestingBlocks = this.maxVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
@@ -225,10 +224,6 @@ export default class Farming extends Component {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
     this.setDepositAmount(value);
-  }
-
-  async maxDepositAmount() {
-    this.setDepositAmount(scaleDownUnits(this.state.availableAmount));
   }
 
   async setDepositAmount(amount) {
@@ -668,7 +663,7 @@ export default class Farming extends Component {
                                 <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
                                 <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
                                 <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                                <button type="button" className="maxbuttons" onClick={this.maxDepositAmount}>Max</button>
+                                <button type="button" className="maxbuttons" onClick={() => this.setDepositAmount(availableAmount)}>Max</button>
                               </div>
                             </div>
                           </div>
