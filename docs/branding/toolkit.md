@@ -12,15 +12,19 @@ The Schnoodle logo is an "S" stylised in a way that makes one think of the infin
 
 ### Standard
 
-![logo.png](../.gitbook/assets/logo.png) ![logo.svg](../.gitbook/assets/logo.svg) ![logo-background.svg](../.gitbook/assets/logo-background.svg)
+![logo.png](../.gitbook/assets/logo.png) ![logo.svg](../.gitbook/assets/logo.svg) ![logo-invert.png](../.gitbook/assets/logo-invert.png) ![logo-invert.svg](../.gitbook/assets/logo-invert.svg)
 
 ### Variation 1
 
-![logo-variation-1.png](../.gitbook/assets/logo-variation-1.png) ![logo-variation-1.svg](../.gitbook/assets/logo-variation-1.svg) ![logo-variation-1-background.svg](../.gitbook/assets/logo-variation-1-background.svg)
+![logo-variation-1.png](../.gitbook/assets/logo-variation-1.png) ![logo-variation-1.svg](../.gitbook/assets/logo-variation-1.svg) ![logo-variation-1-invert.png](../.gitbook/assets/logo-variation-1-invert.png) ![logo-variation-1-invert.svg](../.gitbook/assets/logo-variation-1-invert.svg)
 
 ### Variation 2
 
-![logo-variation-2.png](../.gitbook/assets/logo-variation-2.png) ![logo-variation-2.svg](../.gitbook/assets/logo-variation-2.svg) ![logo-variation-2-background.svg](../.gitbook/assets/logo-variation-2-background.svg)
+![logo-variation-2.png](../.gitbook/assets/logo-variation-2.png) ![logo-variation-2.svg](../.gitbook/assets/logo-variation-2.svg) ![logo-variation-2-invert.png](../.gitbook/assets/logo-variation-2-invert.png) ![logo-variation-2-invert.svg](../.gitbook/assets/logo-variation-2-invert.svg)
+
+### Backgrounds
+
+![logo-background.png](../.gitbook/assets/logo-background.png) ![logo-variation-1-background.png](../.gitbook/assets/logo-variation-1-background.png) ![logo-variation-2-background.png](../.gitbook/assets/logo-variation-2-background.png)
 
 ### Usage
 
