@@ -3,6 +3,7 @@
 ## 📝 Whitepaper
 
 * [🐶 Overview](README.md)
+* [🫂 Community Ecosystem](whitepaper/community-ecosystem.md)
 * [🏛 Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md)
 * [🏭 Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md)
 * [🏗 Architecture](whitepaper/architecture.md)

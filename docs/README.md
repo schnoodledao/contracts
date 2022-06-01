@@ -44,7 +44,7 @@ Go to our Dework space [here](https://app.dework.xyz/schnoodle-dao-1).
 
 Schnoodle was launched in July 2021 by a team classically trained in software engineering and financial markets, and who have extensive commercial and corporate experience in marketing, engineering, and financial industries. Fully based across Europe (from UK to Georgia), most of us are married and have young children, and we're fully doxed.
 
-Schnoodle uses bleeding edge decentralised technologies to form a fully trustless and permissionless ecosystem which we call the [Schnoodle Community Ecosystem](./#community-ecosystem) (SCE).
+Schnoodle uses bleeding edge decentralised technologies to form a fully trustless and permissionless ecosystem which we call the [Schnoodle Community Ecosystem](whitepaper/community-ecosystem.md) (SCE).
 
 The [Cornerstones of Schnoodle](whitepaper/foundations-of-schnoodle.md#cornerstones-of-schnoodle-cos) (CoS) are the Trustless Autonomous Governance (TAG) and Blockchain Automated Reward Kickbacks (BARK).
 
@@ -104,32 +104,8 @@ This means that the architecture of the business logic must itself be decentrali
 
 But don't forget, the membership of the trusted group is effectively governed by the code of the DAO as the owners and executors are stored in code and can be changed in code. That means the entire DAO runs by its code. But when an exceptional situation arises (such as a 51% attack or a critical opportunity), the elected trusted group can take action.
 
-Schnoodle aims to fully respect the DATA equation, and this is enshrined in its technical architecture, which is the first of its four pillars, which we call the Cornerstone of Schnoodle.
-
-## Community Ecosystem
-
-The Schnoodle Community Ecosystem (SCE) is comprehensive, but is structured in such a way as to be easily understandable and digestible by any would-be investor in SNOOD. The following block diagram shows this structure followed by a brief overview of the main parts.
-
-![The Schnoodle Community Ecosystem structure](.gitbook/assets/community-ecosystem.svg)
-
-### Technology
-
-First, is our technology. This comprises the Foundations of Schnoodle which are formed from the two Cornerstones and Four Pillars of Schnoodle. You can read about these here:
+Schnoodle aims to fully respect the DATA equation, and this is enshrined in its technical architecture, which forms the first Cornerstone of Schnoodle, part of the Foundations of Schnoodle.
 
 {% content-ref url="whitepaper/foundations-of-schnoodle.md" %}
 [foundations-of-schnoodle.md](whitepaper/foundations-of-schnoodle.md)
 {% endcontent-ref %}
-
-### Use Cases
-
-Second, are our use cases. This comprises the Utilities of Schnoodle which are built on the Foundations of Schnoodle. You can read about these here:
-
-{% content-ref url="whitepaper/utilities-of-schnoodle.md" %}
-[utilities-of-schnoodle.md](whitepaper/utilities-of-schnoodle.md)
-{% endcontent-ref %}
-
-### Operations
-
-Third, are our operations. As a DAO, our backlog is completely transparent, and everyone can be a part of it. This means that, as well as earning SNOOD from BARK and MFP, you can also earn SNOOD from completing tasks for Schnoodle. You can view our full backlog and get involved on Dework here:
-
-{% embed url="https://app.dework.xyz/schnoodle-dao-1" %}
