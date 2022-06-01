@@ -38,7 +38,7 @@ All versions of the logo may be upscaled proportionally to any size. Downscaling
 * Print: 20 mm
 * Typeface: Archivo Black
 
-![Examples how to use the logo](../.gitbook/assets/logo-how-to-use.svg)
+![Examples how to use the logo](../.gitbook/assets/logo-how-to-use.svg) ![Logo banner example](../.gitbook/assets/logo-banner.png)
 
 ![Examples how not to use the logo](../.gitbook/assets/logo-how-not-to-use.svg)
 
