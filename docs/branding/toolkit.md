@@ -44,7 +44,9 @@ All versions of the logo may be upscaled proportionally to any size. Downscaling
 * Print: 20 mm
 * Typeface: Archivo Black
 
-![Examples how to use the logo](../.gitbook/assets/logo-how-to-use.svg) ![Logo banner example](../.gitbook/assets/logo-banner.png)
+![Examples how to use the logo](../.gitbook/assets/logo-how-to-use.svg) ![Social card example](../.gitbook/assets/logo-social.png)
+
+![Banner example](../.gitbook/assets/logo-banner.png)
 
 ![Examples how not to use the logo](../.gitbook/assets/logo-how-not-to-use.svg)
 
@@ -98,4 +100,4 @@ The Matrix theme is heavily used, not only visually, but also as part of the nar
 
 ![](../.gitbook/assets/mascot-shades-10.png) ![](../.gitbook/assets/mascot-shades-9.png) ![](../.gitbook/assets/mascot-shades-8.png) ![](../.gitbook/assets/mascot-shades-7.png) ![](../.gitbook/assets/mascot-shades-6.png) ![](../.gitbook/assets/mascot-shades-5.png) ![](../.gitbook/assets/mascot-shades-4.png) ![](../.gitbook/assets/mascot-shades-3.png) ![](../.gitbook/assets/mascot-shades-2.png) ![](../.gitbook/assets/mascot-shades-1.png)
 
-![Mascot Matrix](../.gitbook/assets/mascot-matrix.png) ![Mascot Matrix background](../.gitbook/assets/mascot-matrix-bg.png) ![Golden Krypto](../.gitbook/assets/mascot-golden.png)
+![Mascot Matrix](../.gitbook/assets/krypto-shades.png) ![Mascot Matrix background](../.gitbook/assets/mascot-matrix-bg.png) ![Golden Krypto](../.gitbook/assets/mascot-golden.png)
