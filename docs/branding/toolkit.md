@@ -46,7 +46,9 @@ All versions of the logo may be upscaled proportionally to any size. Downscaling
 
 ![Examples how to use the logo](../.gitbook/assets/logo-how-to-use.svg) ![Social card example](../.gitbook/assets/logo-social.png)
 
-![Banner example](../.gitbook/assets/logo-banner.png)
+![Twitter and Facebook banner example](../.gitbook/assets/logo-banner-1.png)
+
+![LinkedIn and YouTube banner example](../.gitbook/assets/logo-banner-2.png)
 
 ![Examples how not to use the logo](../.gitbook/assets/logo-how-not-to-use.svg)
 
