@@ -207,7 +207,7 @@ Well, in reality, this would only happen if we were savagely attacked by flesh-e
 
 Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the holders vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
-This makes use of an extended feature of Gnosis Safe known as [SafeSnap](https://github.com/gnosis/dao-module) through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [reality.eth](https://realit.io/).
+This makes use of the Reality Module, which is part of the [Zodiac App](https://gnosis.github.io/zodiac/) within Gnosis Safe, through which any upgrade proposals must be made. This acts as the linchpin between two other platforms known as [Snapshot](https://snapshot.org/#/schnoodle.eth) and [Reality.eth](https://realit.io/).
 
 _**Wow! Three more blockchain platforms in the mix. Schnoodle really is the dog's bollocks, right?**_
 
@@ -215,7 +215,7 @@ Right. But they all serve an important purpose. Our [Snapshot space](https://sna
 
 _**Free as in beer? But doesn't that come at the expense of a measure of decentralization?**_
 
-Right. Which is where reality.eth comes in. This is essentially a very cool escalation-game-based oracle that SafeSnap uses to allow trustless, on-chain execution based on the outcome of the off-chain votes.
+Right. Which is where Reality.eth comes in. This is essentially a very cool escalation-game-based oracle that SafeSnap uses to allow trustless, on-chain execution based on the outcome of the off-chain votes.
 
 The science bit... _**(Huh? I thought we'd passed the science bit!)**_
 
@@ -223,9 +223,9 @@ The Schnoodle Snapshot space is connected to the SafeSnap DAO module instance us
 
 _**Umm, OK. So, can I finally make a proposal?**_ 💍
 
-Yes! Proposals to execute an upgrade (on `ProxyAdmin`), which can be done by anyone including you, can now be made via Snapshot where off-chain votes are gathered. Once voting has closed, a question is placed on reality.eth asking if the proposal passed. This question is posed for 24 hours before the outcome may be finalised. The question may be answered by anyone with the placement of a bond in ETH.
+Yes! Proposals to execute an upgrade (on `ProxyAdmin`), which can be done by anyone including you, can now be made via Snapshot where off-chain votes are gathered. Once voting has closed, a question is placed on Reality.eth asking if the proposal passed. This question is posed for 24 hours before the outcome may be finalised. The question may be answered by anyone with the placement of a bond in ETH.
 
-If the vote is in favour and the reality.eth question confirms this, reality.eth can then be triggered (via a button in Snapshot, by anyone) to execute the upgrade via Gnosis Safe (which, as explained earlier, is connected to `ProxyAdmin` via `SchnoodleGovernance` which is the owner of `ProxyAdmin` which can therefore only be interacted with by our Gnosis Safe account).
+If the vote is in favour and the Reality.eth question confirms this, Reality.eth can then be triggered (via a button in Snapshot, by anyone) to execute the upgrade via Gnosis Safe (which, as explained earlier, is connected to `ProxyAdmin` via `SchnoodleGovernance` which is the owner of `ProxyAdmin` which can therefore only be interacted with by our Gnosis Safe account).
 
 _**This sounds brilliant! But aren't you worried about holders making a dog's dinner of everything?**_
 

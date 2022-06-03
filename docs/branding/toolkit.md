@@ -66,7 +66,7 @@ When using these colours, it is paramount that there is enough contrast between 
 
 The gradients shown below are composed of the brand colours, and are the only gradients that should be used throughout the branding.
 
-![Colour swatches](../.gitbook/assets/branding-colour-swatches.svg) ![Colour gradients](../.gitbook/assets/branding-colour-gradients.svg)
+![Colour swatches](../.gitbook/assets/brand-colour-swatches.svg) ![Colour gradients](../.gitbook/assets/brand-colour-gradients.svg)
 
 ## Typography
 
