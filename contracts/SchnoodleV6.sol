@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@schnoodle/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 contract SchnoodleV6 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
