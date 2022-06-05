@@ -195,7 +195,7 @@ export default class Bridge extends Component {
       }
     } catch (err) {
       // This error code indicates that the chain has not been added to the wallet
-      if (err.code === 4902 || data?.originalError?.code === 4902) {
+      if (err.code === 4902 || err.data?.originalError?.code === 4902) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [
