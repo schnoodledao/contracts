@@ -24,7 +24,8 @@ const networks =
     url: process.env.REACT_APP_ETH_URL,
     display: 'Ethereum',
     symbol: 'ETH',
-    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL]
+    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_ETH_EXPLORER_URL]
   },
   bsc: {
     name: process.env.REACT_APP_BSC_NET_NAME,
@@ -32,7 +33,8 @@ const networks =
     url: process.env.REACT_APP_BSC_URL,
     display: 'BSC',
     symbol: 'BNB',
-    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL]
+    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_BSC_EXPLORER_URL]
   }
 };
 
@@ -205,7 +207,8 @@ export default class Bridge extends Component {
                 symbol: network.symbol,
                 decimals: 18
               },
-              rpcUrls: network.rpcUrls
+              rpcUrls: network.rpcUrls,
+              blockExplorerUrls: network.explorerUrls
             }
           ]
         });
