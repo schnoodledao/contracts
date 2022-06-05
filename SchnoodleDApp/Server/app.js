@@ -59,7 +59,7 @@ function build(opts = {}) {
       await writeFile('encrypted.json', JSON.stringify({ "message": request.body.message }), { flag: 'wx' });
       sendReply(reply, 'ok');
     } catch (err) {
-      sendReply(reply, 'error', { err });
+      sendReply(reply, 'error', { message: err.message });
     }
   });
 
@@ -67,10 +67,10 @@ function build(opts = {}) {
     var data = JSON.parse(request.body);
 
     try {
-      sendReply(reply, 'ok', { fee: fees[data.network] });
+      sendReply(reply, 'ok', { fee: fees1[data.network] });
     } catch (err) {
       console.log(err);
-      sendReply(reply, 'error', { err });
+      sendReply(reply, 'error', { message: err.message });
     }
   });
 
@@ -81,7 +81,7 @@ function build(opts = {}) {
       sendReply(reply, 'ok', { tokensPending: await getTokensPending(data) });
     } catch (err) {
       console.log(err);
-      sendReply(reply, 'error', { err });
+      sendReply(reply, 'error', { message: err.message });
     }
   });
 
@@ -119,8 +119,7 @@ function build(opts = {}) {
       }
     } catch (err) {
       console.log(err);
-      message = err.message;
-      sendReply(reply, 'error', { message });
+      sendReply(reply, 'error', { message: err.message });
     }
   });
 

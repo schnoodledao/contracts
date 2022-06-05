@@ -155,7 +155,7 @@ export default class Bridge extends Component {
           if (json.status === 'ok') {
             this.setState({ tokensPending: json.body.tokensPending });
           } else {
-            this.setState({ serverError: json.body.err.message });
+            this.setState({ serverError: json.body.message });
           }
         }
 
@@ -320,7 +320,7 @@ export default class Bridge extends Component {
     if (json.status === 'ok') {
       return json.body.fee;
     } else {
-      throw new Error(json.body.err.message);
+      throw new Error(json.body.message);
     }
   }
 
