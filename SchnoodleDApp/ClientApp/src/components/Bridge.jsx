@@ -170,9 +170,9 @@ export default class Bridge extends Component {
 
   //#region Handling
 
-  handleReceipt(receipt) {
+  handleReceipt(receipt, callback) {
     if (receipt.status) {
-      this.setState({ success: true, message: receipt.transactionHash });
+      this.setState({ success: true, message: receipt.transactionHash }, callback);
     } else {
       throw new Error(receipt);
     }
@@ -227,10 +227,10 @@ export default class Bridge extends Component {
         const { amount, schnoodle, selectedAddress, targetNetwork } = this.state;
         const targetNetworkInfo = networks[targetNetwork];
 
-        this.handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }));
-
-        // Attempt to switch the user's wallet to the target network so they can receive their tokens
-        await this.switchNetwork(targetNetworkInfo);
+        this.handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }), async () => {
+          // Attempt to switch the user's wallet to the target network so they can receive their tokens
+          await this.switchNetwork(targetNetworkInfo);
+        });
       });
     } catch (err) {
       this.handleError(err);
