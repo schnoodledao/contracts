@@ -19,20 +19,20 @@ const Network = createEnum(['ethereum', 'bsc']);
 const networks =
 {
   ethereum: {
-    name: 'Ethereum',
+    name: process.env.REACT_APP_ETH_NET_NAME,
     id: Number(process.env.REACT_APP_ETH_NET_ID),
     url: process.env.REACT_APP_ETH_URL,
-    standard: 'ERC20',
+    display: 'Ethereum',
     symbol: 'ETH',
-    rpcUrls: ['https://mainnet.infura.io/v3/']
+    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL]
   },
   bsc: {
-    name: 'BNB Smart Chain',
+    name: process.env.REACT_APP_BSC_NET_NAME,
     id: Number(process.env.REACT_APP_BSC_NET_ID),
     url: process.env.REACT_APP_BSC_URL,
-    standard: 'BEP20',
+    display: 'BSC',
     symbol: 'BNB',
-    rpcUrls: ['https://bsc-dataseed.binance.org/']
+    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL]
   }
 };
 
@@ -261,8 +261,8 @@ export default class Bridge extends Component {
           await this.getInfo();
         }
       });
-    } catch (err2) {
-      this.handleError(err2);
+    } catch (err) {
+      this.handleError(err);
     }
 
     this.setState({ busyReceive: false });
@@ -335,7 +335,7 @@ export default class Bridge extends Component {
     const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
 
     const availableAmount = scaleDownUnits(this.state.availableAmount);
-    const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
+    const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
     const targetNetworks = sourceNetworks;
 
     const styles = {
