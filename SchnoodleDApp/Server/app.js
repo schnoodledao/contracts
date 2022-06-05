@@ -67,7 +67,7 @@ function build(opts = {}) {
     var data = JSON.parse(request.body);
 
     try {
-      sendReply(reply, 'ok', { fee: fees1[data.network] });
+      sendReply(reply, 'ok', { fee: fees[data.network] });
     } catch (err) {
       console.log(err);
       sendReply(reply, 'error', { message: err.message });
