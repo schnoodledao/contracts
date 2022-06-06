@@ -65,8 +65,11 @@ export default class Bridge extends Component {
   async componentDidMount() {
     try {
       // Web3
+      const web3 = await getWeb3();
       const web3Eth = new Web3(networks[Network.ethereum].url);
       const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
+      const networkId = await web3.eth.net.getId();
+      const selectedAddress = web3.currentProvider.selectedAddress;
 
       // Smart contracts
       const schnoodleEthNetwork = SchnoodleV1.networks[networks[Network.ethereum].id];
@@ -74,38 +77,7 @@ export default class Bridge extends Component {
       const schnoodleBscNetwork = SchnoodleV1.networks[networks[Network.bsc].id];
       const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
 
-      window.ethereum.on('networkChanged', async () => await this.updateWeb3());
-
-      this.setState({
-        web3Eth,
-        web3Bsc,
-        schnoodleEthNetwork,
-        schnoodleEth,
-        schnoodleBscNetwork,
-        schnoodleBsc
-      }, async () => {
-        await this.updateWeb3();
-        await this.getInfo();
-        const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
-        this.setState({ getInfoIntervalId });
-      });
-    } catch (err) {
-      this.handleError(err);
-    }
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.state.getInfoIntervalId);
-  }
-
-  async updateWeb3(callback) {
-    try {
-      const web3 = await getWeb3();
-      const { schnoodleEthNetwork, schnoodleBscNetwork } = this.state;
-
       let schnoodle, sourceNetwork;
-      const networkId = await web3.eth.net.getId();
-      const selectedAddress = web3.currentProvider.selectedAddress;
 
       switch (networkId.toString()) {
         case process.env.REACT_APP_ETH_NET_ID:
@@ -116,14 +88,22 @@ export default class Bridge extends Component {
           schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
           sourceNetwork = Network.bsc;
           break;
-        default:
+      default:
           throw new Error(`Network ID ${networkId} unsupported.`);
       }
 
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({
         web3,
+        web3Eth,
+        web3Bsc,
+        schnoodleEthNetwork,
+        schnoodleEth,
+        schnoodleBscNetwork,
+        schnoodleBsc,
         networkId,
         schnoodle,
         selectedAddress,
@@ -131,11 +111,16 @@ export default class Bridge extends Component {
       }, async () => {
         await this.changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? sourceNetwork });
         await this.changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? sourceNetwork });
-        if (callback) await callback();
+        const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
+        this.setState({ getInfoIntervalId });
       });
     } catch (err) {
       this.handleError(err);
     }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.state.getInfoIntervalId);
   }
 
   async getInfo() {
@@ -155,7 +140,7 @@ export default class Bridge extends Component {
           if (json.status === 'ok') {
             this.setState({ tokensPending: json.body.tokensPending });
           } else {
-            this.setState({ serverError: json.body.err.message });
+            this.setState({ serverError: json.body.message });
           }
         }
 
@@ -188,14 +173,12 @@ export default class Bridge extends Component {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: this.state.web3.utils.toHex(network.id) }]
         });
-
-        await this.updateWeb3(callback);
       } else {
         await callback();
       }
     } catch (err) {
       // This error code indicates that the chain has not been added to the wallet
-      if (err.code === 4902) {
+      if (err.code === 4902 || err.data?.originalError?.code === 4902) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [
@@ -294,7 +277,10 @@ export default class Bridge extends Component {
         throw new Error(`Source network ${sourceNetwork} unsupported.`);
     }
 
-    this.setState({ availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) });
+    this.setState({ availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) }, async () =>
+    {
+      await this.setAmount(localStorage.getItem(`${sourceNetwork}Amount`));
+    });
   }
 
   async changeTargetNetwork(e) {
@@ -320,7 +306,7 @@ export default class Bridge extends Component {
     if (json.status === 'ok') {
       return json.body.fee;
     } else {
-      throw new Error(json.body.err.message);
+      throw new Error(json.body.message);
     }
   }
 
@@ -331,11 +317,13 @@ export default class Bridge extends Component {
   }
 
   async setAmount(amount) {
-    this.setState({ amount: Math.min(Math.floor(amount), scaleDownUnits(this.state.availableAmount)) });
+    this.setState({ amount: Math.min(Math.floor(amount), scaleDownUnits(this.state.availableAmount)) }, () => {
+      localStorage.setItem(`${this.state.sourceNetwork}Amount`, this.state.amount);
+    });
   }
 
   render() {
-    const { sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
+    const { networkId, sourceNetwork, targetNetwork, selectedAddress, busySwap, busyReceive, tokensPending, fee, amount, serverStatus, serverError, message } = this.state;
 
     const availableAmount = scaleDownUnits(this.state.availableAmount);
     const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
@@ -361,7 +349,7 @@ export default class Bridge extends Component {
         />
         <span>{props.data.label}</span>
       </div>
-    )
+    );
 
     const singleValue = props => (
       <SingleValue {...props}>
@@ -413,6 +401,7 @@ export default class Bridge extends Component {
         <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{`Server error: ${serverError}`}</div>
       </div>;
     } else {
+      const token = 'SNOOD';
       bridge =
       <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
         <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
@@ -421,7 +410,7 @@ export default class Bridge extends Component {
               <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
-                  <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">{token}</div>
                   <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
@@ -433,7 +422,7 @@ export default class Bridge extends Component {
               <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
-                  <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
+                  <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">{token}</div>
                   <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
@@ -444,7 +433,7 @@ export default class Bridge extends Component {
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
                   <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{'SNOOD ready to be received'}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 tw-mb-7 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 tw-mb-7 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
               </div>
             : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
@@ -457,7 +446,7 @@ export default class Bridge extends Component {
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
                   <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} className="keybtnbridge maxbuttonbridge tw-w-full" disabled={amount === 0}>SEND</button>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtnbridge maxbuttonbridge tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
                 <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
@@ -467,14 +456,14 @@ export default class Bridge extends Component {
                       </div>
                     </div>
                   }
-                  </div>
+                </div>
               </div>
           }
           <div className="tw-text-center tw-mt-2.5">
             <p style={{ color: this.state.success ? 'green' : 'red' }}>{message}</p>
           </div>
-        </div>;
-      </div>
+        </div>
+      </div>;
     }
 
     return (

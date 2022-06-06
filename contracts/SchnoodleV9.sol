@@ -14,7 +14,6 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant FARMING_CONTRACT = keccak256("FARMING_CONTRACT");
     bytes32 public constant LOCKED = keccak256("LOCKED");
-    bytes32 public constant BRIDGE = keccak256("BRIDGE");
 
     address private _bridgeOwner;
     mapping(address => mapping (uint256 => uint256)) private _tokensSent;
