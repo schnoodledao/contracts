@@ -91,8 +91,6 @@ function build(opts = {}) {
     console.log('Timestamp:', new Date().toISOString());
     console.log('Data:', data);
 
-    let message;
-
     try {
       const web3 = getWeb3(data.targetNetwork);
       const privateKey = (await decryptMessage()).toString(CryptoJS.enc.Utf8);
