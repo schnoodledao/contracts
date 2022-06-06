@@ -440,11 +440,11 @@ export default class Bridge extends Component {
             </div>
           </div>
           {tokensPending > 0
-            ? <div className="tw-col-span-7 lg:bg-color lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
+            ? <div className="tw-col-span-7 lg:bg-color tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
+                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{'SNOOD ready to be received'}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 tw-mb-7 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
               </div>
             : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
@@ -457,8 +457,8 @@ export default class Bridge extends Component {
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
                   <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">SEND</button>
-                <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                <button type="button" onClick={this.sendTokens} className="keybtnbridge maxbuttonbridge tw-w-full" disabled={amount === 0}>SEND</button>
+                <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
                       <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
