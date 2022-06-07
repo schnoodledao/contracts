@@ -108,6 +108,10 @@ fieldset:disabled button {
   margin-top: -3px;
 }
 
+.plustop {
+  margin-top: 3px;
+}
+
 .tw-stats {
   @apply tw-w-full tw-grid-flow-row lg:tw-grid-flow-col tw-my-6 md:tw-my-5;
 }
@@ -184,7 +188,7 @@ input.withdrawinput {
 }
 
 .maxbuttonbridge {
-  @apply tw-btn tw-btn-accent tw-border-accent tw-text-base-300 md:tw-text-lg tw-uppercase tw-opacity-80 tw-bordered;;
+  @apply tw-ml-0 !important;
 }
 
 .depositbtns {
@@ -192,11 +196,7 @@ input.withdrawinput {
 }
 
 .keybtn {
-  @apply maxbuttonbridge tw-mt-5 tw-text-xl tw-font-black !important;
-}
-
-.keybtnbridge {
-  @apply maxbuttonbridge tw-mt-5 tw-text-xl tw-font-black !important;
+  @apply maxbuttons tw-mt-5 tw-text-xl tw-font-black !important;
 }
 
 .maximise {

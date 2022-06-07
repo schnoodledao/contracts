@@ -330,7 +330,7 @@ export default class Bridge extends Component {
     const targetNetworks = sourceNetworks;
 
     const styles = {
-      valueContainer: () => ({ width: 100, border: 'none', display: 'grid' }),
+      valueContainer: () => ({ width: 120, border: 'none', display: 'grid' }),
       singleValue: base => ({ ...base, color: 'white', }),
       control: (base, state) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
       dropdownIndicator: (base, state) => ({ ...base, color: 'white' }),
@@ -344,10 +344,10 @@ export default class Bridge extends Component {
       <div className="tw-flex">
         <img
           src={`/assets/img/svg/${props.data.value}.svg`}
-          className="tw-w-1/4 tw-mr-2"
+          className="tw-w-1/6 tw-mx-1 plustop"
           alt={props.data.label}
         />
-        <span>{props.data.label}</span>
+        <span className="plustop">{props.data.label}</span>
       </div>
     );
 
@@ -405,13 +405,15 @@ export default class Bridge extends Component {
       bridge =
       <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
         <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
-          <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
+          <div className="tw-flex tw-items-center tw-flex-col lg:tw-flex-row">
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
-              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                <div>
-                  <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+              <div className="tw-flex tw-flex-col">
+                <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">From</div>
+                <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                  <div>
+                    <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                    <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -419,19 +421,21 @@ export default class Bridge extends Component {
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
-              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                <div>
-                  <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+              <div className="tw-flex tw-flex-col">
+                <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">To</div>
+                <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                  <div>
+                    <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                    <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           {tokensPending > 0
-            ? <div className="tw-col-span-7 lg:bg-color tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
+            ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{'SNOOD ready to be received'}</span>
+                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
                 </div>
                 <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 tw-mb-7 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
               </div>
@@ -446,7 +450,7 @@ export default class Bridge extends Component {
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
                   <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtnbridge maxbuttonbridge tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbuttonbridge tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
                 <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
