@@ -1,10 +1,9 @@
 // ReSharper disable InconsistentNaming
 import React, { useEffect, useState } from 'react';
 import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
-// @ts-ignore
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
-import { bridge, farming, moontron } from '../resources';
+import { bridge, farming } from '../resources';
 import { getWeb3 } from '../helpers';
 // ReSharper restore InconsistentNaming
 
@@ -17,9 +16,9 @@ const NavMenu: React.FC<{}> = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-        const web3 = await getWeb3();
-        (window as any).ethereum.on('accountsChanged', () => window.location.reload());
-        setAccount((web3 as any).currentProvider.selectedAddress);
+      const web3 = await getWeb3();
+      (window as any).ethereum.on('accountsChanged', () => window.location.reload());
+      setAccount((web3 as any).currentProvider.selectedAddress);
     }
     fetchData();
     return () => {}
@@ -39,13 +38,13 @@ const NavMenu: React.FC<{}> = () => {
 
   return (
     <header>
-    <Navbar className="navbar-expand-sm navbar-toggleable-sm tw-bg-neutral tw-text-neutral-content tw-font-roboto tw-px-1 md:tw-px-4" dark>
+      <Navbar className="navbar-expand-sm navbar-toggleable-sm tw-bg-neutral tw-text-neutral-content tw-font-roboto tw-px-1 md:tw-px-4" dark>
         <NavbarBrand tag={Link} to="/" className="tw-leading-tight tw-uppercase tw-font-bold">
-        <img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
+          <img className="w-40 h-auto" src="/assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
         </NavbarBrand>
         <NavbarToggler onClick={toggleNavbar} className="mr-2" />
         <Collapse className="d-sm-inline-flex flex-sm-row-reverse" isOpen={!collapsed} navbar>
-        <ul className="navbar-nav flex-grow">
+          <ul className="navbar-nav flex-grow">
             <NavItem>
             <NavLink tag={Link} className="text-light tw-uppercase" to="/" onClick={toggleNavbar}>Home</NavLink>
             </NavItem>
@@ -61,17 +60,16 @@ const NavMenu: React.FC<{}> = () => {
             {/* <NavItem>
             <NavLink tag={Link} className="text-light tw-uppercase" to="/moontron" onClick={toggleNavbar}>{moontron.MOONTRON}</NavLink>
             </NavItem> */}
-        </ul>
+          </ul>
         </Collapse>
         {account == null
         ? <button onClick={connect}>Connect</button>
         : <div>{account.slice(0, 6) + '...' + account.slice(-6)}</div>
         }
-    </Navbar>
+      </Navbar>
     </header>
   );
 }
-
 
 NavMenu.displayName = NavMenu.name;
 export default NavMenu;

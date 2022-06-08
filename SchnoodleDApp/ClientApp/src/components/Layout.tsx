@@ -1,20 +1,19 @@
 // ReSharper disable InconsistentNaming
-import React, { Component } from 'react';
+import React from 'react';
 import { Container } from 'reactstrap';
 import NavMenu from './NavMenu';
 // ReSharper disable InconsistentNaming
 
-export class Layout extends Component {
-  static displayName = Layout.name;
-
-  render () {
-    return (
-      <div className="">
-        <NavMenu />
-        <Container>
-          {(this.props as any).children}
-        </Container>
-      </div>
-    );
-  }
+const Layout = ({children}: React.PropsWithChildren<{}>) => {
+  return (
+    <div className="">
+      <NavMenu />
+      <Container>
+        {children}
+      </Container>
+    </div>
+  );
 }
+
+Layout.displayName = Layout.name;
+export default Layout;

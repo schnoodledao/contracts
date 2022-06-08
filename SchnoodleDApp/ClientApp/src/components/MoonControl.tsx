@@ -12,7 +12,6 @@ import { IHelpData } from '../types';
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-// @ts-ignore
 import chroma from 'chroma-js';
 import Globe from 'react-globe.gl';
 const bigInt = require('big-integer');
@@ -21,7 +20,7 @@ const bigInt = require('big-integer');
 interface IContractData {
     web3: any,
     schnoodle: any,
-    schnoodleFarming: any
+    schnoodleFarming: any,
 }
 
 interface IFactorData {
@@ -34,21 +33,21 @@ interface IFactorData {
 }
 
 interface IFarmData {
-    lat?: number;
-    lng?: number;
-    radius?: number;
-    altitude?: number;
-    pointColor?: any;
-    depositInfo?: any;
-    ringColor?: any;
-    maxRadius?: number;
-    propagationSpeed?: number;
-    repeatPeriod?: number;
+    lat?: number,
+    lng?: number,
+    radius?: number,
+    altitude?: number,
+    pointColor?: any,
+    depositInfo?: any,
+    ringColor?: any,
+    maxRadius?: number,
+    propagationSpeed?: number,
+    repeatPeriod?: number,
 }
 
 interface IStatus {
   success: boolean,
-  message: string
+  message: string,
 }
 
 interface IDepositInfo {
@@ -57,41 +56,41 @@ interface IDepositInfo {
         amount: number
     },
     reward: number,
-    vestimatedApy: number
+    vestimatedApy: number,
 }
 
 interface IArc {
     startLat: number,
     startLng: number,
-    endLat: number
-    endLng: number
+    endLat: number,
+    endLng: number,
 }
 
 const MoonControl: React.FC<{}> = () => {
-    const [globeClickPoint, setGlobeClickPoint] = useState(null);
-    const [farmingOverview, setFarmingOverview] = useState([]);
-    const [contracts, setContracts] = useState<IContractData>();
-    const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
-    const [openModal, setOpenHelpModal] = useState(false);
-    const [arcsData, setArcsData] = useState<IArc[]>();
-    const [farmData, setFarmData] = useState<IFarmData[]>();
-    const [status, setStatus] = useState<IStatus>();
-    const [factors, setFactors] = useState<IFactorData>();
-    const [blockNumber, setBlockNumber] = useState<number>();
-    const [helpInfo, setHelpInfo] = useState<IHelpData>();
-    const globeRef = useRef(null);
-    const globeEl = useRef(null);
-    const ARC_REL_LEN = 0.4;
-    const FLIGHT_TIME = 1000;
+  const [globeClickPoint, setGlobeClickPoint] = useState(null);
+  const [farmingOverview, setFarmingOverview] = useState([]);
+  const [contracts, setContracts] = useState<IContractData>();
+  const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
+  const [openModal, setOpenHelpModal] = useState(false);
+  const [arcsData, setArcsData] = useState<IArc[]>();
+  const [farmData, setFarmData] = useState<IFarmData[]>();
+  const [status, setStatus] = useState<IStatus>();
+  const [factors, setFactors] = useState<IFactorData>();
+  const [blockNumber, setBlockNumber] = useState<number>();
+  const [helpInfo, setHelpInfo] = useState<IHelpData>();
+  const globeRef = useRef(null);
+  const globeEl = useRef(null);
+  const ARC_REL_LEN = 0.4;
+  const FLIGHT_TIME = 1000;
 
   useEffect(() => {
     if (contracts) {
-        getInfo();
-        const getInfoIntervalId = setInterval(async () => await getInfo(), 60000);
-        setGetInfoIntervalId(getInfoIntervalId);
-        const globeElControls = (globeEl as any).current.controls();
-        globeElControls.autoRotate = true;
-        globeElControls.autoRotateSpeed = 0.5;
+      getInfo();
+      const getInfoIntervalId = setInterval(async () => await getInfo(), 60000);
+      setGetInfoIntervalId(getInfoIntervalId);
+      const globeElControls = (globeEl as any).current.controls();
+      globeElControls.autoRotate = true;
+      globeElControls.autoRotateSpeed = 0.5;
     }
   }, [contracts])
 
@@ -115,7 +114,7 @@ const MoonControl: React.FC<{}> = () => {
       handleError(err, setStatus);
     }
     return () => {
-        clearInterval(getInfoIntervalId);
+      clearInterval(getInfoIntervalId);
     }
   }, [])
 
@@ -386,60 +385,60 @@ const MoonControl: React.FC<{}> = () => {
 
   if (!contracts?.web3) {
     return (
-    <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
+      <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
         <div className="tw-h-noheader md:tw-flex">
-        <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
+          <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
             <div className="tw-px-4">
-            <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
-            <div className="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
-            <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-            <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-            <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+              <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
+              <div className="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
+              <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
+              <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
+              <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
             </div>
+          </div>
         </div>
-        </div>
-    </div>
+      </div>
     );
-}
+  }
   return (
     <div className="mooncontrol tw-w-100">
-    <div className="tw-m-auto tw-px-4 tw-max-w-screen-2xl">
+      <div className="tw-m-auto tw-px-4 tw-max-w-screen-2xl">
         <div className="tw-h-noheader tw-overflow-hidden tw-mx-2 md:tw-m-auto tw-font-roboto">
-        <div className="tw-text-center tw-px-1 md:tw-px-4">
+          <div className="tw-text-center tw-px-1 md:tw-px-4">
             <div className="tw-text-base-200 tw-w-full">
-            <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_CONTROL}</h1>
-            <p className="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
-                <span className="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
-                <span className="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
-            </p>
+              <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_CONTROL}</h1>
+              <p className="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
+                  <span className="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
+                  <span className="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
+              </p>
 
-            {renderMoonFarms()}
+              {renderMoonFarms()}
 
-            {farmingOverview.length > 0 &&
-                <div className="summarytable">
-                <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
-                <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
-                    {renderFarmingOverviewTable(farmingOverview)}
-                </div>
-                </div>
-            }
+              {farmingOverview.length > 0 &&
+                  <div className="summarytable">
+                  <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
+                  <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
+                      {renderFarmingOverviewTable(farmingOverview)}
+                  </div>
+                  </div>
+              }
 
-            <div className="tw-my-5">
-                <p style={{ color: status?.success ? 'green' : 'red' }}>{status?.message}</p>
+              <div className="tw-my-5">
+                  <p style={{ color: status?.success ? 'green' : 'red' }}>{status?.message}</p>
+              </div>
             </div>
-            </div>
-        </div>
+          </div>
         </div>
         
         <div>
-        <Modal open={openModal} onClose={closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
-            <h1>{helpInfo?.helpTitle}</h1>
-            <p>{helpInfo?.helpInfo}</p>
-            <br />
-            <p>{helpInfo?.helpDetails}</p>
-        </Modal>
+          <Modal open={openModal} onClose={closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
+              <h1>{helpInfo?.helpTitle}</h1>
+              <p>{helpInfo?.helpInfo}</p>
+              <br />
+              <p>{helpInfo?.helpDetails}</p>
+          </Modal>
         </div>
-    </div>
+      </div>
     </div>
   );
   //#endregion
