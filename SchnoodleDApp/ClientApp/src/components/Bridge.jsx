@@ -9,6 +9,7 @@ import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, 
 // Third-party libraries
 import Web3 from 'web3';
 import Select, { components } from 'react-select';
+import { Puff } from 'react-loader-spinner';
 const bigInt = require('big-integer');
 
 const Network = createEnum(['ethereum', 'bsc']);
@@ -389,7 +390,7 @@ export default class Bridge extends Component {
       );
     } else if (busyMessage) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <img src="/assets/img/svg/load.svg" alt="" className="tw-w-16 tw-h-16 tw-mb-8 lg:tw-mb-11 tw-animate-spin" />
+        <Puff color="#00BFFF" />
         <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
       </div>;
     } else if (!serverStatus) {
@@ -417,7 +418,7 @@ export default class Bridge extends Component {
                 </div>
               </div>
             </div>
-            <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 bg-color lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+            <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 tw-btn-accent lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
@@ -435,9 +436,9 @@ export default class Bridge extends Component {
           {tokensPending > 0
             ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
+                  <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 tw-mb-7 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-w-1/2 keybtn maxbuttons">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
               </div>
             : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
@@ -450,7 +451,7 @@ export default class Bridge extends Component {
                   <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
                   <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbuttonbridge tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbuttons tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
                 <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
