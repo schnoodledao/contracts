@@ -158,7 +158,7 @@ export default class Moontron extends Component {
                 <div className="maintitles tw-uppercase">{resources.MOONTRON}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -225,10 +225,10 @@ export default class Moontron extends Component {
                             <div ref={this.viewerRef} className="viewer tw-max-w-6xl tw-mx-auto" />
 
                             <div className="tw-mb-3 tw-form-control tw-w-full">
-                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.selectedConfig == null} onClick={this.generateAsset}>Generate</button>
+                              <button type="button" className="keybtn nftbtn maxbtn" disabled={this.state.selectedConfig == null} onClick={this.generateAsset}>Generate</button>
                             </div>
                             <div className="tw-mb-3 tw-form-control tw-w-full">
-                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
+                              <button type="button" className="keybtn nftbtn maxbtn" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
                             </div>
                           </fieldset>
                         </form>

@@ -382,7 +382,7 @@ export default class Bridge extends Component {
                 <div className="maintitles tw-uppercase">{resources.BRIDGE}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -438,24 +438,24 @@ export default class Bridge extends Component {
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
                   <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} className="tw-w-1/2 keybtn maxbuttons">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-w-1/2 keybtn maxbtn">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
               </div>
             : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
                   <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                  <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                  <button type="button" className="maxbtn" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbuttons tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbtn tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
                 <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
-                      <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
+                      <div className="tw-flex tw-justify-center purplefade tw-mb-7">
                         Receive Fee:
                         <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
                       </div>
