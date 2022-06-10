@@ -10,6 +10,7 @@ import { IStatus } from '../types';
 // Third-party libraries
 import Web3 from 'web3';
 import Select, { components } from 'react-select';
+import { Puff } from 'react-loader-spinner';
 const bigInt = require('big-integer');
 
 const Network : {[key: string]: string} = createEnum(['ethereum', 'bsc']);
@@ -22,17 +23,19 @@ const networks: {[key: string]: INetwork} =
     name: 'Ethereum',
     id: Number(process.env.REACT_APP_ETH_NET_ID),
     url: process.env.REACT_APP_ETH_URL,
-    standard: 'ERC20',
+    display: 'Ethereum',
     symbol: 'ETH',
-    rpcUrls: ['https://mainnet.infura.io/v3/']
+    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_ETH_EXPLORER_URL]
   },
   bsc: {
     name: 'BNB Smart Chain',
     id: Number(process.env.REACT_APP_BSC_NET_ID),
     url: process.env.REACT_APP_BSC_URL,
-    standard: 'BEP20',
+    display: 'BSC',
     symbol: 'BNB',
-    rpcUrls: ['https://bsc-dataseed.binance.org/']
+    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_BSC_EXPLORER_URL]
   }
 };
 
@@ -40,9 +43,10 @@ interface INetwork {
   name: string,
   id: number,
   url: any,
-  standard: string,
+  display: string,
   symbol: string,
   rpcUrls: string[],
+  explorerUrls: string[]
 }
 
 interface IContractData {
@@ -200,9 +204,10 @@ const Bridge: React.FC<{}> = () => {
 
   //#region Handling
 
-  const handleReceipt = (receipt: any) => {
+  const handleReceipt = (receipt: any, callback?: any) => {
     if (receipt.status) {
-      setStatus({success: true, message: receipt.transactionHash})
+      setStatus({success: true, message: receipt.transactionHash});
+      if (callback) callback();
     } else {
       throw new Error(receipt);
     }
@@ -219,14 +224,12 @@ const Bridge: React.FC<{}> = () => {
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: networksData?.web3.utils.toHex(network.id) }]
           });
-
-          await updateWeb3(callback);
         } else {
           await callback();
         }
       } catch (err: any) {
         // This error code indicates that the chain has not been added to the wallet
-        if (err.code === 4902) {
+        if (err.code === 4902 || err.data?.originalError?.code === 4902) {
           await (window as any).ethereum.request({
             method: 'wallet_addEthereumChain',
             params: [
@@ -238,7 +241,8 @@ const Bridge: React.FC<{}> = () => {
                   symbol: network.symbol,
                   decimals: 18
                 },
-                rpcUrls: network.rpcUrls
+                rpcUrls: network.rpcUrls,
+                blockExplorerUrls: network.explorerUrls
               }
             ]
           });
@@ -257,10 +261,10 @@ const Bridge: React.FC<{}> = () => {
           const { amount, schnoodle, selectedAddress, targetNetwork } = networksData;
           const targetNetworkInfo = networks[targetNetwork as string];
 
-          handleReceipt(await (schnoodle as any).methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }));
-
-          // Attempt to switch the user's wallet to the target network so they can receive their tokens
-          await switchNetwork(targetNetworkInfo);
+          handleReceipt(await (schnoodle as any).methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }), async () => {
+            // Attempt to switch the user's wallet to the target network so they can receive their tokens
+            await switchNetwork(targetNetworkInfo);
+          });
         } catch (err) {
           handleError(err, setStatus);
           setBusyMessage(null);
@@ -282,7 +286,7 @@ const Bridge: React.FC<{}> = () => {
       // Pay the fee (suggested by the server) to the Schnoodle contract
       const sourceNetworkId = networks[sourceNetwork].id;
       const fee = await getFee(targetNetwork) - await (schnoodle as any).methods.feesPaid(selectedAddress, sourceNetworkId).call();
-      if (fee) handleReceipt(await (schnoodle as any).methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
+      if (fee > 0) handleReceipt(await (schnoodle as any).methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
       // Request the server to call receiveTokens on the Schnoodle contract
       const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
@@ -324,6 +328,12 @@ const Bridge: React.FC<{}> = () => {
     setAmounts({ ...amounts, availableAmount: bigInt(await (schnoodleSource as any).methods.unlockedBalanceOf(selectedAddress).call()) });
   }
 
+  useEffect(() => {
+    if (amounts.availableAmount) {
+      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
+    }
+  }, [amounts.availableAmount])
+
   const changeTargetNetwork = async (e: any) => {
     await changeNetwork(e.value, networksData.sourceNetwork, 'targetNetwork', 'sourceNetwork');
   }
@@ -348,7 +358,7 @@ const Bridge: React.FC<{}> = () => {
     if (json.status === 'ok') {
       return json.body.fee;
     } else {
-      throw new Error(json.body.err.message);
+      throw new Error(json.body.message);
     }
   }
 
@@ -360,6 +370,7 @@ const Bridge: React.FC<{}> = () => {
 
   const setAmount = (amount: number) => {
     setAmounts({...amounts, amount: Math.min(Math.floor(amount), scaleDownUnits(amounts.availableAmount))});
+    localStorage.setItem(`${networksData.sourceNetwork}Amount`, amount.toString());
   }
 
   const close = () => {
@@ -377,7 +388,7 @@ const Bridge: React.FC<{}> = () => {
   }
 
   const styles = {
-    valueContainer: () => ({ width: 100, border: 'none', display: 'grid' }),
+    valueContainer: () => ({ width: 120, border: 'none', display: 'grid' }),
     singleValue: (base: any) => ({ ...base, color: 'white', }),
     control: (base: any, state: any) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
     dropdownIndicator: (base: any, state: any) => ({ ...base, color: 'white' }),
@@ -391,12 +402,12 @@ const Bridge: React.FC<{}> = () => {
     <div className="tw-flex">
       <img
         src={`/assets/img/svg/${props.data.value}.svg`}
-        className="tw-w-1/4 tw-mr-2"
+        className="tw-w-1/6 tw-mx-1 plustop"
         alt={props.data.label}
       />
-      <span>{props.data.label}</span>
+      <span className="plustop">{props.data.label}</span>
     </div>
-  )
+  );
 
   const singleValue = (props: any) => (
     <SingleValue {...props}>
@@ -410,8 +421,9 @@ const Bridge: React.FC<{}> = () => {
     </Option>
   );
 
-  const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].standard } });
+  const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
   const targetNetworks = sourceNetworks;
+  const token = 'SNOOD';
 
   return (
     <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900">
@@ -421,8 +433,8 @@ const Bridge: React.FC<{}> = () => {
             <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
             {busyMessage && 
               <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-                  <img src="/assets/img/svg/load.svg" alt="" className="tw-w-16 tw-h-16 tw-mb-8 lg:tw-mb-11 tw-animate-spin" />
-                  <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
+                <Puff color="#00BFFF" />
+                <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
               </div>
             }
             {showClose ? ( 
@@ -435,7 +447,7 @@ const Bridge: React.FC<{}> = () => {
               </div>
             ) : !serverStatus ? (
               <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-                <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Server offline</div>
+                <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Waiting for server...</div>
               </div>
             ) : serverError != null ? (
               <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
@@ -446,33 +458,37 @@ const Bridge: React.FC<{}> = () => {
               <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
                 <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
                   <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-                    <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
-                    <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                      <div>
-                        <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                        <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === networksData.sourceNetwork)} onChange={changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }}/>
+                    <div className="tw-flex tw-flex-col">
+                      <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">From</div>
+                      <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                        <div>
+                          <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                          <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === networksData.sourceNetwork)} onChange={changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <button type="button" onClick={swapNetworks} className="tw-z-0 tw-p-2 bg-color lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+                  <button type="button" onClick={swapNetworks} className="tw-z-0 tw-p-2 tw-btn-accent lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
                     <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt=""/>
                   </button>
                   <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-                    <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
-                    <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                    <div>
-                      <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">SNOOD</div>
-                        <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === networksData.targetNetwork)} onChange={changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }}/>
+                    <div className="tw-flex tw-flex-col">
+                      <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">To</div>
+                      <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                        <div>
+                          <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                          <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === networksData.targetNetwork)} onChange={changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 {tokensPending > 0
-                ? <div className="tw-col-span-7 lg:bg-color lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
+                ? <div className="tw-col-span-7 lg:bg-color tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
                     <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                      <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{'SNOOD ready to be received'}</span>
+                      <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
                     </div>
-                    <button onClick={receiveTokens} disabled={parseInt(networksData.networkId) !== networks[networksData.targetNetwork].id} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">RECEIVE</button>
+                    <button onClick={receiveTokens} disabled={parseInt(networksData.networkId) !== networks[networksData.targetNetwork].id} className="tw-w-1/2 keybtn maxbuttons">{networks[networksData.targetNetwork].id === parseInt(networksData.networkId) ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
                   </div>
                 : <div className="md:tw-m-auto md:tw-w-1/2">
                     <div className="tw-relative tw-mb-10 tw-flex">
@@ -485,11 +501,11 @@ const Bridge: React.FC<{}> = () => {
                       <button type="button" className="dwmbutton hidelg" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>&frac34;</button>
                       <button type="button" className="maxbuttons" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount))}>Max</button>
                     </div>
-                    <button type="button" onClick={sendTokens} disabled={amounts.amount === 0} className="keybtn maxbuttons tw-w-full">SEND</button>
+                    <button type="button" onClick={sendTokens} disabled={amounts.amount === 0} className="keybtn maxbuttons tw-w-full">{networks[networksData.targetNetwork].id === parseInt(networksData.networkId) ? 'SEND' : 'SWITCH NETWORK'}</button>
                     <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                       {fee &&
                         <div>
-                          <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
+                          <div className="tw-flex tw-justify-center purplefade tw-mb-7">
                             Receive Fee:
                             <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[networksData.targetNetwork].symbol}`}</div>
                           </div>
