@@ -46,11 +46,12 @@ Schnoodle was launched in July 2021 by a team classically trained in software en
 
 Schnoodle uses bleeding edge decentralised technologies to form a fully trustless and permissionless ecosystem which we call the [Schnoodle Community Ecosystem](whitepaper/community-ecosystem.md) (SCE).
 
-The [Cornerstones of Schnoodle](whitepaper/foundations-of-schnoodle.md#cornerstones-of-schnoodle-cos) (CoS) are the Trustless Autonomous Governance (TAG) and Blockchain Automated Reward Kickbacks (BARK).
+The **first major component** of the SCE is the [Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md) (FoS). This is comprised of two subcomponents:
 
-The [Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md) (FoS) comprise our Price Support Mechanism (PSM), Moon Farming Platform (MFP), Fully Autonomous Bridge (FAB), and our NFT Platform (Moontron).
+1. The [Cornerstones of Schnoodle](whitepaper/foundations-of-schnoodle.md#cornerstones-of-schnoodle-cos) (CoS) are the Trustless Autonomous Governance (TAG) and Blockchain Automated Reward Kickbacks (BARK).
+2. The [Four Pillars of Schnoodle](whitepaper/foundations-of-schnoodle.md#four-pillars-of-schnoodle-4pos) (4PoS) comprise our Price Support Mechanism (PSM), Moon Farming Platform (MFP), Fully Autonomous Bridge (FAB), and our NFT Platform (Moontron).
 
-The [Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md) (UoS) are growing constantly, and including an eleemosynary feature and our SaaS systems which are in development. Our ultimate goal is to help other DAO projects utilise our innovative technology, and grow our DAO platforms through our SaaS systems.
+The **second major component** of the SCE is the [Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md) (UoS) which is growing constantly, and includes an eleemosynary feature and our SaaS systems which are in development. Our ultimate goal is to help other DAO projects utilise our innovative technology, and grow our DAO platforms through our SaaS systems.
 
 ## Our Story
 
