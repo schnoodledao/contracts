@@ -9,6 +9,7 @@ import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, 
 // Third-party libraries
 import Web3 from 'web3';
 import Select, { components } from 'react-select';
+import { Puff } from 'react-loader-spinner';
 const bigInt = require('big-integer');
 
 const Network = createEnum(['ethereum', 'bsc']);
@@ -330,7 +331,7 @@ export default class Bridge extends Component {
     const targetNetworks = sourceNetworks;
 
     const styles = {
-      valueContainer: () => ({ width: 100, border: 'none', display: 'grid' }),
+      valueContainer: () => ({ width: 120, border: 'none', display: 'grid' }),
       singleValue: base => ({ ...base, color: 'white', }),
       control: (base, state) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
       dropdownIndicator: (base, state) => ({ ...base, color: 'white' }),
@@ -344,10 +345,10 @@ export default class Bridge extends Component {
       <div className="tw-flex">
         <img
           src={`/assets/img/svg/${props.data.value}.svg`}
-          className="tw-w-1/4 tw-mr-2"
+          className="tw-w-1/6 tw-mx-1 plustop"
           alt={props.data.label}
         />
-        <span>{props.data.label}</span>
+        <span className="plustop">{props.data.label}</span>
       </div>
     );
 
@@ -371,7 +372,7 @@ export default class Bridge extends Component {
 
     let bridge;
 
-    if (!this.state.web3) {
+    if (!this.state.web3 || !serverStatus) {
       return (
         <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
           <div className="h-noheader md:tw-flex">
@@ -381,7 +382,7 @@ export default class Bridge extends Component {
                 <div className="maintitles tw-uppercase">{resources.BRIDGE}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -389,12 +390,8 @@ export default class Bridge extends Component {
       );
     } else if (busyMessage) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <img src="/assets/img/svg/load.svg" alt="" className="tw-w-16 tw-h-16 tw-mb-8 lg:tw-mb-11 tw-animate-spin" />
+        <Puff color="#00BFFF" />
         <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
-      </div>;
-    } else if (!serverStatus) {
-      bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Waiting for server...</div>
       </div>;
     } else if (serverError != null) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
@@ -405,52 +402,56 @@ export default class Bridge extends Component {
       bridge =
       <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
         <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
-          <div className="tw-flex tw-items-center lg:tw-mb-9 tw-mb-6 tw-flex-col lg:tw-flex-row">
+          <div className="tw-flex tw-items-center tw-flex-col lg:tw-flex-row">
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">From</div>
-              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                <div>
-                  <div className="purplefade tw-opacity-50 tw-bg-base-200 tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+              <div className="tw-flex tw-flex-col">
+                <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">From</div>
+                <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                  <div>
+                    <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                    <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={this.changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                  </div>
                 </div>
               </div>
             </div>
-            <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 bg-color lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+            <button type="button" onClick={this.swapNetworks} className="tw-z-0 tw-p-2 tw-btn-accent lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
               <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
             </button>
             <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-              <div className="tw-font-bold tw-text-xs lg:tw-mb-4 tw-text-white">To</div>
-              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                <div>
-                  <div className="purplefade tw-opacity-50 tw-uppercase tw-text-xl tw-font-bold">SN{token}OOD</div>
-                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+              <div className="tw-flex tw-flex-col">
+                <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">To</div>
+                <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                  <div>
+                    <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                    <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={this.changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           {tokensPending > 0
-            ? <div className="tw-col-span-7 lg:bg-color lg:tw-py-40 tw-pt-10 lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
+            ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
                 <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                  <span className="text-main-color tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-font-bold">{`${token} ready to be received`}</span>
+                  <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
                 </div>
-                <button type="button" onClick={this.receiveTokens} className="tw-text-sm tw-max-w-xs tw-w-full tw-mx-auto tw-h-12 bg-color tw-block tw-rounded tw-transition-all tw-duration-200 hover:bg-main-color-hover tw-text-white tw-outline-none focus:tw-outline-none">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
+                <button type="button" onClick={this.receiveTokens} className="tw-w-1/2 keybtn maxbtn">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
               </div>
             : <div className="md:tw-m-auto md:tw-w-1/2">
                 <div className="tw-relative tw-mb-10 tw-flex">
                   <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={this.updateAmount} className="depositinput" />
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
-                  <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
-                  <button type="button" className="dwmbutton hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                  <button type="button" className="maxbuttons" onClick={() => this.setAmount(availableAmount)}>Max</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount / 4)}>25%</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount / 2)}>50%</button>
+                  <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setAmount(availableAmount * 3 / 4)}>75%</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount / 4)}>&frac14;</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount / 2)}>&frac12;</button>
+                  <button type="button" className="dwmbtn hidelg" onClick={() => this.setAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                  <button type="button" className="maxbtn" onClick={() => this.setAmount(availableAmount)}>Max</button>
                 </div>
-                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybn maxbuttons tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
-                <div className="tw-col-span-5 tw-rounded-13 lg:tw-px-8 lg:tw-mr-8 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                <button type="button" onClick={this.sendTokens} disabled={amount === 0} className="keybtn maxbtn tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+                <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
                   {fee &&
                     <div>
-                      <div className="tw-flex tw-justify-center text-main-text tw-mb-7">
+                      <div className="tw-flex tw-justify-center purplefade tw-mb-7">
                         Receive Fee:
                         <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
                       </div>

@@ -538,7 +538,7 @@ export default class Farming extends Component {
                 <div className="maintitles tw-uppercase">{resources.MOON_FARMING}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -657,17 +657,17 @@ export default class Farming extends Component {
                               </label>
                               <div className="tw-relative tw-flex">
                                 <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} className="depositinput" />
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                                <button type="button" className="maxbuttons" onClick={() => this.setDepositAmount(availableAmount)}>Max</button>
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                                <button type="button" className="maxbtn" onClick={() => this.setDepositAmount(availableAmount)}>Max</button>
                               </div>
                             </div>
                           </div>
-                          <div className="tw-mb-3 tw-form-control nobutton">
+                          <div className="tw-mb-3 tw-form-control nobtn">
                             <label className="tw-label">
                               <span className="tw-label-text">
                                 {resources.VESTING_BLOCKS.TITLE}
@@ -676,17 +676,17 @@ export default class Farming extends Component {
                             </label>
                             <div className="tw-mb-3 tw-flex">
                               <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={`Max: ${this.state.factoredVestingBlocksMax}`} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} className="depositinput w-full" />
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
-                              <button type="button" className="maxbuttons" onClick={this.maxVestingBlocks}>Max</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
+                              <button type="button" className="maxbtn" onClick={this.maxVestingBlocks}>Max</button>
                             </div>
                             <p className="approxLabel">{blocksDurationText(this.state.factoredVestingBlocks)}</p>
                           </div>
-                          <div className="tw-mb-3 tw-form-control nobutton">
+                          <div className="tw-mb-3 tw-form-control nobtn">
                             <label className="tw-label">
                               <span className="tw-label-text">
                                 {resources.UNBONDING_BLOCKS.TITLE}
@@ -695,18 +695,18 @@ export default class Farming extends Component {
                             </label>
                             <div className="tw-mb-3 tw-flex">
                               <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={`Max: ${this.state.factoredUnbondingBlocksMax}`} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} className="depositinput" />
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                              <button type="button" className="maxbuttons" onClick={this.maxUnbondingBlocks}>Max</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                              <button type="button" className="maxbtn" onClick={this.maxUnbondingBlocks}>Max</button>
                             </div>
                             <p className="approxLabel">{blocksDurationText(this.state.factoredUnbondingBlocks)}</p>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons maximise" disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                            <button type="button" className="keybtn maxbtn maximise" disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
                           </div>
                           <div className="tw-shadow-sm bottomstats tw-stats stats">
                             <div className="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
@@ -727,7 +727,7 @@ export default class Farming extends Component {
                             </div>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons" disabled={this.state.depositAmount < 1 || this.vestingBlocks() < 1 || this.unbondingBlocks() < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                            <button type="button" className="keybtn maxbtn" disabled={this.state.depositAmount < 1 || this.vestingBlocks() < 1 || this.unbondingBlocks() < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>
