@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@schnoodle/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract SchnoodleV1 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
@@ -45,7 +45,7 @@ contract SchnoodleV1 is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
 
     function _payFeeAndDonate(address recipient, uint256 reflectedAmount, uint256 amount) private {
         _payFee(recipient, reflectedAmount);
-        
+
         // The eleemosynary fund is optional
         if (_eleemosynary != address(0)) {
             uint256 donationAmount = amount * _getRate() / 100 * _donationPercent;

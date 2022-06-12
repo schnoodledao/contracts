@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import "./imports/SchnoodleV9Base.sol";
+import "@schnoodle/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
 contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
@@ -15,9 +14,7 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     bytes32 public constant LIQUIDITY = keccak256("LIQUIDITY");
     bytes32 public constant FARMING_CONTRACT = keccak256("FARMING_CONTRACT");
     bytes32 public constant LOCKED = keccak256("LOCKED");
-    bytes32 public constant BRIDGE = keccak256("BRIDGE");
 
-    bool private _avoidReentrancy;
     address private _bridgeOwner;
     mapping(address => mapping (uint256 => uint256)) private _tokensSent;
     mapping(address => mapping (uint256 => uint256)) private _tokensReceived;
@@ -105,17 +102,12 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     }
 
     function receiveTokens(address account, uint256 networkId, uint256 amount, uint256 fee) external {
-        require(!_avoidReentrancy);
         require(_msgSender() == _bridgeOwner, "Schnoodle: Sender must be the bridge owner");
         require(_feesPaid[account][networkId] >= fee, "Schnoodle: Insufficient fee paid");
 
-        _avoidReentrancy = true;
         _feesPaid[account][networkId] -= fee;
-
         _mint(account, amount);
         _tokensReceived[account][networkId] += amount;
-
-        _avoidReentrancy = false;
     }
 
     function tokensSent(address account, uint256 networkId) external view returns (uint256) {

@@ -22,7 +22,6 @@ module.exports = async function (deployer, network, accounts) {
   const instance = await deployProxy(Contract, [initialization.initialTokens, serviceAccount], { deployer });
   await instance.changeFeePercent(initialization.feePercent);
   await instance.changeEleemosynary(eleemosynary, initialization.donationPercent);
-  if (initialBurn) await instance.burn(BigInt((initialization.initialTokens - 1) * 10 ** await instance.decimals()), 0);
 
   const { appendList } = require('../scripts/contracts.js');
   appendList(`${contractName}@${await (await admin.getInstance()).getProxyImplementation(instance.address)}`, network);

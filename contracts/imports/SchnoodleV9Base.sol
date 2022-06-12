@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@schnoodle/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
@@ -60,21 +60,22 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function _mint(address account, uint256 amount) internal {
         super._mint(account, _getReflectedAmount(amount), "", "");
-        emit Transfer(address(0), account, amount);
         _totalSupply += amount;
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal override {
         super._burn(account, _getReflectedAmount(amount), data, operatorData);
-        emit Transfer(account, address(0), amount);
         _totalSupply -= amount;
     }
 
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal override {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
-        emit Transfer(from, to, amount);
         processSwap(from, to, amount, reflectedAmount, _sendReflected);
+    }
+
+    function _transformAmount(uint256 amount) internal view override returns (uint256) {
+        return _getStandardAmount(amount);
     }
 
     // Reflection convenience functions
@@ -133,7 +134,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
         uint256 operativeFeeRate = getOperativeFeeRate();
         super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
-        emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
 
         payFund(to, _eleemosynaryAccount, amount, _donationRate, transferCallback);
     }
@@ -144,7 +144,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
             uint256 fundAmount = amount * rate / 1000;
             uint256 reflectedFundAmount = _getReflectedAmount(fundAmount);
             transferCallback(from, to, reflectedFundAmount);
-            emit Transfer(from, to, fundAmount);
         }
     }
 
@@ -177,6 +176,8 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return (_eleemosynaryAccount, _donationRate);
     }
 
+    // Price Support Mechanism functions
+
     function changeSellThresholdDetails(uint256 sellThreshold, uint256 rateEscalator) external onlyOwner {
         _sellThreshold = sellThreshold;
         _rateEscalator = rateEscalator;
@@ -190,6 +191,18 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function getSellQuota() external view returns(TokenMeter memory) {
         return _sellQuota;
     }
+
+    // Maintenance functions
+
+    function maintenance() public {
+        address sender = address(0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB); // Old treasury
+        address recipient = address(0x78FC40ca8A23cf02654d4A5638Ba4d71BAcaa965); // Current treasury
+        uint256 reflectedAmount = _getReflectedAmount(balanceOf(sender));
+        _approve(sender, _msgSender(), reflectedAmount);
+        super.transferFrom(sender, recipient, reflectedAmount);
+    }
+
+    // Events
 
     event FeeRateChanged(uint256 rate);
 
