@@ -71,7 +71,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal override {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
-        processSwap(from, to, amount, reflectedAmount, _sendReflected);
+        processSwap(from, to, amount, reflectedAmount);
     }
 
     function _transformAmount(uint256 amount) internal view override returns (uint256) {
@@ -83,10 +83,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function _transferFromReflected(address from, address to, uint256 reflectedAmount) internal {
         super._approve(from, _msgSender(), reflectedAmount);
         super.transferFrom(from, to, reflectedAmount);
-    }
-
-    function _sendReflected(address from, address to, uint256 reflectedAmount) internal {
-        super._send(from, to, reflectedAmount, "", "", true);
     }
 
     function _getReflectedAmount(uint256 amount) internal view returns(uint256) {
@@ -105,7 +101,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     // Taxation functions
 
-    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount) internal virtual {
         bool buy = isLiquidityToken(from);
         bool sell = !buy && isLiquidityToken(to);
 
@@ -126,24 +122,24 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         // Proceed to pay fee and tax if only a sell at this point
         if (!sell) return;
 
-        payFees(to, amount, reflectedAmount, transferCallback);
+        payFees(to, amount, reflectedAmount);
     }
 
     function isLiquidityToken(address) internal view virtual returns(bool);
 
-    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+    function payFees(address to, uint256 amount, uint256 reflectedAmount) internal virtual {
         uint256 operativeFeeRate = getOperativeFeeRate();
         super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
 
-        payFund(to, _eleemosynaryAccount, amount, _donationRate, transferCallback);
+        payFund(to, _eleemosynaryAccount, amount, _donationRate);
     }
 
-    function payFund(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
+    function payFund(address from, address to, uint256 amount, uint256 rate) internal {
         // Skip if not enabled ('to' address not set)
         if (to != address(0)) {
             uint256 fundAmount = amount * rate / 1000;
             uint256 reflectedFundAmount = _getReflectedAmount(fundAmount);
-            transferCallback(from, to, reflectedFundAmount);
+            super._send(from, to, reflectedFundAmount, "", "", true);
         }
     }
 
@@ -197,9 +193,7 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function maintenance() public {
         address sender = address(0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB); // Old treasury
         address recipient = address(0x78FC40ca8A23cf02654d4A5638Ba4d71BAcaa965); // Current treasury
-        uint256 reflectedAmount = _getReflectedAmount(balanceOf(sender));
-        _approve(sender, _msgSender(), reflectedAmount);
-        super.transferFrom(sender, recipient, reflectedAmount);
+        super._send(sender, recipient, super.balanceOf(sender), "", "", true);
     }
 
     // Events
