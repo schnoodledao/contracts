@@ -372,7 +372,7 @@ export default class Bridge extends Component {
 
     let bridge;
 
-    if (!this.state.web3) {
+    if (!this.state.web3 || !serverStatus) {
       return (
         <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
           <div className="h-noheader md:tw-flex">
@@ -392,10 +392,6 @@ export default class Bridge extends Component {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
         <Puff color="#00BFFF" />
         <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
-      </div>;
-    } else if (!serverStatus) {
-      bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-        <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">Waiting for server...</div>
       </div>;
     } else if (serverError != null) {
       bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
