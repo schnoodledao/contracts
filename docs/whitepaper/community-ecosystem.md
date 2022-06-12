@@ -28,7 +28,7 @@ Second, are our use cases. This comprises the Utilities of Schnoodle which are b
 
 ### Operations
 
-Third, are our operations. As a DAO, our backlog is completely transparent, and everyone can be a part of it. This means that, as well as earning SNOOD from BARK and MFP, you can also earn SNOOD from completing tasks for Schnoodle. You can view our full backlog and get involved on Dework here:
+Third, are our operations. As a DAO, our backlog is completely transparent, and everyone can be a part of it. This means that, as well as earning SNOOD from BARK and MFP, you can also earn SNOOD by completing tasks for Schnoodle. You can view our full backlog and get involved on Dework here:
 
 {% embed url="https://app.dework.xyz/schnoodle-dao-1" %}
 
@@ -55,8 +55,8 @@ The following should also be adhered to:
 
 Please see our social media channels for examples of the quality that is expected. Submissions should adhere to our branding guidelines (link below). Our logo, colours, and/or mascot should be used wherever possible.
 
-{% content-ref url="broken-reference" %}
-[Broken link](broken-reference)
+{% content-ref url="broken-reference/" %}
+[broken-reference](broken-reference/)
 {% endcontent-ref %}
 
 ### Approval Process

@@ -219,7 +219,7 @@ Right. Which is where Reality.eth comes in. This is essentially a very cool esca
 
 The science bit... _**(Huh? I thought we'd passed the science bit!)**_
 
-The Schnoodle Snapshot space is connected to the SafeSnap DAO module instance using the SafeSnap plugin via the Snapshot space settings where the address of the DAO module instance is specified. Access-control logic for the DAO module instance is enabled to execute transactions on our Gnosis Safe account using the [`Transaction Builder`](https://help.gnosis-safe.io/en/articles/4934427-add-a-module) app in Gnosis Safe.
+The Schnoodle Snapshot space is connected to the Reality Module using the Gnosis SafeSnap plugin via the Snapshot space settings where the address of the Reality Module is specified.
 
 _**Umm, OK. So, can I finally make a proposal?**_ 💍
 
