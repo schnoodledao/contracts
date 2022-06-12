@@ -48,9 +48,9 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         super._beforeTokenTransfer(operator, from, to, amount);
     }
 
-    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal override {
-        super.payFees(to, amount, reflectedAmount, transferCallback);
-        payFund(to, _farmingFund, amount, _sowRate, transferCallback);
+    function payFees(address to, uint256 amount, uint256 reflectedAmount) internal override {
+        super.payFees(to, amount, reflectedAmount);
+        payFund(to, _farmingFund, amount, _sowRate);
     }
 
     function isLiquidityToken(address account) internal view override returns(bool)
