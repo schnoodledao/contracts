@@ -103,14 +103,38 @@ const Bridge: React.FC<{}> = () => {
     }
   }, [networksData])
 
-  useEffect(() => {
-    if (contracts) {
-      updateWeb3();
-    }
-  }, [contracts])
 
   useEffect(() => {
     try {
+      const updateWeb3 = async (schnoodleEthNetwork: any, schnoodleBscNetwork: any) => {
+        const web3 = await getWeb3();
+
+        let schnoodle, sourceNetwork;
+        const networkId = await web3.eth.net.getId();
+        const selectedAddress = web3.currentProvider.selectedAddress;
+        switch (networkId.toString()) {
+          case process.env.REACT_APP_ETH_NET_ID:
+            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
+            sourceNetwork = Network.ethereum;
+            break;
+          case process.env.REACT_APP_BSC_NET_ID:
+            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
+            sourceNetwork = Network.bsc;
+            break;
+          default:
+            throw new Error(`Network ID ${networkId} unsupported.`);
+        }
+
+        await initializeHelpers(await schnoodle.methods.decimals().call());
+        setNetworksData({
+          ...networksData,
+          web3: web3,
+          networkId: networkId,
+          schnoodle: schnoodle,
+          selectedAddress: selectedAddress,
+          sourceNetwork: sourceNetwork
+        })
+      }
       // Web3
       const web3Eth = new Web3(networks[Network.ethereum].url);
       const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
@@ -122,6 +146,7 @@ const Bridge: React.FC<{}> = () => {
       const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
 
       (window as any).ethereum.on('networkChanged', () => window.location.reload());
+      
       setContracts({
         web3Eth,
         web3Bsc,
@@ -130,42 +155,12 @@ const Bridge: React.FC<{}> = () => {
         schnoodleBscNetwork,
         schnoodleBsc
       })
+      updateWeb3(schnoodleEthNetwork, schnoodleBscNetwork)
+      
     } catch (err) {
       handleError(err, setStatus);
     }
   }, [])
-
-  const updateWeb3 = async () => {
-    if (!contracts) return;
-    const web3 = await getWeb3();
-    const { schnoodleEthNetwork, schnoodleBscNetwork } = contracts;
-
-    let schnoodle, sourceNetwork;
-    const networkId = await web3.eth.net.getId();
-    const selectedAddress = web3.currentProvider.selectedAddress;
-    switch (networkId.toString()) {
-      case process.env.REACT_APP_ETH_NET_ID:
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-        sourceNetwork = Network.ethereum;
-        break;
-      case process.env.REACT_APP_BSC_NET_ID:
-        schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-        sourceNetwork = Network.bsc;
-        break;
-      default:
-        throw new Error(`Network ID ${networkId} unsupported.`);
-    }
-
-    await initializeHelpers(await schnoodle.methods.decimals().call());
-    setNetworksData({
-      ...networksData,
-      web3: web3,
-      networkId: networkId,
-      schnoodle: schnoodle,
-      selectedAddress: selectedAddress,
-      sourceNetwork: sourceNetwork
-    })
-  }
 
   const getInfo = async () => {
     let serverStatus = false;
