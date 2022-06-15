@@ -66,3 +66,10 @@ Contract interaction is via either 1) multisig (SafeSnap optional) if `Schnoodle
     * After the question outcome is finalised and it is in favour, the upgrade transaction may be triggered by anyone to be executed on the interaction contract.
 1. If the proposal is malicious, it may be vetoed during the 24-hour cooldown period via Gnosis Safe by calling `markProposalInvalid` on the DAO module contract address.
     * The `proposalId` and `txHashes` values may be found from the `Input Data` of the relevant `Add Proposal` transaction on the DAO module contract.
+
+# FAQ
+### On Ubuntu, I get the the error `Error: not found: make`.
+Refer to [here](https://stackoverflow.com/a/14772631/197591).
+
+### On Linux, I get the 'make' error `No such file or directory`.
+If your clone path has spaces, this is due to a known [bug](https://savannah.gnu.org/bugs/?712). Avoid spaces in your clone path.

@@ -8,7 +8,7 @@
   "license": "ISC",
   "scripts": {
     "test": "mocha --exit --recursive --parallel --timeout 200000",
-    "postinstall": "(cd SchnoodleDApp/ClientApp && npm i) && (cd ../Server && npm i)"
+    "postinstall": "cd SchnoodleDApp/ClientApp && npm i && cd ../Server && npm i"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^4.5.0",
