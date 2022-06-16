@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
@@ -46,26 +46,22 @@ interface INetwork {
   display: string,
   symbol: string,
   rpcUrls: string[],
-  explorerUrls: string[]
+  explorerUrls: string[],
 }
 
-interface IContractData {
+interface INetworkData {
+  web3: Web3,
   web3Eth: Web3,
   web3Bsc: Web3,
   schnoodleEthNetwork: any,
   schnoodleEth: any,
   schnoodleBscNetwork: any,
   schnoodleBsc: any,
-}
-
-interface INetworkData {
-  web3: Web3,
-  networkId: string,
+  networkId: number,
   schnoodle: any,
-  sourceNetwork: string,
-  targetNetwork: string,
+  sourceNetwork?: string,
+  targetNetwork?: string,
   selectedAddress: string,
-  amount?: number | null,
 }
 
 interface IAmountData {
@@ -79,23 +75,42 @@ const Bridge: React.FC<{}> = () => {
     amount: 0
   });
   const [busyMessage, setBusyMessage] = useState<string | null>();
-  const [contracts, setContracts] = useState<IContractData | null>();
   const [networksData, setNetworksData] = useState<INetworkData>();
   const [fee, setFee] = useState(0);
   const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
-  const [serverError, setServerError] = useState(false);
+  const [serverError, setServerError] = useState();
   const [serverStatus, setServerStatus] = useState(false);
   const [status, setStatus] = useState<IStatus>();
   const [tokensPending, setTokensPending] = useState<number>();
 
   useEffect(() => {
+    const updateAvailableAmount = async () => {
+      const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = networksData;
+      let schnoodleSource;
+
+      switch (sourceNetwork) {
+        case Network.ethereum:
+          schnoodleSource = schnoodleEth;
+          break;
+        case Network.bsc:
+          schnoodleSource = schnoodleBsc;
+          break;
+        default:
+          throw new Error(`Source network ${sourceNetwork} unsupported.`);
+      }
+
+      setAmounts({ ...amounts, availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) })
+    }
+
     if (networksData) {
       if (!networksData.targetNetwork) {
-        changeSourceNetwork({ value: localStorage.getItem('sourceNetwork') ?? networksData.sourceNetwork });
         changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? networksData.sourceNetwork });
+        const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
+        setGetInfoIntervalId(getInfoIntervalId);
+      } else {
+        updateAvailableAmount();
+        getInfo();
       }
-      const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
-      setGetInfoIntervalId(getInfoIntervalId);
     }
 
     return () => {
@@ -103,15 +118,35 @@ const Bridge: React.FC<{}> = () => {
     }
   }, [networksData])
 
+  useEffect(() => {
+    if (amounts.amount) {
+      localStorage.setItem(`${networksData.sourceNetwork}Amount`, amounts.amount.toString());
+    }
+  }, [amounts.amount])
+
+  useEffect(() => {
+    if (amounts.availableAmount) {
+      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
+    }
+  }, [amounts.availableAmount])
 
   useEffect(() => {
     try {
-      const updateWeb3 = async (schnoodleEthNetwork: any, schnoodleBscNetwork: any) => {
+      const updateWeb3 = async () => {
+        // Web3
         const web3 = await getWeb3();
-
-        let schnoodle, sourceNetwork;
+        const web3Eth = new Web3(networks[Network.ethereum].url);
+        const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
         const networkId = await web3.eth.net.getId();
         const selectedAddress = web3.currentProvider.selectedAddress;
+
+        // Smart contracts
+        const schnoodleEthNetwork = (SchnoodleV1.networks as any)[networks[Network.ethereum].id];
+        const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi as any, schnoodleEthNetwork && schnoodleEthNetwork.address);
+        const schnoodleBscNetwork = (SchnoodleV1.networks as any)[networks[Network.bsc].id];
+        const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
+
+        let schnoodle, sourceNetwork: string;
         switch (networkId.toString()) {
           case process.env.REACT_APP_ETH_NET_ID:
             schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
@@ -126,37 +161,25 @@ const Bridge: React.FC<{}> = () => {
         }
 
         await initializeHelpers(await schnoodle.methods.decimals().call());
+
+        (window as any).ethereum.on('networkChanged', () => window.location.reload());
+
         setNetworksData({
-          ...networksData,
-          web3: web3,
-          networkId: networkId,
-          schnoodle: schnoodle,
-          selectedAddress: selectedAddress,
-          sourceNetwork: sourceNetwork
-        })
+          web3,
+          web3Eth,
+          web3Bsc,
+          schnoodleEthNetwork,
+          schnoodleEth,
+          schnoodleBscNetwork,
+          schnoodleBsc,
+          networkId,
+          schnoodle,
+          sourceNetwork,
+          selectedAddress
+        });
+        setStatus({ success: false, message: null});
       }
-      // Web3
-      const web3Eth = new Web3(networks[Network.ethereum].url);
-      const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
-
-      // Smart contracts
-      const schnoodleEthNetwork = (SchnoodleV1.networks as any)[networks[Network.ethereum].id];
-      const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi as any, schnoodleEthNetwork && schnoodleEthNetwork.address);
-      const schnoodleBscNetwork = (SchnoodleV1.networks as any)[networks[Network.bsc].id];
-      const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
-
-      (window as any).ethereum.on('networkChanged', () => window.location.reload());
-      
-      setContracts({
-        web3Eth,
-        web3Bsc,
-        schnoodleEthNetwork,
-        schnoodleEth,
-        schnoodleBscNetwork,
-        schnoodleBsc
-      })
-      updateWeb3(schnoodleEthNetwork, schnoodleBscNetwork)
-      
+      updateWeb3();
     } catch (err) {
       handleError(err, setStatus);
     }
@@ -179,7 +202,7 @@ const Bridge: React.FC<{}> = () => {
           if (json.status === 'ok') {
             setTokensPending(json.body.tokensPending);
           } else {
-            setServerError(json.body.err.message);
+            setServerError(json.body.message);
           }
         }
 
@@ -193,10 +216,9 @@ const Bridge: React.FC<{}> = () => {
 
   //#region Handling
 
-  const handleReceipt = (receipt: any, callback?: any) => {
+  const handleReceipt = (receipt: any) => {
     if (receipt.status) {
       setStatus({success: true, message: receipt.transactionHash});
-      if (callback) callback();
     } else {
       throw new Error(receipt);
     }
@@ -204,13 +226,13 @@ const Bridge: React.FC<{}> = () => {
   
   //#endregion
 
-  const switchNetwork = async (network:any, callback?: any) => {
+  const switchNetwork = async (network: INetwork, callback?: any) => {
     try {
       // Attempt to switch the user's wallet to the target network so they can receive their tokens
       if (Number((window as any).ethereum.networkVersion) !== network.id) {
         await (window as any).ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: networksData?.web3.utils.toHex(network.id) }]
+          params: [{ chainId: networksData.web3.utils.toHex(network.id) }]
         });
       } else {
         await callback();
@@ -223,7 +245,7 @@ const Bridge: React.FC<{}> = () => {
           params: [
             {
               chainName: network.name,
-              chainId: networksData?.web3.utils.toHex(network.id),
+              chainId: networksData.web3.utils.toHex(network.id),
               nativeCurrency: {
                 name: network.symbol,
                 symbol: network.symbol,
@@ -243,16 +265,16 @@ const Bridge: React.FC<{}> = () => {
   const sendTokens = async () => {
     try {
       setBusyMessage(resources.BUSY_MESSAGE_SWAP);
-      
+
       // Ensure the user's wallet is set to the source network so they can send their tokens
       await switchNetwork(networks[networksData.sourceNetwork], async () => {
-        const { amount, schnoodle, selectedAddress, targetNetwork } = networksData;
-        const targetNetworkInfo = networks[targetNetwork as string];
+        const { schnoodle, selectedAddress, targetNetwork } = networksData;
+        const targetNetworkInfo = networks[targetNetwork];
 
-        handleReceipt(await (schnoodle as any).methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }), async () => {
-          // Attempt to switch the user's wallet to the target network so they can receive their tokens
-          await switchNetwork(targetNetworkInfo);
-        });
+        handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amounts.amount).toString()).send({ from: selectedAddress }));
+
+        // Attempt to switch the user's wallet to the target network so they can receive their tokens
+        await switchNetwork(targetNetworkInfo);
       });
     } catch (err) {
       handleError(err, setStatus);
@@ -263,25 +285,30 @@ const Bridge: React.FC<{}> = () => {
 
   const receiveTokens = async () => {
     try {
-      const { schnoodle, selectedAddress, sourceNetwork, targetNetwork } = networksData;
       setBusyMessage(resources.BUSY_MESSAGE_RECEIVE);
 
-      // Pay the fee (suggested by the server) to the Schnoodle contract
-      const sourceNetworkId = networks[sourceNetwork].id;
-      const fee = await getFee(targetNetwork) - await (schnoodle as any).methods.feesPaid(selectedAddress, sourceNetworkId).call();
-      if (fee > 0) handleReceipt(await (schnoodle as any).methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
-      // Request the server to call receiveTokens on the Schnoodle contract
-      const json = await (await fetch(`http://${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
-        method: 'POST',
-        body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
-      })).json();
+      // Ensure the user's wallet is set to the target network so they can receive their tokens
+      await switchNetwork(networks[networksData.targetNetwork], async () => {
+        const { schnoodle, selectedAddress, sourceNetwork, targetNetwork } = networksData;
 
-      if (json.status !== 'ok') {
-        setServerError(json.body.message);
-      } else {
-        await getInfo();
-      }
+        // Pay the fee (suggested by the server) to the Schnoodle contract
+        const sourceNetworkId = networks[sourceNetwork].id;
+        const fee = await getFee(targetNetwork) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
+        if (fee > 0) handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
+
+        // Request the server to call receiveTokens on the Schnoodle contract
+        const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
+          method: 'POST',
+          body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
+        })).json();
+
+        if (json.status !== 'ok') {
+          setServerError(json.body.message);
+        } else {
+          await getInfo();
+        }
+      });
     } catch (err) {
       handleError(err, setStatus);
     }
@@ -290,50 +317,29 @@ const Bridge: React.FC<{}> = () => {
   }
 
   const swapNetworks = async () => {
-    await changeSourceNetwork({ value: networksData.targetNetwork });
-    await changeTargetNetwork({ value: networksData.sourceNetwork });
+    const { sourceNetwork, targetNetwork } = networksData;
+    await changeSourceNetwork({ value: targetNetwork });
+    await changeTargetNetwork({ value: sourceNetwork });
   }
 
   const changeSourceNetwork = async (e: any) => {
-    await changeNetwork(e.value, networksData?.targetNetwork, 'sourceNetwork', 'targetNetwork');
-
-    const { sourceNetwork, selectedAddress } = networksData;
-    const { schnoodleEth, schnoodleBsc } = contracts;
-    let schnoodleSource;
-    switch (sourceNetwork) {
-      case Network.ethereum:
-        schnoodleSource = schnoodleBsc;
-        break;
-      case Network.bsc:
-        schnoodleSource = schnoodleEth;
-        break;
-      default:
-        throw new Error(`Source network ${sourceNetwork} unsupported.`);
-    }
-    setAmounts({ ...amounts, availableAmount: bigInt(await (schnoodleSource as any).methods.unlockedBalanceOf(selectedAddress).call()) });
+    await changeNetwork(e.value, networksData.targetNetwork, 'sourceNetwork', 'targetNetwork');
   }
-
-  useEffect(() => {
-    if (amounts.availableAmount) {
-      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
-    }
-  }, [amounts.availableAmount])
 
   const changeTargetNetwork = async (e: any) => {
     await changeNetwork(e.value, networksData.sourceNetwork, 'targetNetwork', 'sourceNetwork');
   }
 
-  const changeNetwork = async (network: any, counterNetwork: string | null, networkKey: string, counterNetworkKey: string) => {
+  const changeNetwork = async (network: string, counterNetwork: string, networkKey: string, counterNetworkKey: string) => {
     localStorage.setItem(networkKey, network);
     if (network === counterNetwork) {
       await changeNetwork(Object.keys(networks).find(key => key !== counterNetwork), network, counterNetworkKey, networkKey);
     } else {
       setNetworksData({...networksData, [networkKey]: network, [counterNetworkKey]: counterNetwork});
-      await getInfo();
     }
   }
 
-  const getFee = async (network: any) => {
+  const getFee = async (network: string) => {
     // Get the fee that must be paid before receiving tokens on the blockchain
     const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetFee`, {
       method: 'POST',
@@ -347,15 +353,14 @@ const Bridge: React.FC<{}> = () => {
     }
   }
 
-  const updateAmount = (e: any) => {
+  const updateAmount = async (e: any) => {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    setAmounts({...amounts, amount: value});
+    setAmount(value);
   }
 
-  const setAmount = (amount: number) => {
+  const setAmount = async (amount: number) => {
     setAmounts({...amounts, amount: Math.min(Math.floor(amount), scaleDownUnits(amounts.availableAmount))});
-    localStorage.setItem(`${networksData.sourceNetwork}Amount`, amount.toString());
   }
 
   const styles = {
@@ -392,10 +397,8 @@ const Bridge: React.FC<{}> = () => {
     </Option>
   );
 
-  const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
-  const targetNetworks = sourceNetworks;
-  const token = 'SNOOD';
-  
+  let bridge;
+
   if (!networksData || !networksData.web3 || !serverStatus) {
     return (
       <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
@@ -414,94 +417,109 @@ const Bridge: React.FC<{}> = () => {
     );
   }
 
-  return (
-    <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
-      <div className="tw-flex-grow">
-        <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
-          <div className="lg:tw-grid tw-block">
-            <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
-            {busyMessage ? ( 
-              <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-                <Puff color="#00BFFF" />
-                <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
-              </div>
-            ) : serverError != null ? (
-              <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
-                <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{`Server error: ${serverError}`}</div>
-              </div>
-            ) : (
-            <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
-              <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
-                <div className="tw-flex tw-items-center tw-flex-col lg:tw-flex-row">
-                  <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
-                    <div className="tw-flex tw-flex-col">
-                      <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">From</div>
-                      <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                        <div>
-                          <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                          <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === networksData.sourceNetwork)} onChange={changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <button type="button" onClick={swapNetworks} className="tw-z-0 tw-p-2 tw-btn-accent lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw-my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
-                    <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt=""/>
-                  </button>
-                  <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
-                    <div className="tw-flex tw-flex-col">
-                      <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">To</div>
-                      <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
-                        <div>
-                          <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                          <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === networksData.targetNetwork)} onChange={changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {tokensPending > 0
-                ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
-                    <div className="tw-text-center tw-mb-14 tw-leading-normal">
-                      <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
-                    </div>
-                    <button onClick={receiveTokens} disabled={parseInt(networksData.networkId) !== networks[networksData.targetNetwork].id} className="tw-w-1/2 keybtn maxbuttons">{networks[networksData.targetNetwork].id === parseInt(networksData.networkId) ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
-                  </div>
-                : <div className="md:tw-m-auto md:tw-w-1/2">
-                    <div className="tw-relative tw-mb-10 tw-flex">
-                      <input type="number" min="1" max={scaleDownUnits(amounts.availableAmount)} placeholder={`Max: ${scaleDownUnits(amounts.availableAmount)}`} value={amounts.amount || ''} onChange={updateAmount} className="depositinput" />
-                      <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount / 4))}>25%</button>
-                      <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount / 2))}>50%</button>
-                      <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>75%</button>
-                      <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount / 4))}>&frac14;</button>
-                      <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount / 2))}>&frac12;</button>
-                      <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>&frac34;</button>
-                      <button type="button" className="maxbtn" onClick={() => setAmount(scaleDownUnits(amounts.availableAmount))}>Max</button>
-                    </div>
-                    <button type="button" onClick={sendTokens} disabled={amounts.amount === 0} className="keybtn maxbtn tw-w-full">{networks[networksData.sourceNetwork].id === parseInt(networksData.networkId) ? 'SEND' : 'SWITCH NETWORK'}</button>
-                    <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
-                      {fee &&
-                        <div>
-                          <div className="tw-flex tw-justify-center purplefade tw-mb-7">
-                            Receive Fee:
-                            <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[networksData.targetNetwork].symbol}`}</div>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-                <div className="tw-text-center tw-mt-2.5">
-                  <p style={{ color: status?.success ? "green" : "red" }}>{status?.message}</p>
+  const { networkId, sourceNetwork, targetNetwork, selectedAddress } = networksData;
+  const { amount } = amounts;
+
+  const availableAmount = scaleDownUnits(amounts.availableAmount);
+  const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
+  const targetNetworks = sourceNetworks;
+
+  if (busyMessage) {
+    bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-color tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
+      <Puff color="#00BFFF" />
+      <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{busyMessage}</div>
+    </div>;
+  } else if (serverError != null) {
+    bridge = <div className="tw-col-span-7 lg:tw-px-6 lg:tw-py-10 tw-rounded-xl lg:bg-violet-900 tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-mt-14 lg:tw-mt-0">
+      <div className="tw-text-2xl lg:tw-text-3xl tw-leading-snug tw-text-white tw-text-center">{`Server error: ${serverError}`}</div>
+    </div>;
+  } else {
+    const token = 'SNOOD';
+    bridge =
+    <div className="tw-card tw-shadow-sm tw-border-purple-500 tw-border-4 tw-rounded-2xl tw-text-accent-content tw-mt-5 tw-mb-5 tw-container-lg">
+      <div className="tw-col-span-7 tw-p-9 lg:tw-px-6 tw-rounded-13 lg:bg-violet-900 tw-bg-transparent">
+        <div className="tw-flex tw-items-center tw-flex-col lg:tw-flex-row">
+          <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mb-5 lg:tw-mb-0 tw-p-12 tw-rounded-xl tw-bg-neutral lg:tw-bg-transparent">
+            <div className="tw-flex tw-flex-col">
+              <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">From</div>
+              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                <div>
+                  <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
             </div>
-            )
-            }
+          </div>
+          <button type="button" onClick={swapNetworks} className="tw-z-0 tw-p-2 tw-btn-accent lg:tw-w-1/6 tw-h-10 tw-content-center tw-rounded-lg outline-none focus:outline-none tw--my-4 lg:tw-mt-7 tw-relative lg:tw-static tw-transform tw-rotate-90 lg:tw-transform-none">
+            <img className="tw-block tw-w-5 tw-h-5 tw-mx-auto" src="/assets/img/svg/arrows.svg" alt="" />
+          </button>
+          <div className="tw-w-full tw-flex tw-items-center tw-flex-col tw-mt-5 tw-mb-5 lg:tw-mt-5 -mt-3 tw-bg-neutral lg:tw-bg-transparent tw-p-12 tw-rounded-xl">
+            <div className="tw-flex tw-flex-col">
+              <div className="tw-font-bold tw-uppercase lg:tw-mb-2 tw-text-white">To</div>
+              <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
+                <div>
+                  <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
+                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+        {tokensPending > 0
+          ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
+              <div className="tw-text-center tw-mb-14 tw-leading-normal">
+                <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
+              </div>
+              <button type="button" onClick={receiveTokens} className="tw-w-1/2 keybtn maxbtn">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
+            </div>
+          : <div className="md:tw-m-auto md:tw-w-1/2">
+              <div className="tw-relative tw-mb-10 tw-flex">
+                <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={updateAmount} className="depositinput" />
+                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount / 4)}>25%</button>
+                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount / 2)}>50%</button>
+                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount * 3 / 4)}>75%</button>
+                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount / 4)}>&frac14;</button>
+                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount / 2)}>&frac12;</button>
+                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                <button type="button" className="maxbtn" onClick={() => setAmount(availableAmount)}>Max</button>
+              </div>
+              <button type="button" onClick={sendTokens} disabled={amount === 0} className="keybtn maxbtn tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+              <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
+                {fee &&
+                  <div>
+                    <div className="tw-flex tw-justify-center purplefade tw-mb-7">
+                      Receive Fee:
+                      <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+        }
+        <div className="tw-text-center tw-mt-2.5">
+          <p style={{ color: status?.success ? 'green' : 'red' }}>{status?.message}</p>
+        </div>
       </div>
-      <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
-    </div>
+    </div>;
+  }
+
+  return (
+    <form className="tw-justify-center tw-mx-auto">
+      <fieldset disabled={selectedAddress == null}>
+        <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
+          <div className="tw-flex-grow">
+            <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
+              <div className="lg:tw-grid tw-block">
+                <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
+                {bridge}
+              </div>
+            </div>
+          </div>
+
+          <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
+        </div>
+      </fieldset>
+    </form>
   );
 }
 
