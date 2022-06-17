@@ -156,8 +156,7 @@ const Farming: React.FC<{}> = () => {
       const { 1: donationRate } = await schnoodle.methods.getEleemosynaryDetails().call();
       const sowRate = await schnoodle.methods.getSowRate().call();
       const sellQuota = await schnoodle.methods.getSellQuota().call();
-      // const farmingFundBalance = bigInt(await schnoodle.methods.balanceOf(await schnoodle.methods.getFarmingFund().call()).call());
-      const farmingFundBalance = 10000;
+      const farmingFundBalance = bigInt(await schnoodle.methods.balanceOf(await schnoodle.methods.getFarmingFund().call()).call());
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
       const unbondingBalance = bigInt(await schnoodleFarming.methods.unbondingBalanceOf(selectedAddress).call());

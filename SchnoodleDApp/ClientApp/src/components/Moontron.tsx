@@ -4,10 +4,8 @@ import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
 import { handleError, getWeb3 } from '../helpers';
 import { Viewer } from '../viewer/viewer';
-import { IHelpData } from '../types';
 
 // Third-party libraries
-import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import { Puff } from 'react-loader-spinner';
 import queryString from 'query-string';
@@ -46,8 +44,6 @@ interface IConfig {
 const Moontron: React.FC<{}> = () => {
   const [contracts, setContracts] = useState<IContractData>();
   const [status, setStatus] = useState<Status>({success: false, message: ""});
-  const [helpModal, setOpenHelpModal] = useState(false);
-  const [helpData, setHelpData] = useState<IHelpData>();
   const [busy, setBusy] = useState(false);
   const [selectedComponents, setSelectedComponents] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState<string>();
@@ -152,17 +148,6 @@ const Moontron: React.FC<{}> = () => {
     setBusy(false);
   }
 
-  //#region Help functions
-
-  const openHelpModal = (content: any) => {
-    setHelpData({helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS});
-    setOpenHelpModal(true);
-  }
-
-  const closeHelpModal = () => {
-    setOpenHelpModal(false);
-  }
-
   //#endregion
 
   //#region Rendering
@@ -265,15 +250,6 @@ const Moontron: React.FC<{}> = () => {
               </div>
             </div>
           </div>
-        </div>
-    
-        <div>
-          <Modal open={helpModal} onClose={closeHelpModal} center classNames={{ overlay: "customOverlay", modal: "customModal" }}>
-            <h1>{helpData?.helpTitle}</h1>
-            <p>{helpData?.helpInfo}</p>
-            <br />
-            <p>{helpData?.helpDetails}</p>
-          </Modal>
         </div>
       </div>
     </div>

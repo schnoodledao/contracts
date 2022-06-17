@@ -17,27 +17,6 @@ const Network : {[key: string]: string} = createEnum(['ethereum', 'bsc']);
 // ReSharper restore InconsistentNaming
 
 // global fetch: false
-const networks: {[key: string]: INetwork} =
-{
-  ethereum: {
-    name: 'Ethereum',
-    id: Number(process.env.REACT_APP_ETH_NET_ID),
-    url: process.env.REACT_APP_ETH_URL,
-    display: 'Ethereum',
-    symbol: 'ETH',
-    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL],
-    explorerUrls: [process.env.REACT_APP_ETH_EXPLORER_URL]
-  },
-  bsc: {
-    name: 'BNB Smart Chain',
-    id: Number(process.env.REACT_APP_BSC_NET_ID),
-    url: process.env.REACT_APP_BSC_URL,
-    display: 'BSC',
-    symbol: 'BNB',
-    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL],
-    explorerUrls: [process.env.REACT_APP_BSC_EXPLORER_URL]
-  }
-};
 
 interface INetwork {
   name: string,
@@ -69,16 +48,35 @@ interface IAmountData {
   availableAmount: number,
 }
 
+const networks: {[key: string]: INetwork} =
+{
+  ethereum: {
+    name: process.env.REACT_APP_ETH_NET_NAME,
+    id: Number(process.env.REACT_APP_ETH_NET_ID),
+    url: process.env.REACT_APP_ETH_URL,
+    display: 'Ethereum',
+    symbol: 'ETH',
+    rpcUrls: [process.env.REACT_APP_ETH_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_ETH_EXPLORER_URL]
+  },
+  bsc: {
+    name: process.env.REACT_APP_BSC_NET_NAME,
+    id: Number(process.env.REACT_APP_BSC_NET_ID),
+    url: process.env.REACT_APP_BSC_URL,
+    display: 'BSC',
+    symbol: 'BNB',
+    rpcUrls: [process.env.REACT_APP_BSC_RPC_URL],
+    explorerUrls: [process.env.REACT_APP_BSC_EXPLORER_URL]
+  }
+};
+
 const Bridge: React.FC<{}> = () => {
-  const [amounts, setAmounts] = useState<IAmountData>({
-    availableAmount: 0,
-    amount: 0
-  });
-  const [busyMessage, setBusyMessage] = useState<string | null>();
-  const [networksData, setNetworksData] = useState<INetworkData>();
-  const [fee, setFee] = useState(0);
+  const [amounts, setAmounts] = useState<IAmountData>({availableAmount: 0, amount: 0});
+  const [busyMessage, setBusyMessage] = useState<string>();
+  const [fee, setFee] = useState<number>();
   const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
-  const [serverError, setServerError] = useState();
+  const [networksData, setNetworksData] = useState<INetworkData>();
+  const [serverError, setServerError] = useState<string>();
   const [serverStatus, setServerStatus] = useState(false);
   const [status, setStatus] = useState<IStatus>();
   const [tokensPending, setTokensPending] = useState<number>();
@@ -98,8 +96,8 @@ const Bridge: React.FC<{}> = () => {
         default:
           throw new Error(`Source network ${sourceNetwork} unsupported.`);
       }
-
-      setAmounts({ ...amounts, availableAmount: bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call()) })
+      const availableAmount = bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call());
+      setAmounts(amounts => ({...amounts, availableAmount: availableAmount }));
     }
 
     if (networksData) {
@@ -122,17 +120,18 @@ const Bridge: React.FC<{}> = () => {
     if (amounts.amount) {
       localStorage.setItem(`${networksData.sourceNetwork}Amount`, amounts.amount.toString());
     }
-  }, [amounts.amount])
+  }, [amounts.amount, networksData?.sourceNetwork])
+
 
   useEffect(() => {
     if (amounts.availableAmount) {
       setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
     }
-  }, [amounts.availableAmount])
+  }, [amounts.availableAmount, networksData?.sourceNetwork])
 
   useEffect(() => {
     try {
-      const updateWeb3 = async () => {
+      const initialize = async () => {
         // Web3
         const web3 = await getWeb3();
         const web3Eth = new Web3(networks[Network.ethereum].url);
@@ -179,7 +178,7 @@ const Bridge: React.FC<{}> = () => {
         });
         setStatus({ success: false, message: null});
       }
-      updateWeb3();
+      initialize();
     } catch (err) {
       handleError(err, setStatus);
     }
