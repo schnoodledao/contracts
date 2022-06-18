@@ -7,7 +7,7 @@ require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider
 const { singletons } = require('@openzeppelin/test-helpers');
 
 module.exports = async function (deployer, network, accounts) {
-  const { initialBurn, initialization } = require(`../migrations-config.${network}.js`);
+  const { initialization } = require(`../migrations-config.${network}.js`);
   let serviceAccount = initialization.serviceAccount;
   let eleemosynary = initialization.eleemosynary;
 

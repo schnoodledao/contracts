@@ -9,5 +9,5 @@ module.exports = async function (deployer, network) {
   await deployer.deploy(SchnoodleTimelockFactory);
 
   const { appendList } = require('../scripts/contracts.js');
-  appendList.append(contractName, network);
+  appendList(contractName, network);
 };

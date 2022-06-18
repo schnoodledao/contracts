@@ -1938,6 +1938,584 @@
           }
         }
       }
+    },
+    "79e62a8fe67c9b2e8ca1f5be258f1dd03df50f44ec6639380dc28d1298356302": {
+      "address": "0xdD47F7CBB8b4DEf3c8EDA801BfaAc30796688338",
+      "txHash": "0x9c697b6f6f4a8f27295baca4d3be5e1d8c0f7c10e8d405991db7cde1818b6d2b",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:35"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_name",
+            "type": "t_string_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:39"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_symbol",
+            "type": "t_string_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:40"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperatorsArray",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:46"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperators",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:49"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_operators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:52"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_revokedDefaultOperators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:53"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_allowances",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:56"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)41_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:572"
+          },
+          {
+            "contract": "ERC777PresetFixedSupplyUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\presets\\ERC777PresetFixedSupplyUpgradeable.sol:57"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:12"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_feeRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:13"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_eleemosynaryAccount",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:14"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_donationRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:15"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_sellThreshold",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:16"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_sellQuota",
+            "type": "t_struct(TokenMeter)19744_storage",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:17"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_rateEscalator",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:18"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\utils\\introspection\\ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)2432_storage)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_schnoodleFarming",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:10"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_farmingFund",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:11"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_sowRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:12"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_bridgeOwner",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:18"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_tokensSent",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:19"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_tokensReceived",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:20"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_feesPaid",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:21"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)2432_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)2432_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_struct(TokenMeter)19744_storage": {
+            "label": "struct SchnoodleV9Base.TokenMeter",
+            "members": [
+              {
+                "label": "blockMetric",
+                "type": "t_uint256"
+              },
+              {
+                "label": "amount",
+                "type": "t_int256"
+              }
+            ]
+          },
+          "t_int256": {
+            "label": "int256"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))"
+          },
+          "t_array(t_uint256)41_storage": {
+            "label": "uint256[41]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
+    },
+    "6dc2c08b366d32eccc1601d09577e6a8855665682d2a8244dbd0a6895f66def7": {
+      "address": "0xeAC2A259f3eBb8fD1097AECcaA62E73b6e43D5bF",
+      "txHash": "0xbad56f7349921c2f98c9df688ea23d044af3728c619f5987e395bf4592448b94",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_uint8",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\proxy\\utils\\Initializable.sol:67"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\utils\\ContextUpgradeable.sol:36"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_balances",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:35"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:37"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_name",
+            "type": "t_string_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:39"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_symbol",
+            "type": "t_string_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:40"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperatorsArray",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:46"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_defaultOperators",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:49"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_operators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:52"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_revokedDefaultOperators",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:53"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "_allowances",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:56"
+          },
+          {
+            "contract": "ERC777Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)41_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\ERC777Upgradeable.sol:572"
+          },
+          {
+            "contract": "ERC777PresetFixedSupplyUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\token\\ERC777\\presets\\ERC777PresetFixedSupplyUpgradeable.sol:57"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\OwnableUpgradeable.sol:87"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_totalSupply",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:12"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_feeRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:13"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_eleemosynaryAccount",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:14"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_donationRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:15"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_sellThreshold",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:16"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_sellQuota",
+            "type": "t_struct(TokenMeter)19808_storage",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:17"
+          },
+          {
+            "contract": "SchnoodleV9Base",
+            "label": "_rateEscalator",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\imports\\SchnoodleV9Base.sol:18"
+          },
+          {
+            "contract": "ERC165Upgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\utils\\introspection\\ERC165Upgradeable.sol:41"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "_roles",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)2432_storage)",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:61"
+          },
+          {
+            "contract": "AccessControlUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "..\\@schnoodle\\contracts-upgradeable\\access\\AccessControlUpgradeable.sol:247"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_schnoodleFarming",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:10"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_farmingFund",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:11"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_sowRate",
+            "type": "t_uint256",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:12"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_bridgeOwner",
+            "type": "t_address",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:18"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_tokensSent",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:19"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_tokensReceived",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:20"
+          },
+          {
+            "contract": "SchnoodleV9",
+            "label": "_feesPaid",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "..\\project:\\contracts\\SchnoodleV9.sol:21"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)2432_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)"
+          },
+          "t_bytes32": {
+            "label": "bytes32"
+          },
+          "t_struct(RoleData)2432_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32"
+              }
+            ]
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_struct(TokenMeter)19808_storage": {
+            "label": "struct SchnoodleV9Base.TokenMeter",
+            "members": [
+              {
+                "label": "blockMetric",
+                "type": "t_uint256"
+              },
+              {
+                "label": "amount",
+                "type": "t_int256"
+              }
+            ]
+          },
+          "t_int256": {
+            "label": "int256"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))"
+          },
+          "t_array(t_uint256)41_storage": {
+            "label": "uint256[41]"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          }
+        }
+      }
     }
   }
 }

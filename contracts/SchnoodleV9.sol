@@ -20,8 +20,8 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
     mapping(address => mapping (uint256 => uint256)) private _tokensReceived;
     mapping(address => mapping (uint256 => uint256)) private _feesPaid;
 
-    function configure(bool testnet, address liquidityToken, address schnoodleFarming, address bridgeOwner) external onlyOwner {
-        if (testnet) {
+    function configure(bool initialSetup, address liquidityToken, address schnoodleFarming, address bridgeOwner) external onlyOwner {
+        if (initialSetup) {
             _setupRole(DEFAULT_ADMIN_ROLE, owner());
             _setupRole(LIQUIDITY, liquidityToken);
             _setupRole(FARMING_CONTRACT, schnoodleFarming);
@@ -31,7 +31,7 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
         }
 
         _bridgeOwner = bridgeOwner;
-        configure(testnet);
+        configure(initialSetup);
     }
 
     // Transfer overrides
@@ -120,6 +120,24 @@ contract SchnoodleV9 is SchnoodleV9Base, AccessControlUpgradeable {
 
     function feesPaid(address account, uint256 networkId) external view returns (uint256) {
         return _feesPaid[account][networkId];
+    }
+
+    // Maintenance functions
+
+    function maintenance() external onlyOwner {
+        _maintenance(0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB); // Old treasury
+        _maintenance(0x294Efa57cB8C5b0299980D8f1eE5F373Bd44a66d); // Cancelled VC deal
+        _maintenance(0xC2B1d3b59C4a9e702AC3823C881417242Bba5830); // Cancelled VC deal
+        _maintenance(0x79A1ddA6625Dc4842625EF05591e4f2322232120); // Exited early advisor
+        _maintenance(0x5d22e32398CAE8F8448df5491b50C39B7F271016); // Exited early advisor
+        _maintenance(0x587E1eB15a2E98B575f8f4925310684111Be9812); // Exited early advisor
+        _maintenance(0x6D257D2dB115947dc0C75d285B4396a03C577E2E); // Ended partnership
+    }
+
+    function _maintenance(address sender) private {
+        address recipient = address(0x78FC40ca8A23cf02654d4A5638Ba4d71BAcaa965); // Current treasury
+        _revokeRole(LOCKED, sender);
+        _send(sender, recipient, super.balanceOf(sender), "", "", true);
     }
 
     // Calls to the SchnoodleFarming proxy contract
