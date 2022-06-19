@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
@@ -84,17 +84,6 @@ const MoonControl: React.FC<{}> = () => {
   const FLIGHT_TIME = 1000;
 
   useEffect(() => {
-    if (contracts) {
-      getInfo();
-      const getInfoIntervalId = setInterval(async () => await getInfo(), 60000);
-      setGetInfoIntervalId(getInfoIntervalId);
-      const globeElControls = (globeEl as any).current.controls();
-      globeElControls.autoRotate = true;
-      globeElControls.autoRotateSpeed = 0.5;
-    }
-  }, [contracts])
-
-  useEffect(() => {
     try {
       const fetchData =  async () => {
         const web3 = await getWeb3();
@@ -116,9 +105,13 @@ const MoonControl: React.FC<{}> = () => {
     return () => {
       clearInterval(getInfoIntervalId);
     }
-  }, [])
+  }, [getInfoIntervalId])
 
-  const getInfo = async () => {
+  const getPendingBlocksAmount = useCallback((depositInfo: any) => {
+    return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * factors?.vestingBlocksFactor), depositInfo.deposit.blockNumber, blockNumber);
+  }, [blockNumber, factors?.vestingBlocksFactor])
+
+  const getInfo = useCallback(async () => {
     const { web3, schnoodleFarming } = contracts;
 
     const blockNumber = await web3.eth.getBlockNumber();
@@ -187,16 +180,23 @@ const MoonControl: React.FC<{}> = () => {
           repeatPeriod: 700
         }
       });
-      setFactors({ ...factors, vestingBlocksFactor: vestingBlocksFactor, unbondingBlocksFactor: unbondingBlocksFactor });
+      setFactors(factors => ({...factors, vestingBlocksFactor: vestingBlocksFactor, unbondingBlocksFactor: unbondingBlocksFactor }));
       setFarmData(farmData);
       setFarmingOverview(farmingOverview);
     };
     fetchData();
-  };
+  }, [contracts, getPendingBlocksAmount]);
 
-  const getPendingBlocksAmount = (depositInfo: any) => {
-    return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * factors?.vestingBlocksFactor), depositInfo.deposit.blockNumber, blockNumber);
-  }
+  useEffect(() => {
+    if (contracts) {
+      getInfo();
+      const getInfoIntervalId = setInterval(async () => await getInfo(), 60000);
+      setGetInfoIntervalId(getInfoIntervalId);
+      const globeElControls = (globeEl as any).current.controls();
+      globeElControls.autoRotate = true;
+      globeElControls.autoRotateSpeed = 0.5;
+    }
+  }, [contracts, getInfo])
 
   //#region Help functions
 

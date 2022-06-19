@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
@@ -81,110 +81,7 @@ const Bridge: React.FC<{}> = () => {
   const [status, setStatus] = useState<IStatus>();
   const [tokensPending, setTokensPending] = useState<number>();
 
-  useEffect(() => {
-    const updateAvailableAmount = async () => {
-      const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = networksData;
-      let schnoodleSource;
-
-      switch (sourceNetwork) {
-        case Network.ethereum:
-          schnoodleSource = schnoodleEth;
-          break;
-        case Network.bsc:
-          schnoodleSource = schnoodleBsc;
-          break;
-        default:
-          throw new Error(`Source network ${sourceNetwork} unsupported.`);
-      }
-      const availableAmount = bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call());
-      setAmounts(amounts => ({...amounts, availableAmount: availableAmount }));
-    }
-
-    if (networksData) {
-      if (!networksData.targetNetwork) {
-        changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? networksData.sourceNetwork });
-        const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
-        setGetInfoIntervalId(getInfoIntervalId);
-      } else {
-        updateAvailableAmount();
-        getInfo();
-      }
-    }
-
-    return () => {
-      clearInterval(getInfoIntervalId as NodeJS.Timer);
-    }
-  }, [networksData])
-
-  useEffect(() => {
-    if (amounts.amount) {
-      localStorage.setItem(`${networksData.sourceNetwork}Amount`, amounts.amount.toString());
-    }
-  }, [amounts.amount, networksData?.sourceNetwork])
-
-
-  useEffect(() => {
-    if (amounts.availableAmount) {
-      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
-    }
-  }, [amounts.availableAmount, networksData?.sourceNetwork])
-
-  useEffect(() => {
-    try {
-      const initialize = async () => {
-        // Web3
-        const web3 = await getWeb3();
-        const web3Eth = new Web3(networks[Network.ethereum].url);
-        const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
-        const networkId = await web3.eth.net.getId();
-        const selectedAddress = web3.currentProvider.selectedAddress;
-
-        // Smart contracts
-        const schnoodleEthNetwork = (SchnoodleV1.networks as any)[networks[Network.ethereum].id];
-        const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi as any, schnoodleEthNetwork && schnoodleEthNetwork.address);
-        const schnoodleBscNetwork = (SchnoodleV1.networks as any)[networks[Network.bsc].id];
-        const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
-
-        let schnoodle, sourceNetwork: string;
-        switch (networkId.toString()) {
-          case process.env.REACT_APP_ETH_NET_ID:
-            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-            sourceNetwork = Network.ethereum;
-            break;
-          case process.env.REACT_APP_BSC_NET_ID:
-            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-            sourceNetwork = Network.bsc;
-            break;
-          default:
-            throw new Error(`Network ID ${networkId} unsupported.`);
-        }
-
-        await initializeHelpers(await schnoodle.methods.decimals().call());
-
-        (window as any).ethereum.on('networkChanged', () => window.location.reload());
-
-        setNetworksData({
-          web3,
-          web3Eth,
-          web3Bsc,
-          schnoodleEthNetwork,
-          schnoodleEth,
-          schnoodleBscNetwork,
-          schnoodleBsc,
-          networkId,
-          schnoodle,
-          sourceNetwork,
-          selectedAddress
-        });
-        setStatus({ success: false, message: null});
-      }
-      initialize();
-    } catch (err) {
-      handleError(err, setStatus);
-    }
-  }, [])
-
-  const getInfo = async () => {
+  const getInfo = useCallback(async () => {
     let serverStatus = false;
     try {
       serverStatus = (await fetch(`${process.env.REACT_APP_SERVER_URL}/Alive`)).ok;
@@ -211,7 +108,7 @@ const Bridge: React.FC<{}> = () => {
       handleError(err, setStatus, false);
     }
     setServerStatus(serverStatus);
-  }
+  }, [networksData])
 
   //#region Handling
 
@@ -321,22 +218,22 @@ const Bridge: React.FC<{}> = () => {
     await changeTargetNetwork({ value: sourceNetwork });
   }
 
-  const changeSourceNetwork = async (e: any) => {
-    await changeNetwork(e.value, networksData.targetNetwork, 'sourceNetwork', 'targetNetwork');
-  }
-
-  const changeTargetNetwork = async (e: any) => {
-    await changeNetwork(e.value, networksData.sourceNetwork, 'targetNetwork', 'sourceNetwork');
-  }
-
-  const changeNetwork = async (network: string, counterNetwork: string, networkKey: string, counterNetworkKey: string) => {
+  const changeNetwork = useCallback(async (network: string, counterNetwork: string, networkKey: string, counterNetworkKey: string) => {
     localStorage.setItem(networkKey, network);
     if (network === counterNetwork) {
       await changeNetwork(Object.keys(networks).find(key => key !== counterNetwork), network, counterNetworkKey, networkKey);
     } else {
       setNetworksData({...networksData, [networkKey]: network, [counterNetworkKey]: counterNetwork});
     }
+  }, [networksData])
+
+  const changeSourceNetwork = async (e: any) => {
+    await changeNetwork(e.value, networksData.targetNetwork, 'sourceNetwork', 'targetNetwork');
   }
+
+  const changeTargetNetwork = useCallback(async (e: any) => {
+    await changeNetwork(e.value, networksData.sourceNetwork, 'targetNetwork', 'sourceNetwork');
+  }, [changeNetwork, networksData?.sourceNetwork])
 
   const getFee = async (network: string) => {
     // Get the fee that must be paid before receiving tokens on the blockchain
@@ -358,9 +255,111 @@ const Bridge: React.FC<{}> = () => {
     setAmount(value);
   }
 
-  const setAmount = async (amount: number) => {
-    setAmounts({...amounts, amount: Math.min(Math.floor(amount), scaleDownUnits(amounts.availableAmount))});
-  }
+  const setAmount = useCallback(async (amount: number) => {
+    setAmounts(amounts => ({...amounts, amount: Math.min(Math.floor(amount), scaleDownUnits(amounts.availableAmount))}));
+  }, [])
+
+  useEffect(() => {
+    try {
+      const initialize = async () => {
+        // Web3
+        const web3 = await getWeb3();
+        const web3Eth = new Web3(networks[Network.ethereum].url);
+        const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
+        const networkId = await web3.eth.net.getId();
+        const selectedAddress = web3.currentProvider.selectedAddress;
+
+        // Smart contracts
+        const schnoodleEthNetwork = (SchnoodleV1.networks as any)[networks[Network.ethereum].id];
+        const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi as any, schnoodleEthNetwork && schnoodleEthNetwork.address);
+        const schnoodleBscNetwork = (SchnoodleV1.networks as any)[networks[Network.bsc].id];
+        const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
+
+        let schnoodle, sourceNetwork: string;
+        switch (networkId.toString()) {
+          case process.env.REACT_APP_ETH_NET_ID:
+            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
+            sourceNetwork = Network.ethereum;
+            break;
+          case process.env.REACT_APP_BSC_NET_ID:
+            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
+            sourceNetwork = Network.bsc;
+            break;
+          default:
+            throw new Error(`Network ID ${networkId} unsupported.`);
+        }
+
+        await initializeHelpers(await schnoodle.methods.decimals().call());
+
+        (window as any).ethereum.on('networkChanged', () => window.location.reload());
+
+        setNetworksData({
+          web3,
+          web3Eth,
+          web3Bsc,
+          schnoodleEthNetwork,
+          schnoodleEth,
+          schnoodleBscNetwork,
+          schnoodleBsc,
+          networkId,
+          schnoodle,
+          sourceNetwork,
+          selectedAddress
+        });
+        setStatus({ success: false, message: null});
+      }
+      initialize();
+    } catch (err) {
+      handleError(err, setStatus);
+    }
+  }, [])
+
+  useEffect(() => {
+    if (amounts.amount) {
+      localStorage.setItem(`${networksData.sourceNetwork}Amount`, amounts.amount.toString());
+    }
+  }, [amounts.amount, networksData?.sourceNetwork])
+
+  useEffect(() => {
+    if (amounts.availableAmount) {
+      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
+    }
+  }, [amounts.availableAmount, networksData?.sourceNetwork, setAmount])
+
+  useEffect(() => {
+    const updateAvailableAmount = async () => {
+      const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = networksData;
+      let schnoodleSource;
+
+      switch (sourceNetwork) {
+        case Network.ethereum:
+          schnoodleSource = schnoodleEth;
+          break;
+        case Network.bsc:
+          schnoodleSource = schnoodleBsc;
+          break;
+        default:
+          throw new Error(`Source network ${sourceNetwork} unsupported.`);
+      }
+      const availableAmount = bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call());
+      setAmounts(amounts => ({...amounts, availableAmount: availableAmount }));
+    }
+
+    if (networksData) {
+      if (!networksData.targetNetwork) {
+        changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? networksData.sourceNetwork });
+        const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
+        setGetInfoIntervalId(getInfoIntervalId);
+      } else {
+        updateAvailableAmount();
+        getInfo();
+      }
+    }
+
+    return () => {
+      clearInterval(getInfoIntervalId as NodeJS.Timer);
+    }
+  }, [networksData, getInfoIntervalId, changeTargetNetwork, getInfo])
 
   const styles = {
     valueContainer: () => ({ width: 120, border: 'none', display: 'grid' }),

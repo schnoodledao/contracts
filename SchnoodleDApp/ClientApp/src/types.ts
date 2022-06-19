@@ -1,10 +1,10 @@
 export interface IStatus {
     success: boolean,
-    message: string
+    message: string,
 }
 
 export interface IHelpData {
     helpTitle: string,
     helpInfo: string,
-    helpDetails: string
+    helpDetails: string,
 }

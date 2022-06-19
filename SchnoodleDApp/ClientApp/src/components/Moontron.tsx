@@ -53,14 +53,6 @@ const Moontron: React.FC<{}> = () => {
   const viewerRef = useRef(null);
   const [viewer, setViewer] = useState(null);
 
-  const hash = window.location.hash ? queryString.parse(window.location.hash) : {};
-  const options = {
-    kiosk: Boolean(hash.kiosk),
-    model: hash.model || '',
-    preset: hash.preset || '',
-    cameraPosition: hash.cameraPosition ? (hash as any).cameraPosition.split(',').map(Number) : null
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -71,7 +63,13 @@ const Moontron: React.FC<{}> = () => {
         const serviceAccount = await (await fetch('nft/serviceaccount')).text();
         const mintFee = await (await fetch('nft/mintfee')).text();
         const assetConfigs = await (await fetch('nft/assetconfigs')).json();
-
+        const hash = window.location.hash ? queryString.parse(window.location.hash) : {};
+        const options = {
+          kiosk: Boolean(hash.kiosk),
+          model: hash.model || '',
+          preset: hash.preset || '',
+          cameraPosition: hash.cameraPosition ? (hash as any).cameraPosition.split(',').map(Number) : null
+        };
         (window as any).ethereum.on('networkChanged', () => window.location.reload());
         setAssetConfigs(assetConfigs);
         setContracts({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee });

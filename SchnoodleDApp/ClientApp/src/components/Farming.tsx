@@ -1,5 +1,5 @@
 // ReSharper disable InconsistentNaming
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
@@ -37,6 +37,15 @@ interface IContractData {
   selectedAddress: string,
 }
 
+interface IDeposit {
+  amount: number,
+  blockNumber: number,
+  id: number,
+  vestingBlocks: number,
+  unbondingBlocks: number,
+  multiplier: number,
+}
+
 interface IFactorData {
   factoredVestingBlocks: number,
   factoredVestingBlocksMax: number
@@ -44,6 +53,13 @@ interface IFactorData {
   factoredUnbondingBlocksMax: number,
   vestingBlocksFactor: number,
   unbondingBlocksFactor: number,
+}
+
+interface IFarmingSummary {
+  deposit: IDeposit,
+  created: Date,
+  reward: number,
+  vestimatedApy: number
 }
 
 interface IOptimumData {
@@ -77,8 +93,8 @@ interface IRateData {
 }
 
 interface ISummaryData {
-  unbondingSummary: any[],
-  farmingSummary: any[],
+  unbondingSummary: IUnbond[],
+  farmingSummary: IFarmingSummary[],
 }
 
 interface IVestiplotData {
@@ -86,10 +102,25 @@ interface IVestiplotData {
   vestiplotApy: IPlotData[],
 }
 
+interface IUnbond {
+  amount: number,
+  expiryBlock: number,
+}
+
 const Farming: React.FC<{}> = () => {
-  const [vestiplotsCancellationToken, setVestiplotsCancellationToken] = useState<Symbol>();
-  const [contracts, setContracts] = useState<IContractData>();
+  const [amounts, setAmounts] = useState<IAmountData>({
+    depositAmount: 0,
+    availableAmount: 0,
+    withdrawAmounts: [0]
+  });
+  const [balances, setBalances] = useState<IBalanceData>({
+    farmingFundBalance: 0,
+    balance: 0,
+    lockedBalance: 0,
+    unbondingBalance: 0
+  });
   const [blockNumber, setBlockNumber] = useState<number>();
+  const [contracts, setContracts] = useState<IContractData>();
   const [factors, setFactors] = useState<IFactorData>({
     factoredVestingBlocks: 0,
     vestingBlocksFactor: 0,
@@ -98,58 +129,49 @@ const Farming: React.FC<{}> = () => {
     unbondingBlocksFactor: 0,
     factoredUnbondingBlocksMax: 0
   });
-  const [rewards, setRewards] = useState<IRewardData>({
-    vestimatedReward: 0,
-    vestimatedApy: 0
-  });
-  const [optimum, setOptimum] = useState<IOptimumData>({
-    optimumVestingBlocks: 0,
-    optimumUnbondingBlocks: 0
-  });
-  const [progress, setProgress] = useState<IProgress>();
-  const [vestiplot, setVestiplot] = useState<IVestiplotData>({
-    vestiplotReward: [],
-    vestiplotApy: []
-  });
-  const [openModal, setOpenHelpModal] = useState(false);
+  const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
   const [helpData, setHelpData] = useState<IHelpData>({
     helpTitle: "",
     helpInfo: "",
     helpDetails: ""
   });
+  const [openModal, setOpenHelpModal] = useState(false);
+  const [optimum, setOptimum] = useState<IOptimumData>({
+    optimumVestingBlocks: 0,
+    optimumUnbondingBlocks: 0
+  });
+  const [progress, setProgress] = useState<IProgress>();
   const [rates, setRates] = useState<IRateData>({
     operativeFeeRate: 0,
     donationRate: 0,
     sowRate: 0,
     sellQuota: { blockMetric: 0, amount: 0 }
   });
-  const [balances, setBalances] = useState<IBalanceData>({
-    farmingFundBalance: 0,
-    balance: 0,
-    lockedBalance: 0,
-    unbondingBalance: 0
+  const [rewards, setRewards] = useState<IRewardData>({
+    vestimatedReward: 0,
+    vestimatedApy: 0
   });
+  const [status, setStatus] = useState<IStatus>();
   const [summaries, setSummaries] = useState<ISummaryData>({
     farmingSummary: [],
     unbondingSummary: []
   });
-  const [status, setStatus] = useState<IStatus>();
-  const [amounts, setAmounts] = useState<IAmountData>({
-    depositAmount: 0,
-    availableAmount: 0,
-    withdrawAmounts: [0]
+  const [vestiplot, setVestiplot] = useState<IVestiplotData>({
+    vestiplotReward: [],
+    vestiplotApy: []
   });
-  const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
-  const savedCallback = useRef<any>(updateVestimates);
-  const savedVestiplots = useRef<any>(updateVestimates);
-  savedCallback.current = debounce(updateVestimates, 500);
-  savedVestiplots.current = debounce(updateVestiplots, 2000);
+  const [vestiplotsCancellationToken, setVestiplotsCancellationToken] = useState<Symbol>();
+
+  const getInfo = useCallback(async () => {
+    const blockNumber = await contracts.web3.eth.getBlockNumber();
+    setBlockNumber(blockNumber);
+  }, [contracts?.web3])
 
   useEffect(() => {
     if (!contracts) return
     const { schnoodle, selectedAddress, schnoodleFarming } = contracts;
     const fetchData = async () => {
-      getInfo();
+      await getInfo();
       const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
       setGetInfoIntervalId(getInfoIntervalId);
       const operativeFeeRate = await schnoodle.methods.getOperativeFeeRate().call();
@@ -182,8 +204,8 @@ const Farming: React.FC<{}> = () => {
           const withdrawAmount = amounts.withdrawAmounts[i];
           withdrawAmounts[i] = amounts.withdrawAmounts[i] === undefined ? scaleDownUnits(farmingSummary[i].deposit.amount) : withdrawAmount;
       }
-      setFactors({...factors, vestingBlocksFactor: vestingBlocksFactor, factoredVestingBlocksMax: factoredVestingBlocksMax,
-                  unbondingBlocksFactor: unbondingBlocksFactor, factoredUnbondingBlocksMax: factoredUnbondingBlocksMax});
+      setFactors(factors => ({...factors, vestingBlocksFactor: vestingBlocksFactor, factoredVestingBlocksMax: factoredVestingBlocksMax,
+                  unbondingBlocksFactor: unbondingBlocksFactor, factoredUnbondingBlocksMax: factoredUnbondingBlocksMax}));
       setAmounts({...amounts, availableAmount: availableAmount, withdrawAmounts: withdrawAmounts});
       setRates({operativeFeeRate, donationRate, sowRate, sellQuota});
       setBalances({farmingFundBalance: farmingFundBalance, balance: balance,
@@ -191,7 +213,7 @@ const Farming: React.FC<{}> = () => {
       setSummaries({farmingSummary, unbondingSummary});
     }
     fetchData();
-  }, [contracts])
+  }, [contracts, amounts, blockNumber, getInfo])
 
   useEffect(() => {
     try {
@@ -216,25 +238,7 @@ const Farming: React.FC<{}> = () => {
       savedCallback.current.cancel();
       savedVestiplots.current.cancel();
     }
-  }, [])
-
-  useEffect(() => {
-    if (factors) {
-      updateVestimates();
-    }
-  }, [factors])
-
-  useEffect(() => {
-    if (amounts) {
-      updateVestimates();
-      updateVestiplots();
-    }
-  }, [amounts])
-
-  const getInfo = async () => {
-    const blockNumber = await contracts.web3.eth.getBlockNumber();
-    setBlockNumber(blockNumber);
-  }
+  }, [getInfoIntervalId])
 
   //#region Handling
 
@@ -313,11 +317,11 @@ const Farming: React.FC<{}> = () => {
 
   //#region Vesting blocks functions
 
-  const vestingBlocks = () => {
+  const vestingBlocks = useCallback(() => {
     if (!factors) return 0
     const { factoredVestingBlocks, vestingBlocksFactor } = factors;
     return factoredVestingBlocks / vestingBlocksFactor;
-  }
+  }, [factors])
 
   const updateVestingBlocks = async (e: any) => {
     const value = Number(e.target.value);
@@ -325,7 +329,7 @@ const Farming: React.FC<{}> = () => {
     setFactors({...factors, factoredVestingBlocks: Math.min(value, factors.factoredVestingBlocksMax)});
   }
 
-  const addVestingBlocks = async (blocks: any) => {
+  const addVestingBlocks = async (blocks: number) => {
     const { factoredVestingBlocks, factoredVestingBlocksMax } = factors;
     setFactors({...factors, factoredVestingBlocks: Math.min(factoredVestingBlocks + blocks, factoredVestingBlocksMax)});
   }
@@ -338,10 +342,10 @@ const Farming: React.FC<{}> = () => {
 
   //#region Unbonding blocks functions
 
-  const unbondingBlocks = () => {
+  const unbondingBlocks = useCallback(() => {
     const { factoredUnbondingBlocks, unbondingBlocksFactor } = factors;
     return factoredUnbondingBlocks / unbondingBlocksFactor;
-  }
+  }, [factors])
 
   const updateUnbondingBlocks = async (e: any) => {
     const value = Number(e.target.value);
@@ -362,12 +366,22 @@ const Farming: React.FC<{}> = () => {
 
   //#region Vestimates / Vestiplots
 
-  async function updateVestimates () {
+  const getVestimates = useCallback(async (amount: number, vestingBlocks: number, unbondingBlocks: number) => {
+    if (amount === 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
+      return [0, 0];
+    }
+    const vestimatedReward = scaleDownUnits(await contracts.schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocks, unbondingBlocks, blockNumber + vestingBlocks).call());
+    const vestimatedApy = await calculateApy(amount, vestimatedReward, vestingBlocks);
+
+    return [vestimatedReward, vestimatedApy];
+  }, [blockNumber, contracts?.schnoodleFarming.methods])
+
+  const updateVestimates = useCallback(async () => {
     const [vestimatedReward, vestimatedApy] = await getVestimates(amounts.depositAmount, vestingBlocks(), unbondingBlocks());
     setRewards({ vestimatedReward: vestimatedReward, vestimatedApy: vestimatedApy });
-  }
+  }, [getVestimates, amounts.depositAmount, unbondingBlocks, vestingBlocks])
 
-  async function updateVestiplots () {
+  const updateVestiplots = useCallback(async () => {
     const { factoredVestingBlocksMax, factoredUnbondingBlocksMax, vestingBlocksFactor, unbondingBlocksFactor } = factors;
     const { depositAmount } = amounts;
     setVestiplotsCancellationToken(Symbol());
@@ -438,20 +452,15 @@ const Farming: React.FC<{}> = () => {
 
     setOptimum({optimumVestingBlocks, optimumUnbondingBlocks});
     setVestiplot({ vestiplotReward: vestiplotReward, vestiplotApy: vestiplotApy});
-  }
+  }, [amounts, factors, vestiplotsCancellationToken, getVestimates])
+
+  const savedCallback = useRef<any>(updateVestimates);
+  const savedVestiplots = useRef<any>(updateVestimates);
+  savedCallback.current = debounce(updateVestimates, 500);
+  savedVestiplots.current = debounce(updateVestiplots, 2000);
 
   const maximiseApy = async () => {
     setFactors({ ...factors, factoredVestingBlocks: optimum.optimumVestingBlocks, factoredUnbondingBlocks: optimum.optimumUnbondingBlocks });
-  }
-
-  const getVestimates = async (amount: number, vestingBlocks: number, unbondingBlocks: number) => {
-    if (amount === 0 || vestingBlocks === 0 || unbondingBlocks === 0) {
-      return [0, 0];
-    }
-    const vestimatedReward = scaleDownUnits(await contracts.schnoodleFarming.methods.getReward(scaleUpUnits(amount).toString(), vestingBlocks, unbondingBlocks, blockNumber + vestingBlocks).call());
-    const vestimatedApy = await calculateApy(amount, vestimatedReward, vestingBlocks);
-
-    return [vestimatedReward, vestimatedApy];
   }
 
   //#endregion
@@ -466,12 +475,29 @@ const Farming: React.FC<{}> = () => {
   const closeHelpModal = () => {
     setOpenHelpModal(false);
   }
+  
+  //#endregion
+
+  //#region Hooks
+
+  useEffect(() => {
+    if (factors) {
+      updateVestimates();
+    }
+  }, [factors, updateVestimates, updateVestiplots])
+
+  useEffect(() => {
+    if (amounts.depositAmount) {
+      updateVestimates();
+      updateVestiplots();
+    }
+  }, [amounts.depositAmount, updateVestimates, updateVestiplots])
 
   //#endregion
 
   //#region Rendering
 
-  const renderFarmingSummaryTable = (farmingSummary: any) => {
+  const renderFarmingSummaryTable = (farmingSummary: IFarmingSummary[]) => {
     const space = ' ';
     const blockNumberTitleParts = resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE.split(space);
     const depositAmountTitleParts = resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE.split(space);
@@ -579,9 +605,9 @@ const Farming: React.FC<{}> = () => {
           </div>
         </div>
         <div role="rowgroup" className="tw-text-secondary">
-          {unbondingSummary.map((unbond: any) => {
+          {unbondingSummary.map((unbond: IUnbond) => {
             const amount = scaleDownUnits(unbond.amount);
-            const pendingBlocks = parseInt(unbond.expiryBlock) - blockNumber;
+            const pendingBlocks = unbond.expiryBlock - blockNumber;
             return pendingBlocks > 0 && (
               <div role="row" key={unbond.expiryBlock}>
                 <span role="cell" data-header="Amount:">{amount.toLocaleString()}</span>
@@ -728,13 +754,13 @@ const Farming: React.FC<{}> = () => {
                             </label>
                             <div className="tw-relative tw-flex">
                               <input type="number" min="1" max={scaleDownUnits(amounts.availableAmount)} placeholder={'Max: ' + scaleDownUnits(amounts.availableAmount)} value={amounts.depositAmount || ''} onChange={updateDepositAmount} className="depositinput" />
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 4))}>25%</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount/ 2))}>50%</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>75%</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 4))}>&frac14;</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 2))}>&frac12;</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>&frac34;</button>
-                              <button type="button" className="maxbuttons" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount))}>Max</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 4))}>25%</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount/ 2))}>50%</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>75%</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 4))}>&frac14;</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount / 2))}>&frac12;</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount * 3 / 4))}>&frac34;</button>
+                              <button type="button" className="maxbtn" onClick={() => setDepositAmount(scaleDownUnits(amounts.availableAmount))}>Max</button>
                             </div>
                           </div>
                         </div>
@@ -747,13 +773,13 @@ const Farming: React.FC<{}> = () => {
                           </label>
                           <div className="tw-mb-3 tw-flex">
                             <input type="number" min="1" max={factors.factoredVestingBlocksMax} placeholder={'Max: ' + factors.factoredVestingBlocksMax} value={factors.factoredVestingBlocks} onChange={updateVestingBlocks} className="depositinput w-full" />
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
-                            <button type="button" className="maxbuttons" onClick={maxVestingBlocks}>Max</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
+                            <button type="button" className="maxbtn" onClick={maxVestingBlocks}>Max</button>
                           </div>
                           <p className="approxLabel">{blocksDurationText(factors.factoredVestingBlocks)}</p>
                         </div>
@@ -766,18 +792,18 @@ const Farming: React.FC<{}> = () => {
                           </label>
                           <div className="tw-mb-3 tw-flex">
                             <input type="number" min="1" max={factors.factoredUnbondingBlocksMax} placeholder={'Max: ' + factors.factoredUnbondingBlocksMax} value={factors.factoredUnbondingBlocks || ''} onChange={updateUnbondingBlocks} className="depositinput" />
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
-                            <button type="button" className="dwmbutton hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
-                            <button type="button" className="dwmbutton hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                            <button type="button" className="maxbuttons" onClick={maxUnbondingBlocks}>Max</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
+                            <button type="button" className="dwmbtn hidesmmd" onClick={() => addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
+                            <button type="button" className="dwmbtn hidelg" onClick={() => addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                            <button type="button" className="maxbtn" onClick={maxUnbondingBlocks}>Max</button>
                           </div>
                           <p className="approxLabel">{blocksDurationText(factors.factoredUnbondingBlocks)}</p>
                         </div>
                         <div className="tw-mb-3 tw-form-control">
-                          <button type="button" className="keybtn maxbuttons maximise" disabled={optimum.optimumVestingBlocks === 0 || optimum.optimumVestingBlocks === 0} onClick={maximiseApy}>Maximise APY</button>
+                          <button type="button" className="keybtn maxbtn maximise" disabled={optimum.optimumVestingBlocks === 0 || optimum.optimumVestingBlocks === 0} onClick={maximiseApy}>Maximise APY</button>
                         </div>
                         <div className="tw-shadow-sm bottomstats tw-stats stats">
                           <div className="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
@@ -798,7 +824,7 @@ const Farming: React.FC<{}> = () => {
                           </div>
                         </div>
                         <div className="tw-mb-3 tw-form-control">
-                          <button type="button" className="keybtn maxbuttons" disabled={amounts.depositAmount < 1 || vestingBlocks() < 1 || unbondingBlocks() < 1 || amounts.depositAmount > amounts.availableAmount} onClick={addDeposit}>Deposit</button>
+                          <button type="button" className="keybtn maxbtn" disabled={amounts.depositAmount < 1 || vestingBlocks() < 1 || unbondingBlocks() < 1 || amounts.depositAmount > amounts.availableAmount} onClick={addDeposit}>Deposit</button>
                         </div>
                       </fieldset>
                     </form>
