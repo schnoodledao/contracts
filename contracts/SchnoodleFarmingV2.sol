@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@schnoodle/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 import "abdk-libraries-solidity/ABDKMath64x64.sol";
 
 /// @author Jason Payne (https://twitter.com/Neo42)
@@ -277,7 +277,7 @@ contract SchnoodleFarmingV2 is Initializable, OwnableUpgradeable {
     }
 
     // Autoregulator functions
-    
+
     function _getCumulativeTotal(uint256 rewardBlock) private view returns(uint256) {
         return _getCumulativeTotal(rewardBlock, _checkpointBlock, _cumulativeTotal, _totalTokens);
     }

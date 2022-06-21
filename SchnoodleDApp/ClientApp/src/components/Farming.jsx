@@ -1,21 +1,22 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
-import getWeb3 from '../getWeb3';
-import { initializeHelpers, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks, handleError } from '../helpers';
+import { initializeHelpers, handleError, getWeb3, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { debounce, range } from 'lodash';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import Plot from 'react-plotly.js';
-import Loader from 'react-loader-spinner';
+import { Puff } from 'react-loader-spinner';
 const bigInt = require('big-integer');
+// ReSharper restore InconsistentNaming
 
-export class Farming extends Component {
+export default class Farming extends Component {
   static displayName = Farming.name;
   static vestiplotsCancellationToken;
   
@@ -24,7 +25,6 @@ export class Farming extends Component {
 
     this.state = {
       success: false,
-      getInfoIntervalId: 0,
       farmingFundBalance: 0,
       blockNumber: 0,
       operativeFeeRate: 0,
@@ -61,7 +61,6 @@ export class Farming extends Component {
     this.handleError = handleError.bind(this);
     this.addDeposit = this.addDeposit.bind(this);
     this.updateDepositAmount = this.updateDepositAmount.bind(this);
-    this.maxDepositAmount = this.maxDepositAmount.bind(this);
     this.updateVestingBlocks = this.updateVestingBlocks.bind(this);
     this.maxVestingBlocks = this.maxVestingBlocks.bind(this);
     this.updateUnbondingBlocks = this.updateUnbondingBlocks.bind(this);
@@ -82,14 +81,15 @@ export class Farming extends Component {
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({ web3, schnoodle, schnoodleFarming, selectedAddress: web3.currentProvider.selectedAddress }, async () => {
         await this.getInfo();
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 10000);
         this.setState({ getInfoIntervalId });
       });
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
   }
 
@@ -114,7 +114,7 @@ export class Farming extends Component {
       const balance = bigInt(await schnoodle.methods.balanceOf(selectedAddress).call());
       const lockedBalance = bigInt(await schnoodleFarming.methods.lockedBalanceOf(selectedAddress).call());
       const unbondingBalance = bigInt(await schnoodleFarming.methods.unbondingBalanceOf(selectedAddress).call());
-      const availableAmount = balance.subtract(lockedBalance);
+      const availableAmount = bigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call());
       const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
       const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
       const factoredVestingBlocksMax = Math.floor(blocksPerDuration({ years: 1 }) * vestingBlocksFactor);
@@ -224,10 +224,6 @@ export class Farming extends Component {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
     this.setDepositAmount(value);
-  }
-
-  async maxDepositAmount() {
-    this.setDepositAmount(scaleDownUnits(this.state.availableAmount));
   }
 
   async setDepositAmount(amount) {
@@ -542,7 +538,7 @@ export class Farming extends Component {
                 <div className="maintitles tw-uppercase">{resources.MOON_FARMING}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -660,18 +656,18 @@ export class Farming extends Component {
                                 </span>
                               </label>
                               <div className="tw-relative tw-flex">
-                                <input type="number" min="1" max={availableAmount} placeholder={'Max: ' + availableAmount} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} className="depositinput" />
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
-                                <button type="button" className="dwmbutton hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
-                                <button type="button" className="dwmbutton hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                                <button type="button" className="maxbuttons" onClick={this.maxDepositAmount}>Max</button>
+                                <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={this.state.depositAmount || ''} onChange={this.updateDepositAmount} className="depositinput" />
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 4)}>25%</button>
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount / 2)}>50%</button>
+                                <button type="button" className="dwmbtn hidesmmd" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>75%</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount / 4)}>&frac14;</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount / 2)}>&frac12;</button>
+                                <button type="button" className="dwmbtn hidelg" onClick={() => this.setDepositAmount(availableAmount * 3 / 4)}>&frac34;</button>
+                                <button type="button" className="maxbtn" onClick={() => this.setDepositAmount(availableAmount)}>Max</button>
                               </div>
                             </div>
                           </div>
-                          <div className="tw-mb-3 tw-form-control nobutton">
+                          <div className="tw-mb-3 tw-form-control nobtn">
                             <label className="tw-label">
                               <span className="tw-label-text">
                                 {resources.VESTING_BLOCKS.TITLE}
@@ -679,18 +675,18 @@ export class Farming extends Component {
                               </span>
                             </label>
                             <div className="tw-mb-3 tw-flex">
-                              <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={'Max: ' + this.state.factoredVestingBlocksMax} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} className="depositinput w-full" />
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
-                              <button type="button" className="maxbuttons" onClick={this.maxVestingBlocks}>Max</button>
+                              <input type="number" min="1" max={this.state.factoredVestingBlocksMax} placeholder={`Max: ${this.state.factoredVestingBlocksMax}`} value={this.state.factoredVestingBlocks || ''} onChange={this.updateVestingBlocks} className="depositinput w-full" />
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))}>Week</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))}>Month</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ weeks: 1 }))} title="Week">W</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addVestingBlocks(blocksPerDuration({ months: 1 }))} title="Month">M</button>
+                              <button type="button" className="maxbtn" onClick={this.maxVestingBlocks}>Max</button>
                             </div>
                             <p className="approxLabel">{blocksDurationText(this.state.factoredVestingBlocks)}</p>
                           </div>
-                          <div className="tw-mb-3 tw-form-control nobutton">
+                          <div className="tw-mb-3 tw-form-control nobtn">
                             <label className="tw-label">
                               <span className="tw-label-text">
                                 {resources.UNBONDING_BLOCKS.TITLE}
@@ -698,19 +694,19 @@ export class Farming extends Component {
                               </span>
                             </label>
                             <div className="tw-mb-3 tw-flex">
-                              <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={'Max: ' + this.state.factoredUnbondingBlocksMax} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} className="depositinput" />
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
-                              <button type="button" className="dwmbutton hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
-                              <button type="button" className="dwmbutton hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
-                              <button type="button" className="maxbuttons" onClick={this.maxUnbondingBlocks}>Max</button>
+                              <input type="number" min="1" max={this.state.factoredUnbondingBlocksMax} placeholder={`Max: ${this.state.factoredUnbondingBlocksMax}`} value={this.state.factoredUnbondingBlocks || ''} onChange={this.updateUnbondingBlocks} className="depositinput" />
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))}>Minute</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))}>Hour</button>
+                              <button type="button" className="dwmbtn hidesmmd" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))}>Day</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ minutes: 1 }))} title="Minute">M</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ hours: 1 }))} title="Hour">H</button>
+                              <button type="button" className="dwmbtn hidelg" onClick={() => this.addUnbondingBlocks(blocksPerDuration({ days: 1 }))} title="Day">D</button>
+                              <button type="button" className="maxbtn" onClick={this.maxUnbondingBlocks}>Max</button>
                             </div>
                             <p className="approxLabel">{blocksDurationText(this.state.factoredUnbondingBlocks)}</p>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons maximise" disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
+                            <button type="button" className="keybtn maxbtn maximise" disabled={this.state.optimumVestingBlocks === 0 || this.state.optimumVestingBlocks === 0} onClick={this.maximiseApy}>Maximise APY</button>
                           </div>
                           <div className="tw-shadow-sm bottomstats tw-stats stats">
                             <div className="tw-stat tw-border-t-1 md:tw-border-t-0 md:tw-border-base-200">
@@ -731,30 +727,30 @@ export class Farming extends Component {
                             </div>
                           </div>
                           <div className="tw-mb-3 tw-form-control">
-                            <button type="button" className="keybtn maxbuttons" disabled={this.state.depositAmount < 1 || this.vestingBlocks() < 1 || this.unbondingBlocks() < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
+                            <button type="button" className="keybtn maxbtn" disabled={this.state.depositAmount < 1 || this.vestingBlocks() < 1 || this.unbondingBlocks() < 1 || this.state.depositAmount > availableAmount} onClick={this.addDeposit}>Deposit</button>
                           </div>
                         </fieldset>
                       </form>
                     </div>
                     <div className="tw-grid tw-mt-4">
 
-                      {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 && (
+                      {this.state.vestiplotProgress > 0 && this.state.vestiplotProgress < 100 &&
                         <div className="tw-overlay tw-z-20">
                           <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
-                              <Loader type="Puff" color="#00BFFF" />
+                              <Puff color="#00BFFF" />
                             </div>
                             <div>
                               <p className="approxLabel tw-mt-4">{this.state.vestiplotProgress}%</p>
                             </div>
                           </div>
                         </div>
-                      )}
+                      }
                       
                       <div className="plotcontainer tw-z-10">
                         <div className="tw-flex tw-flex-col xl:tw-flex-row">
 
-                          {this.state.vestiplotReward.length > 0 && (
+                          {this.state.vestiplotReward.length > 0 &&
                             <Plot
                               data={this.state.vestiplotReward}
                               layout={{
@@ -768,9 +764,9 @@ export class Farming extends Component {
                                 plot_bgcolor: 'rgba(0,0,0,0)'
                               }}
                             />
-                          )}
+                          }
 
-                          {this.state.vestiplotApy.length > 0 && (
+                          {this.state.vestiplotApy.length > 0 &&
                             <Plot
                               data={this.state.vestiplotApy}
                               layout={{
@@ -784,30 +780,30 @@ export class Farming extends Component {
                                 plot_bgcolor: 'rgba(0,0,0,0)'
                               }}
                             />
-                          )}
+                          }
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {this.state.farmingSummary.length > 0 && (
+                {this.state.farmingSummary.length > 0 &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_SUMMARY.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderFarmingSummaryTable(this.state.farmingSummary)}
                     </div>
                   </div>
-                )}
+                }
 
-                {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) && (
+                {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 tw-headingfont tw-sectiontitle tw-mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                     </div>
                   </div>
-                )}
+                }
 
                 <div className="my-5">
                   <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>

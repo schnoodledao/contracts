@@ -3,8 +3,6 @@ const { mnemonic, infuraProjectId, moralisId, etherscanApiKey, bscscanApiKey } =
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
-  contracts_build_directory: path.join(__dirname, "SchnoodleDApp/ClientApp/src/contracts"),
-
   networks: {
     develop: {
       host: "localhost",
@@ -47,13 +45,13 @@ module.exports = {
       provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
       websockets: true,
       network_id: 1,
-      gasPrice: 10e9,
+      gasPrice: 30e9,
       gas: 10e6,
       skipDryRun: true
     },
     // BSC
     chapel: {
-      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-1-s1.binance.org:8545/'),
+      provider: () => new HDWalletProvider(mnemonic, 'https://data-seed-prebsc-2-s1.binance.org:8545/'),
       websockets: true,
       network_id: 97,
       confirmations: 10,
@@ -61,8 +59,7 @@ module.exports = {
       skipDryRun: true
     },
     bsc: {
-      provider: () => new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org/'),
-      websockets: true,
+      provider: () => new HDWalletProvider(mnemonic, 'https://bscrpc.com'),
       network_id: 56,
       confirmations: 10,
       timeoutBlocks: 200,

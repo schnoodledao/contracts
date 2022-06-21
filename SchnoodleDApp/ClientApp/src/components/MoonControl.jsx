@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { general, farming as resources } from '../resources';
@@ -5,8 +6,7 @@ import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
-import getWeb3 from '../getWeb3';
-import { initializeHelpers, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
+import { initializeHelpers, handleError, getWeb3, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
@@ -14,8 +14,9 @@ import 'react-responsive-modal/styles.css';
 import chroma from 'chroma-js';
 import Globe from 'react-globe.gl';
 const bigInt = require('big-integer');
+// ReSharper restore InconsistentNaming
 
-export class MoonControl extends Component {
+export default class MoonControl extends Component {
   static displayName = MoonControl.name;
 
   constructor(props) {
@@ -37,6 +38,7 @@ export class MoonControl extends Component {
       helpDetails: ''
     };
 
+    this.handleError = handleError.bind(this);
     this.closeHelpModal = this.closeHelpModal.bind(this);
     this.globeRef = React.createRef();
     this.globeEl = React.createRef();
@@ -53,20 +55,21 @@ export class MoonControl extends Component {
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
+
       this.setState({ web3, schnoodle, schnoodleFarming }, async () => {
         await this.getInfo();
         const getInfoIntervalId = setInterval(async () => await this.getInfo(), 60000);
         this.setState({ getInfoIntervalId });
       });
 
-      // Set up Moon globe
+      // Set up the moon globe
       const globeElControls = this.globeEl.current.controls();
       globeElControls.autoRotate = true;
       globeElControls.autoRotateSpeed = 0.5;
 
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
   }
 
@@ -346,7 +349,7 @@ export class MoonControl extends Component {
                 <div className="maintitles tw-uppercase">{resources.MOON_CONTROL}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -367,14 +370,14 @@ export class MoonControl extends Component {
 
                 {this.renderMoonFarms()}
 
-                {this.state.farmingOverview.length > 0 && (
+                {this.state.farmingOverview.length > 0 &&
                   <div className="summarytable">
                     <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
                       {this.renderFarmingOverviewTable(this.state.farmingOverview)}
                     </div>
                   </div>
-                )}
+                }
 
                 <div className="tw-my-5">
                   <p style={{ color: this.state.success ? 'green' : 'red' }}>{this.state.message}</p>

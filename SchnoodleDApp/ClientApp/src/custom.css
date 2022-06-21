@@ -86,7 +86,7 @@ fieldset:disabled button {
   @apply textfade tw-from-yellow-300 tw-to-yellow-200;
 }
 
-.fakebutton {
+.fakebtn {
   height: 37px;
 }
 
@@ -106,6 +106,10 @@ fieldset:disabled button {
 
 .minustop {
   margin-top: -3px;
+}
+
+.plustop {
+  margin-top: 3px;
 }
 
 .tw-stats {
@@ -175,11 +179,11 @@ input.withdrawinput {
   @apply tw-input-accent withdraw tw-text-base xl:tw-text-lg tw-text-left;
 }
 
-.dwmbutton {
+.dwmbtn {
   @apply depositbtns tw-btn tw-btn-secondary tw-bordered tw-border-secondary;
 }
 
-.maxbuttons {
+.maxbtn {
   @apply depositbtns tw-btn tw-btn-accent tw-border-accent;
 }
 
@@ -188,7 +192,7 @@ input.withdrawinput {
 }
 
 .keybtn {
-  @apply maxbuttons tw-mt-5 tw-text-xl tw-font-black !important;
+  @apply maxbtn tw-mt-5 tw-text-xl tw-font-black !important;
 }
 
 .maximise {
@@ -199,17 +203,13 @@ input.withdrawinput {
   @apply tw-text-base xl:tw-text-xl tw-btn tw-btn-secondary tw-text-base-300 tw-px-2 lg:tw-px-3 xl:tw-px-2 !important;
 }
 
-.keybtn:disabled {
+.keybtn:disabled, .keybtnbridge:disabled {
   @apply tw-opacity-20 !important;
   pointer-events: none !important;
   cursor: not-allowed !important;
 }
 
-.withbutton .depositinput {
-  @apply sm:tw-pr-11 md:tw-pr-16 !important;
-}
-
-.nobutton .depositinput {
+.nobtn .depositinput {
   @apply tw-pr-2 !important;
 }
 
@@ -537,6 +537,19 @@ TABLE
 .customModal svg {
   color: #f000b8;
   fill: #f000b8;
+}
+
+.bg-color {
+  background-color: #f000b8;
+}
+
+.text-main-color {
+  color: #f000b8;
+}
+
+.text-main-text {
+  --tw-text-opacity: 1;
+  color: rgba(154, 19, 131, var(--tw-text-opacity));
 }
 
 .react-responsive-modal-closeButton {

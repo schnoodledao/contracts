@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/MathUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@schnoodle/contracts-upgradeable/token/ERC777/presets/ERC777PresetFixedSupplyUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@schnoodle/contracts-upgradeable/utils/math/MathUpgradeable.sol";
 
 abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, OwnableUpgradeable {
     uint256 private constant MAX = ~uint256(0);
@@ -28,8 +28,8 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         __ERC777PresetFixedSupply_init("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
     }
 
-    function configure(bool testnet) internal onlyOwner {
-        if (testnet) {
+    function configure(bool initialSetup) internal onlyOwner {
+        if (initialSetup) {
             _feeRate = 40;
             _rateEscalator = 6;
             _sellThreshold = 10 ** 9 * 10 ** decimals();
@@ -46,15 +46,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return _getStandardAmount(super.balanceOf(account));
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
-        uint256 reflectedAmount = _getReflectedAmount(amount);
-        bool result = super.transfer(recipient, reflectedAmount);
-        emit Transfer(_msgSender(), recipient, amount);
-        processSwap(_msgSender(), recipient, amount, reflectedAmount, _transferFromReflected);
-
-        return result;
-    }
-
     function allowance(address holder, address spender) public view override returns (uint256) {
         return _getStandardAmount(super.allowance(holder, spender));
     }
@@ -63,17 +54,13 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         super._approve(holder, spender, _getReflectedAmount(value));
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        uint256 reflectedAmount = _getReflectedAmount(amount);
-        bool result = super.transferFrom(sender, recipient, reflectedAmount);
-        emit Transfer(sender, recipient, amount);
-        processSwap(sender, recipient, amount, reflectedAmount, _transferFromReflected);
-
-        return result;
-    }
-
     function _spendAllowance(address owner, address spender, uint256 amount) internal override {
         super._spendAllowance(owner, spender, _getStandardAmount(amount));
+    }
+
+    function _mint(address account, uint256 amount) internal {
+        super._mint(account, _getReflectedAmount(amount), "", "");
+        _totalSupply += amount;
     }
 
     function _burn(address account, uint256 amount, bytes memory data, bytes memory operatorData) internal override {
@@ -84,8 +71,11 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function _send(address from, address to, uint256 amount, bytes memory userData, bytes memory operatorData, bool requireReceptionAck) internal override {
         uint256 reflectedAmount = _getReflectedAmount(amount);
         super._send(from, to, reflectedAmount, userData, operatorData, requireReceptionAck);
-        emit Transfer(from, to, amount);
-        processSwap(from, to, amount, reflectedAmount, _sendReflected);
+        processSwap(from, to, amount, reflectedAmount);
+    }
+
+    function _transformAmount(uint256 amount) internal view override returns (uint256) {
+        return _getStandardAmount(amount);
     }
 
     // Reflection convenience functions
@@ -93,10 +83,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function _transferFromReflected(address from, address to, uint256 reflectedAmount) internal {
         super._approve(from, _msgSender(), reflectedAmount);
         super.transferFrom(from, to, reflectedAmount);
-    }
-
-    function _sendReflected(address from, address to, uint256 reflectedAmount) internal {
-        super._send(from, to, reflectedAmount, "", "", true);
     }
 
     function _getReflectedAmount(uint256 amount) internal view returns(uint256) {
@@ -110,12 +96,12 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function _getReflectRate() private view returns(uint256) {
         uint256 reflectedTotalSupply = super.totalSupply();
-        return reflectedTotalSupply == 0 ? 0 : super.totalSupply() / totalSupply();
+        return reflectedTotalSupply == 0 ? 0 : reflectedTotalSupply / totalSupply();
     }
 
     // Taxation functions
 
-    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+    function processSwap(address from, address to, uint256 amount, uint256 reflectedAmount) internal virtual {
         bool buy = isLiquidityToken(from);
         bool sell = !buy && isLiquidityToken(to);
 
@@ -136,26 +122,24 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         // Proceed to pay fee and tax if only a sell at this point
         if (!sell) return;
 
-        payFees(to, amount, reflectedAmount, transferCallback);
+        payFees(to, amount, reflectedAmount);
     }
 
     function isLiquidityToken(address) internal view virtual returns(bool);
 
-    function payFees(address to, uint256 amount, uint256 reflectedAmount, function(address, address, uint256) internal transferCallback) internal virtual {
+    function payFees(address to, uint256 amount, uint256 reflectedAmount) internal virtual {
         uint256 operativeFeeRate = getOperativeFeeRate();
         super._burn(to, reflectedAmount / 1000 * operativeFeeRate, "", "");
-        emit Transfer(to, address(0), amount * operativeFeeRate / 1000);
 
-        payFund(to, _eleemosynaryAccount, amount, _donationRate, transferCallback);
+        payFund(to, _eleemosynaryAccount, amount, _donationRate);
     }
 
-    function payFund(address from, address to, uint256 amount, uint256 rate, function(address, address, uint256) internal transferCallback) internal {
+    function payFund(address from, address to, uint256 amount, uint256 rate) internal {
         // Skip if not enabled ('to' address not set)
         if (to != address(0)) {
             uint256 fundAmount = amount * rate / 1000;
             uint256 reflectedFundAmount = _getReflectedAmount(fundAmount);
-            transferCallback(from, to, reflectedFundAmount);
-            emit Transfer(from, to, fundAmount);
+            super._send(from, to, reflectedFundAmount, "", "", true);
         }
     }
 
@@ -188,6 +172,8 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         return (_eleemosynaryAccount, _donationRate);
     }
 
+    // Price Support Mechanism functions
+
     function changeSellThresholdDetails(uint256 sellThreshold, uint256 rateEscalator) external onlyOwner {
         _sellThreshold = sellThreshold;
         _rateEscalator = rateEscalator;
@@ -201,6 +187,8 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
     function getSellQuota() external view returns(TokenMeter memory) {
         return _sellQuota;
     }
+
+    // Events
 
     event FeeRateChanged(uint256 rate);
 

@@ -17,5 +17,5 @@ module.exports = async function (deployer, network) {
   await (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);
 
   const { appendList } = require('../scripts/contracts.js');
-  appendList.append(contractName, network);
+  appendList(contractName, network);
 };

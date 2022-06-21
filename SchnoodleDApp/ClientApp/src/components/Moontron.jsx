@@ -1,16 +1,20 @@
+// ReSharper disable InconsistentNaming
 import React, { Component } from 'react';
 import { general, moontron as resources } from '../resources';
 import MoontronV1 from '../contracts/MoontronV1.json';
-import getWeb3 from '../getWeb3';
+import { handleError, getWeb3 } from '../helpers';
 import { Viewer } from '../viewer/viewer';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import Loader from 'react-loader-spinner';
+import { Puff } from 'react-loader-spinner';
 import queryString from 'query-string';
+// ReSharper restore InconsistentNaming
 
-export class Moontron extends Component {
+// global fetch: false
+
+export default class Moontron extends Component {
   static displayName = Moontron.name;
 
   constructor(props) {
@@ -27,6 +31,7 @@ export class Moontron extends Component {
       nftAssetItem: null
     };
 
+    this.handleError = handleError.bind(this);
     this.updateAssetConfig = this.updateAssetConfig.bind(this);
     this.generateAsset = this.generateAsset.bind(this);
     this.mint = this.mint.bind(this);
@@ -50,41 +55,20 @@ export class Moontron extends Component {
       const web3 = await getWeb3();
       const moontronDeployedNetwork = MoontronV1.networks[await web3.eth.net.getId()];
       const moontron = new web3.eth.Contract(MoontronV1.abi, moontronDeployedNetwork && moontronDeployedNetwork.address);
-      const gatewayBaseUrl = await (await this.fetch('nft/gatewaybaseurl')).text();
-      const serviceAccount = await (await this.fetch('nft/serviceaccount')).text();
-      const mintFee = await (await this.fetch('nft/mintfee')).text();
-      const assetConfigs = await (await this.fetch('nft/assetconfigs')).json();
+      const gatewayBaseUrl = await (await fetch('nft/gatewaybaseurl')).text();
+      const serviceAccount = await (await fetch('nft/serviceaccount')).text();
+      const mintFee = await (await fetch('nft/mintfee')).text();
+      const assetConfigs = await (await fetch('nft/assetconfigs')).json();
+
+      window.ethereum.on('networkChanged', () => window.location.reload(true));
 
       this.setState({ web3, moontron, selectedAddress: web3.currentProvider.selectedAddress, serviceAccount, gatewayBaseUrl, mintFee, assetConfigs });
 
       this.viewer = new Viewer(this.viewerRef.current, this.options);
     } catch (err) {
-      alert('Load error. Please check you are connected to the correct network in MetaMask.');
-      console.error(err);
+      this.handleError(err);
     }
   }
-
-  //#region Error handling
-
-  async fetch(input, init) {
-    const result = await fetch(input, init);
-
-    if (result.ok) {
-      this.setState({ success: true, message: 'Operation successful' });
-      return result;
-    }
-
-    throw new Error(result.statusText);
-  }
-
-  handleError(err) {
-    console.error(err);
-
-    this.setState({ success: false, message: err.message });
-    alert(err.message);
-  }
-
-  //#endregion
 
   async updateAssetConfig(e) {
     const [selectedAsset, selectedConfig] = e.target.value.split(',');
@@ -108,7 +92,7 @@ export class Moontron extends Component {
 
       // Generate the asset sending proof of payment (PoP), and the desired list of components
       const componentsQuery = Object.keys(selectedComponents).filter((component) => selectedComponents[component]).map((component) => `components=${component}`).join('&');
-      const nftAssetItem = await (await this.fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${await web3.eth.getChainId()}/${txn.transactionHash}?${componentsQuery}`)).json();
+      const nftAssetItem = await (await fetch(`nft/generateasset/${selectedAsset}/${selectedConfig}/${selectedAddress}/${await web3.eth.getChainId()}/${txn.transactionHash}?${componentsQuery}`)).json();
 
       // Fetch the GLB file from its pinned URL on IPFS
       const assetUrl = gatewayBaseUrl + nftAssetItem.assetHash;
@@ -136,7 +120,7 @@ export class Moontron extends Component {
       const data = new FormData();
       const type = 'image/png';
       data.append('image', new File([await (await fetch(this.viewer.encode(type))).arrayBuffer()], 'Preview.png', { type }));
-      await this.fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
+      await fetch(`nft/mint/${nftAssetItem.id}`, { method: 'POST', body: data });
 
       // Nullify the generated asset item on a successful mint
       this.setState({ nftAssetItem: null });
@@ -174,7 +158,7 @@ export class Moontron extends Component {
                 <div className="maintitles tw-uppercase">{resources.MOONTRON}</div>
                 <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
                 <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
-                <div className="tw-px-4 tw-mt-4 fakebutton">&nbsp;</div>
+                <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
               </div>
             </div>
           </div>
@@ -204,7 +188,7 @@ export class Moontron extends Component {
                         <div className="tw-overlay tw-z-20">
                           <div className="overlayloader tw-flex tw-flex-col tw-items-center tw-justify-center ">
                             <div>
-                              <Loader type="Puff" color="#00BFFF" />
+                              <Puff color="#00BFFF" />
                             </div>
                           </div>
                         </div>
@@ -241,10 +225,10 @@ export class Moontron extends Component {
                             <div ref={this.viewerRef} className="viewer tw-max-w-6xl tw-mx-auto" />
 
                             <div className="tw-mb-3 tw-form-control tw-w-full">
-                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.selectedConfig == null} onClick={this.generateAsset}>Generate</button>
+                              <button type="button" className="keybtn nftbtn maxbtn" disabled={this.state.selectedConfig == null} onClick={this.generateAsset}>Generate</button>
                             </div>
                             <div className="tw-mb-3 tw-form-control tw-w-full">
-                              <button type="button" className="keybtn nftbtn maxbuttons" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
+                              <button type="button" className="keybtn nftbtn maxbtn" disabled={this.state.nftAssetItem == null} onClick={this.mint}>Mint</button>
                             </div>
                           </fieldset>
                         </form>
