@@ -2,7 +2,7 @@
 import React, { Component } from 'react';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import Schnoodle from '../contracts/SchnoodleV9.json';
+import Schnoodle from '../contracts/SchnoodleV10.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import { initializeHelpers, handleError, getWeb3, scaleDownUnits, scaleUpUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
@@ -75,9 +75,10 @@ export default class Farming extends Component {
   async componentDidMount() {
     try {
       const web3 = await getWeb3();
-      const schnoodleDeployedNetwork = SchnoodleV1.networks[await web3.eth.net.getId()];
+      const networkId = await web3.eth.net.getId();
+      const schnoodleDeployedNetwork = SchnoodleV1.networks[networkId];
       const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
-      const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[await web3.eth.net.getId()];
+      const schnoodleFarmingDeployedNetwork = SchnoodleFarmingV1.networks[networkId];
       const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
       await initializeHelpers(await schnoodle.methods.decimals().call());
 
@@ -798,7 +799,7 @@ export default class Farming extends Component {
 
                 {this.state.unbondingSummary.length > 0 && this.state.unbondingSummary.some(u => parseInt(u.expiryBlock) - this.state.blockNumber > 0) &&
                   <div className="summarytable">
-                    <h3 className="tw-mb-5 tw-headingfont tw-sectiontitle tw-mt-10">{resources.UNBONDING_SUMMARY.TITLE}</h3>
+                    <h3 className="sectiontitle tw-text-2xl md:tw-text-3xl tw-leading-tight">{resources.UNBONDING_SUMMARY.TITLE}</h3>
                     <div className="tw-overflow-x-auto tw-text-secondary tw-my-5">
                       {this.renderUnbondingSummaryTable(this.state.unbondingSummary)}
                     </div>

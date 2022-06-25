@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import Schnoodle from '../contracts/SchnoodleV9.json';
+import Schnoodle from '../contracts/SchnoodleV10.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
 import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
 import { initializeHelpers, handleError, getWeb3, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';

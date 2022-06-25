@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
-import Schnoodle from '../contracts/SchnoodleV9.json';
+import Schnoodle from '../contracts/SchnoodleV10.json';
 import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
 
 // Third-party libraries
