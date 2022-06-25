@@ -1,4 +1,3 @@
-const path = require("path");
 const { mnemonic, infuraProjectId, etherscanApiKey, bscscanApiKey } = require('./secrets.json');
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 

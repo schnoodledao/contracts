@@ -75,7 +75,7 @@ contract SchnoodleV10 is SchnoodleV10Base, AccessControlUpgradeable {
 
     function farmingReward(address account, uint256 netReward, uint256 grossReward) external {
         require(hasRole(FARMING_CONTRACT, _msgSender()));
-        _transferFromReflected(_farmingFund, account, _getReflectedAmount(netReward));
+        _send(_farmingFund, account, netReward, "", "", true);
 
         // Burn the unused part of the gross reward
         _burn(_farmingFund, grossReward - netReward, "", "");

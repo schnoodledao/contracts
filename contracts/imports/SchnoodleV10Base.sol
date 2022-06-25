@@ -55,7 +55,7 @@ abstract contract SchnoodleV10Base is ERC777PresetFixedSupplyUpgradeable, Ownabl
     }
 
     function _spendAllowance(address owner, address spender, uint256 amount) internal override {
-        super._spendAllowance(owner, spender, _getStandardAmount(amount));
+        super._spendAllowance(owner, spender, _getReflectedAmount(amount));
     }
 
     function _mint(address account, uint256 amount) internal {
@@ -79,11 +79,6 @@ abstract contract SchnoodleV10Base is ERC777PresetFixedSupplyUpgradeable, Ownabl
     }
 
     // Reflection convenience functions
-
-    function _transferFromReflected(address from, address to, uint256 reflectedAmount) internal {
-        super._approve(from, _msgSender(), reflectedAmount);
-        super.transferFrom(from, to, reflectedAmount);
-    }
 
     function _getReflectedAmount(uint256 amount) internal view returns(uint256) {
         return amount * _getReflectRate();
