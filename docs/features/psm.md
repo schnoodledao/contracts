@@ -1,4 +1,5 @@
 ---
+description: Built-in protection against market sell-offs
 cover: ../.gitbook/assets/cogs-tech-banner.jpg
 coverY: 0
 ---
@@ -9,7 +10,7 @@ The Price Support Mechanism (PSM) feature was introduced in SchnoodleV6 consisti
 
 ![PSM Components](../.gitbook/assets/psm-components.svg)
 
-## Sell Swap Detector
+## 🕵️ Sell Swap Detector
 
 When Schnoodle was first launched, all transfers incurred fees. However, this was eventually found to be prohibitive for many of our buyers and existing holders due to the lack of adequate support for fee-on-transfer (FoT) tokens by Uniswap.
 
@@ -17,7 +18,7 @@ To address this, the Sell Swap Detector (SSD) was introduced that detects when a
 
 SSD is simple but effective. It detects when the recipient of a transfer is the liquidity token. This inverts the transfer fee policy compared to other fee-on-transfer (FoT) tokens which operate on the basis of exclusive opt-out. Schnoodle operates on the basis of inclusive opt-in. As part of SchnoodleV7, this feature was further improved using the OpenZeppelin `AccessControlUpgradeable` base class which allows access roles to be specified, and for addresses to be assigned to those roles which can then be checked via the `isLiquidityToken` virtual function. The role `LIQUIDITY` is assignable to any number of liquidity tokens which means that Schnoodle may be listed on multiple exchanges with all liquidity tokens of those exchanges assigned the `LIQUIDITY` role.
 
-## Scaling Sell Quota
+## 📈 Scaling Sell Quota
 
 The Scaling Sell Quota (SSQ) is an algorithm that tracks buys and sells, and maintains a sell quota that is the net of all buys and sells during consecutive 24-hour capture periods. This is more advantageous than a simple sell quota as the SSQ allows the sell quota to scale with both buy and sell volume.
 
@@ -25,7 +26,7 @@ To achieve this, each transfer checks the block.timestamp in a `TokenMeter` stat
 
 The effect of the SSQ is that all sell swaps identified by the SSD incur transfer fees at a base fee rate (BFR) of 4% (distributed as BARK rewards) as long as the net sells do not exceed 1 billion SNOOD.
 
-## Gamified HODL Incentivator
+## 🎰 Gamified HODL Incentivator
 
 During periods of extreme sell activity (when the sell quota falls below zero), the Gamified HODL Incentivator (GHI) algorithm activates. At this point, the transfer fee escalates linearly with the sell quota by a rate escalator factor (currently adds 6x the BFR) at 2x the sell threshold at which point it is capped. Therefore, as the sell quota becomes more negative, the transfer fee increases. Conversely, as the sell quota becomes less negative, the transfer fee decreases. So, in theory, buys within a capture period after a sell-off could return the transfer fee to the BFR again. The transfer fee that applies at any point is called the operative fee rate (OFR). The chart below shows the GHI in action.
 
@@ -39,7 +40,7 @@ If the GHI is activated and the OFR increases, hodlers wanting to sell have thre
 
 The expected effect of the GHI is that extreme sell-offs will be prevented because weak hands will be helped by Schnoodle hand-holding them through the tough times, and encouraging them to keep strong hands when everything else is "correcting".
 
-## Summary
+## 🔖 Summary
 
 The Price Support Mechanism consisting of the above three constituent subcomponents is the first of its kind, and is designed to support the price through gamification without preventing people from selling, either by waiting for new buys, waiting for the next reset, or simply selling with higher tax during the game periods which are generally expected to be short-lived under normal circumstances whenever they happen.
 

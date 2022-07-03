@@ -8,7 +8,7 @@ coverY: 0
 
 Ultimately, we intend Schnoodle to have many use cases over time, and for the direction of this to be determined by the community (as a DAO) with guidance from the team. But some of our existing utility concepts are covered below.
 
-### Eleemosynary
+### ❤️‍🩹 Eleemosynary
 
 Not a word you hear every day, but Schnoodle is also a coin with a conscience. as part of Schnoodle's benevolent approach to crypto, a small percentage of all transactions are donated to a good cause agreed on by the community. This takes place automatically within the smart contract, and is known as the eleemosynary functionality.
 
@@ -28,7 +28,7 @@ And the beneficiary of the eleemosynary fund is by no means static. This is dete
 
 </details>
 
-### SaaS Systems
+### 🖥️ SaaS Systems
 
 Some of the Foundations of Schnoodle will be available as Software as a Service (SaaS) for other DAO projects to use. The inception of this, and how it will integrate into SNOOD, is yet to be determined, but the intention is to allow creation of modular DAOs based on the underlying technology that Schnoodle is based on. These will be the SaaS systems that other DAOs will be able to utilise:
 
@@ -37,6 +37,6 @@ Some of the Foundations of Schnoodle will be available as Software as a Service 
 * Farming as a Service (FaaS)
 * NFT as a Service (NaaS)
 
-### Stablecoin (USnooD)
+### 🪙 Stablecoin (USnooD)
 
 More on this to follow.

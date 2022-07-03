@@ -6,7 +6,7 @@ coverY: 0
 
 # 🐶 Overview
 
-## Introduction
+## 👋 Introduction
 
 Schnoodle is a true trustless and progressive DeFi DAO that bridges key cryptocurrency concepts including meme, yield farming, NFTs, and multichain interoperability.
 
@@ -26,7 +26,7 @@ Learn more [here](whitepaper/architecture.md#bark-algorithm).
 
 <summary>Earn by Farming</summary>
 
-Earn yield farming rewards. This is our comprehensive, fully automated, and algorithmic  Moon Farming Platform (MFP). The farming fund is constantly funded from sells (the Gamified Yield Incentivator or GYI), and you can choose how long to lock your tokens for which affects the APY you get.
+Earn yield farming rewards. This is our comprehensive, fully automated, and algorithmic Moon Farming Platform (MFP). The farming fund is constantly funded from sells (the Gamified Yield Incentivator or GYI), and you can choose how long to lock your tokens for which affects the APY you get.
 
 Learn more [here](features/mfp.md).
 
@@ -53,7 +53,7 @@ The **first major component** of the SCE is the [Foundations of Schnoodle](white
 
 The **second major component** of the SCE is the [Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md) (UoS) which is growing constantly, and includes an eleemosynary feature and our SaaS systems which are in development. Our ultimate goal is to help other DAO projects utilise our innovative technology, and grow our DAO platforms through our SaaS systems.
 
-## Our Story
+## 📖 Our Story
 
 > "What's past is prologue." ─ William Shakespeare. _The Tempest._
 
@@ -71,7 +71,7 @@ This was when a new chapter began, and Schnoodle Finance was rebranded to what w
 
 ![](.gitbook/assets/astronaut.jpg)
 
-## Mission
+## 🚀 Mission
 
 Schnoodle is devoted to providing truly decentralised platforms for our community to interact with while helping other projects unlock their decentralised potential through our SaaS (Software as a Service) system.
 
@@ -81,19 +81,19 @@ We believe that decentralising organisations will increase innovation and creati
 
 ![](.gitbook/assets/golden-krypto-chart.png)
 
-## Philosophy
+## ✨ Philosophy
 
-### What is a DAO?
+### ❓ What is a DAO?
 
 In the real world (IRL), most organisations are run by one or more people who make all the decisions based on what they think is best. But, best for whom? Them, or the people affected by the organisation. This could be a company, a charity, a bank, or even a political body. Yes, there are shareholders and citizens who can vote on changes. But usually, there is a degree of opacity, and no one truly knows how deep that runs. And that opacity could hide a policy that allows the organisation to take drastic action in circumstances the community don't know about. In crypto, we call this a rug pull. In traditional organisations, they exist but are hidden. We've seen this happen many times throughout history, such as banks freezing the accounts of its customers in a crisis, or the government taking the land of its citizens using some obscure law or hidden policy.
 
 A DAO is a Decentralized Autonomous Organization. The clue is in the acronym. A DAO aims to solve the problem of traditional organisations by taking control away from a centralised group of people, and using decentralised technology such as blockchain to ensure full transparency in the form of code (smart contracts). But it also goes a step further by autonomising the way the organisation is run by using code that powers the governance processes.
 
-### The DAO Problem
+### 👺 The DAO Problem
 
 The problem is that true DAOs do not exist, and most DAOs hijack this buzzword to promote themselves as as DAO. From an ecosystem perspective, they run on blockchain, and blockchains tend to run autonomously. However, from a business architecture perspective, they require manual fulfilment of governance through a centralised multisig group. That group must be trusted to be active. Where is the autonomy in that?
 
-### Code is Law
+### 📜 Code is Law
 
 We believe a DAO must satisfy the DATA equation:
 
