@@ -9,14 +9,14 @@ const schnoodleToken = '0xD45740aB9ec920bEdBD9BAb2E863519E59731941';
 const theme = {
   primary: '#ffffff',
   secondary: '#adb5bd',
-  container: '#8D38D7',
+  container: '#8d38d7',
   module: '#1d1249',
   interactive: '#f0ca30',
   accent: '#b42a6f',
   outline: '#ced4da',
-  dialog: '#ffffff',
+  dialog: '#1d1249',
   error: '#dc3545',
-  success: '#20c997',
+  success: '#8d38d7',
 };
 
 export default class UniswapWidget extends Component {
