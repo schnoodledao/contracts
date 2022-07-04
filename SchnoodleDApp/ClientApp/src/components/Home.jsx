@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { general, farming } from '../resources';
+import UniswapWidget from './UniswapWidget';
 
 export class Home extends Component {
   static displayName = Home.name;
@@ -8,7 +9,7 @@ export class Home extends Component {
     return (
       <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
         <div className="h-noheader md:tw-flex">
-          <div className="tw-flex tw-items-center tw-justify-center tw-w-full">
+          <div className="tw-flex tw-gap-10 tw-items-center tw-justify-center tw-w-full">
             <div className="tw-px-4">
               <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
               <div className="maintitles tw-uppercase">{general.APP_NAME}</div>
@@ -18,6 +19,7 @@ export class Home extends Component {
                 <button className="tw-px-4 tw-py-2 tw-mt-4 tw-text-lg tw-text-accent tw-border-accent tw-duration-200 tw-transform tw-border tw-rounded-lg hover:tw-bg-purple-100 focus:tw-outline-none">{farming.START_FARMING}</button>
               </a>
             </div>
+            <UniswapWidget />
           </div>
         </div>
       </div>
