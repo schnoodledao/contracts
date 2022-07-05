@@ -67,8 +67,8 @@ Multiple submissions can be eligible for a bounty. This is not a competition. If
 
 Note that if your submission is rejected, you can still see it in the activity feed on the task.
 
-### ⏳ Payment Timelocks
+### ⏳ Payment Timelock
 
-All tasks have the option for the bounty payment to be timelocked. A user can decide the length of this timelock any time up to the moment they get paid. A timelock will attract a compound interest rate (Timelock Reward Rate, or TRR) which is generally agreed by the community. This value is maintained in Discord as the [Timelock Reward statistic](https://schnoodle.io/trr). Its purpose is to reward loyal contributors to Schnoodle. Generally, this will be higher at the top of a bull market, and lower at the bottom of a bear market, as determined by the community.
+All tasks have the option for the bounty payment to be timelocked. A user can decide the length of this timelock any time up to the moment they get paid. A timelock will attract a monthly compound interest rate (Timelock Reward Rate, or TRR) which is generally agreed by the community. This value is maintained in Discord as the [Timelock Reward statistic](https://schnoodle.io/trr). Its purpose is to reward loyal contributors to Schnoodle, and to mitigate risk-reward ratio (RRR). Generally, it will be higher at the top of a bull market, and lower at the bottom of a bear market, as determined by the community.
 
 A timelock requires the user to lock their tokens in a farm on our [Moon Farming Platform](../features/mfp.md) using the Autofarm (AF) feature, a feature we consider to be cool AF. All you have to do to autofarm is enable this on your Ethereum account via the [Schnoodle X DApp](https://schnoodle.farm) specifying the vesting and unbonding blocks which must total the agreed timelock. All subsequent transfers to your account will then autofarm with these parameters including the payment for your task. You may disable AF after payment if you do not wish subsequent transfers to be autofarmed.
