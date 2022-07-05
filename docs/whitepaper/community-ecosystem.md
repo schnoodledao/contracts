@@ -88,6 +88,8 @@ Based on the above, when determining the bounty, we will apply the following rat
 
 All tasks have the option for the bounty payment to be timelocked. A user can decide the length of this timelock any time up to the moment they get paid. A timelock will attract a monthly compound interest rate (Timelock Reward Rate, or TRR) which is generally agreed by the community. This value is maintained in Discord as the [Timelock Reward statistic](https://schnoodle.io/trr). Its purpose is to reward loyal contributors to Schnoodle, and to mitigate risk-reward ratio (RRR). Generally, it will be higher at the top of a bull market, and lower at the bottom of a bear market, as determined by the community. The following spreadsheet can be used to help you understand the payments you can expect based on different timelocks and SNOOD price action.
 
+Feel free to download the spreadsheet from Google Sheets link [here](https://docs.google.com/spreadsheets/d/1d4TLdJKmBm09ozmmNIkCvVhbvYttucHWT9Q5msATqEU/edit?usp=sharing), and follow the instructions given in the spreadsheet to experiment with different figures.
+
 {% embed url="https://docs.google.com/spreadsheets/d/1d4TLdJKmBm09ozmmNIkCvVhbvYttucHWT9Q5msATqEU/edit?usp=sharing" %}
 Bounty Calculator
 {% endembed %}
