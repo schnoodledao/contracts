@@ -26,15 +26,17 @@ As a DAO, our backlog is completely transparent, and everyone can be a part of i
 
 {% embed url="https://schnoodle.community" %}
 
-All tasks should be self-explanatory with a full description including acceptance criteria which will be used to determine if the task is complete. Each task may be discussed in its own thread on Discord by pressing the **Discuss** button on the task. If you apply to work on a task, then that application may also be discussed in a private Discord thread with the reviewer(s) by pressing the **Discuss application** button.
+All tasks are typically open to the entire community. This generally means you must be a verified member of our [Discord server](https://discord.gg/schnoodle). All tasks typically come with a bounty reward, and anyone can apply to work on a task. However, it is important that you understand the rules around receiving payment, and the following sections outline this.
 
-However, there are certain types of task that have some special treatment, and this is indicated by tags. The following sections describe these types of task. Tasks with these tasks will make it clear in their descriptions that special rules apply.
+### ✅ Task Prerequisites
+
+Before work commences on a task (before its status goes to _In Progress_), the description should be clear and complete, and should include acceptance criteria (usually a set of bullet points) which will be used to determine if the task is complete. Each task may be discussed in its own thread on Discord by pressing the **Discuss** button on the task, and each application may be discussed in a private Discord thread with the reviewer(s) by pressing the **Discuss application** button. Feel free to use this to discuss the task prerequisites with the team, and also while working on the task.
 
 ### 🎭 Social Media
 
-Social media of course forms a huge part of our community, and the community should be actively involved in this. For this reason, we use [Dework](https://app.dework.xyz/schnoodle-dao-1) to allow community members to submit social media posts for the team to then post on our various channels including [Twitter](https://twitter.com/SchnoodleDAO), [Instagram](https://instagram.com/schnoodledao), [Facebook](https://www.facebook.com/SchnoodleDAO), [LinkedIn](https://www.linkedin.com/company/schnoodle), and [TikTok](https://www.tiktok.com/@schnoodledao).
+Social media of course forms a huge part of our community, and the community should be actively involved in this. For this reason, any tasks in the [Marketing Space](https://schnoodle.io/marketing) with the `social media` tag may be completed by community members to submit social media posts for the team to then post on our various channels including [Twitter](https://twitter.com/SchnoodleDAO), [Instagram](https://instagram.com/schnoodledao), [Facebook](https://www.facebook.com/SchnoodleDAO), [LinkedIn](https://www.linkedin.com/company/schnoodle), and [TikTok](https://www.tiktok.com/@schnoodledao).
 
-Please look out for tasks in the [Marketing project of Dework](https://app.dework.xyz/schnoodle-dao-1/marketing-63) where you can make a submission in return for a bounty reward. The following information should be referred to when making submissions.
+The following information should be referred to when making submissions.
 
 #### Acceptance Criteria
 
@@ -65,8 +67,8 @@ Multiple submissions can be eligible for a bounty. This is not a competition. If
 
 Note that if your submission is rejected, you can still see it in the activity feed on the task.
 
-### ⏳ Timelocked
+### ⏳ Payment Timelocks
 
-These tasks typically have a high bounty, and represent work that is critical to the operations of Schnoodle. Anyone may participate in such work, but because of the level of reward, they require active engagement with the team, and may even require you to _become_ a member of the team, whether temporarily or long-term.
+All tasks have the option for the bounty payment to be timelocked. A user can decide the length of this timelock any time up to the moment they get paid. A timelock will attract a compound interest rate (Timelock Reward Rate, or TRR) which is generally agreed by the community. This value is maintained in Discord as the [Timelock Reward statistic](https://schnoodle.io/trr). Its purpose is to reward loyal contributors to Schnoodle. Generally, this will be higher at the top of a bull market, and lower at the bottom of a bear market, as determined by the community.
 
-As a result of this, these tasks require SNOOD payments to be timelocked for a period after payment. The timelock period will be in the task description. The nature of this timelock is a requirement for the user to lock their tokens in a farm on our [Moon Farming Platform](../features/mfp.md) using the Autofarm (AF) feature, a feature we consider to be cool AF. All you have to do to autofarm is enable this on your Ethereum account via the Schnoodle X DApp specifying the vesting and unbonding blocks. All subsequent transfers to your account will then autofarm with these parameters including the payment for your task.
+A timelock requires the user to lock their tokens in a farm on our [Moon Farming Platform](../features/mfp.md) using the Autofarm (AF) feature, a feature we consider to be cool AF. All you have to do to autofarm is enable this on your Ethereum account via the [Schnoodle X DApp](https://schnoodle.farm) specifying the vesting and unbonding blocks which must total the agreed timelock. All subsequent transfers to your account will then autofarm with these parameters including the payment for your task. You may disable AF after payment if you do not wish subsequent transfers to be autofarmed.

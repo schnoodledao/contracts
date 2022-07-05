@@ -6,6 +6,10 @@ coverY: 0
 
 # 🌔 Moon Farming Platform
 
+Go straight to the Schnoodle X DApp via the link below to farm your tokens, or read on to find out more about how it works.
+
+{% embed url="https://schnoodle.farm" %}
+
 Schnoodle's revolutionary new yield farming concept, introduced in SchnoodleV7, is more advanced than any other yield farming platform in existence, which is why we call it the Moon Farming Platform (MFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
 
 * **Autoregulator:** This ensures that yield farming rewards are apportioned based on the ratio of each yield farmer's cumulative deposit to the cumulative total of all deposits. This provides the gross reward, which autoregulates via the `_newCumulativeTotal` function called on each farming activity.
@@ -56,5 +60,5 @@ Those who are observant will notice that there is always a part of every reward 
 However, this was seen as an opportunity to add an automatic deflationary component into the code. This unused part of the reward is instead burned. Therefore, every withdrawal results in a portion of the circulating supply being burned which are effectively tokens that originated from sells. This feature is called the ASS Burner (bum intended).
 
 {% hint style="info" %}
-An important point to note with the NFP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
+An important point to note with the MFP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
 {% endhint %}
