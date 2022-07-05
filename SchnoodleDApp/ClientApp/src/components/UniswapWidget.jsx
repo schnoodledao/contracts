@@ -1,11 +1,24 @@
 import React, { Component } from 'react';
+import SchnoodleV1 from '../contracts/SchnoodleV1.json';
+import { handleError, getWeb3 } from '../helpers';
 
 import { SwapWidget } from '@uniswap/widgets/dist/index.js';
 import '@uniswap/widgets/dist/fonts.css';
 
-const uniswapTokenList = 'https://tokens.coingecko.com/uniswap/all.json';
-const nativeToken = 'NATIVE';
-const schnoodleToken = '0xD45740aB9ec920bEdBD9BAb2E863519E59731941';
+const tokenListByNetworkId = {
+  1: 'https://tokens.coingecko.com/uniswap/all.json',
+  4: [
+    {
+      name: 'Schnoodle',
+      address: '0x7fe82717005a38271653Dd3075602A47c4e53002',
+      symbol: 'SNOOD',
+      decimals: 18,
+      chainId: 4,
+      logoURI:
+        'https://assets.coingecko.com/coins/images/17458/thumb/r    c8zDq3.png?1654497345',
+    },
+  ],
+};
 
 const theme = {
   primary: '#ffffff',
@@ -24,15 +37,39 @@ const theme = {
 export default class UniswapWidget extends Component {
   static displayName = UniswapWidget.name;
 
+  constructor(props) {
+  super(props);
+
+  this.state = {};
+
+  this.handleError = handleError.bind(this);
+  }
+
+  async componentDidMount() {
+    try {
+      const web3 = await getWeb3();
+      const networkId = await web3.eth.net.getId();
+      const schnoodleTokenAddress = SchnoodleV1.networks[networkId].address;
+      const tokenList = tokenListByNetworkId[networkId];
+
+      this.setState({
+        schnoodleTokenAddress,
+        tokenList,
+        provider: web3.currentProvider,
+      });
+    } catch (err) {
+      this.handleError(err);
+    }
+  }
+
   render() {
     return (
       <div className="Uniswap">
         <SwapWidget
-          provider={window.ethereum || window.web3.currentProvider}
+          provider={this.state.provider}
           jsonRpcEndpoint={process.env.REACT_APP_ETH_URL}
-          tokenList={uniswapTokenList}
-          defaultInputTokenAddress={nativeToken}
-          defaultOutputTokenAddress={schnoodleToken}
+          tokenList={this.state.tokenList}
+          defaultOutputTokenAddress={this.state.schnoodleTokenAddress}
           defaultInputAmount={1}
           theme={theme}
         />
