@@ -10,6 +10,8 @@ The Schnoodle Community Ecosystem (SCE) is comprehensive, but is structured in s
 
 ![The Schnoodle Community Ecosystem structure](../.gitbook/assets/community-ecosystem.svg)
 
+## 🛸 Technology
+
 A significant component of the SCE is our core technology which comprises the Foundations of Schnoodle formed from the two Cornerstones of Schnoodle and the Four Pillars of Schnoodle. On top of our core technology, we build the Utilities of Schnoodle. You can read about all of this in the following sections:
 
 {% content-ref url="foundations-of-schnoodle.md" %}
