@@ -10,7 +10,7 @@ const tokenListByNetworkId = {
   4: [
     {
       name: 'Schnoodle',
-      address: '0x7fe82717005a38271653Dd3075602A47c4e53002',
+      address: SchnoodleV1.networks['4'].address,
       symbol: 'SNOOD',
       decimals: 18,
       chainId: 4,
