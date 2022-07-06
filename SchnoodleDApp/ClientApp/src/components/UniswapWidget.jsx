@@ -24,13 +24,13 @@ const theme = {
   primary: '#ffffff',
   secondary: '#adb5bd',
   container: '#8a5af5',
-  module: '#170C36',
+  module: '#170c36',
   interactive: '#f3cc30',
   accent: '#b42a6f',
   outline: '#ced4da',
-  dialog: '#1d1249',
+  dialog: '#170c36',
   error: '#dc3545',
-  success: '#8d38d7',
+  success: '#8a5af5',
   fontFamily: 'Verdana',
 };
 
