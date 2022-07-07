@@ -12,13 +12,17 @@ Most DAOs use a governance voting system such as Snapshot for the community to v
 
 ### 🔏 Trustless Autonomous Governance (TAG)
 
-The first Cornerstone of Schnoodle is its Trustless Autonomous Governance (TAG) system which is a smart contract ecosystem that consists of a complex array of decentralised services, smart contracts, and oracles for fully trustless and autonomous interaction with and upgradeability of the SNOOD ERC-777 token contract.
+The first Cornerstone of Schnoodle is its Trustless Autonomous Governance (TAG) system which is a smart contract ecosystem that consists of a complex array of decentralised services, smart contracts, and an oracle for fully trustless and autonomous interaction with and upgradeability of the SNOOD ERC-777 token contract.
 
 <details>
 
 <summary>Overview</summary>
 
-Schnoodle solves the multisig problem by fully automating the execution of gasless (zero cost) off-chain votes via an on-chain oracle that uses simple economic game theory to execute the change. After the vote takes place off-chain (using [Snapshot](https://snapshot.org/#/schnoodle.eth)), an escalation game-based oracle ([Reality.eth](https://realit.io)) then accepts a bond from a member of the community to confirm the outcome of the vote. If their interpretation of the vote aligns with the actual vote, then after 24 hours, the vote will be finalised. If it does not, then someone else can double the bond and state a different interpretation of the vote. And so on and so forth. The bond is returned to those who stated the outcome of the vote correctly. In practice, if the off-chain vote is 'Yes' for example, the first person to set the bond will generally also interpret it as 'Yes' and the vote will be finalised on this basis. It's unusual for this not to happen for standard changes that the majority of people vote for, but this is a safeguard to ensure the integrity of the off-chain voting system when executing it automatically on-chain.
+Schnoodle removes the need for manual multisig execution by fully automating the on-chain execution of off-chain votes via an oracle that uses simple economic game theory.
+
+After the off-chain (gasless) voting takes place (using [Snapshot](https://snapshot.org/#/schnoodle.eth)), an escalation game-based oracle ([Reality.eth](https://realit.io)) then accepts a bond from a member of the community to confirm the outcome of the vote. If their interpretation of the vote aligns with the actual vote, then after 24 hours, the vote will be finalised. If it does not, then someone else can double the bond and state a different interpretation of the vote. And so on and so forth.
+
+The bond is returned to those who stated the outcome of the vote correctly. In practice, if the off-chain vote is 'Yes', for example, the first person to set the bond will generally also interpret it as 'Yes' and the vote will be finalised on that basis. It's unusual for this not to happen for standard changes that the majority of people vote for, but this is a safeguard to ensure the integrity of the off-chain voting system when executing it automatically on-chain.
 
 Finally, after a 24-hour cool-off period, the change may be executed by anyone.
 
