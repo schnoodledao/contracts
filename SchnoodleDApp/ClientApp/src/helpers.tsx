@@ -8,30 +8,30 @@ const bigInt = require('big-integer');
 let decimals = 0;
 let averageBlockTime = 0;
 
-export async function initializeHelpers(decimalsValue) {
+export function getWeb3() {
+  return (window as any).ethereum
+    ? new Web3((window as any).ethereum) // Modern DApp browsers
+    : (window as any).web3
+      ? (window as any).web3 // Legacy DApp browsers
+      : new Web3(new Web3.providers.HttpProvider('http://localhost:8545')); // Fallback to localhost; use dev console port by default
+}
+
+export async function initializeHelpers(decimalsValue: number) {
   decimals = decimalsValue;
   await setAverageBlockTime();
 }
 
 //#region Web3 Helpers
 
-export function getWeb3() {
-  return window.ethereum
-    ? new Web3(window.ethereum) // Modern DApp browsers
-    : window.web3
-      ? window.web3 // Legacy DApp browsers
-      : new Web3(new Web3.providers.HttpProvider('http://localhost:8545')); // Fallback to localhost; use dev console port by default
-}
-
-export function scaleDownPrecise(amount, precision) {
+export function scaleDownPrecise(amount: number, precision: number) {
   return (amount / 10 ** decimals).toPrecision(precision);
 }
 
-export function scaleDownUnits(amount) {
+export function scaleDownUnits(amount: number) {
   return bigInt(amount).divide(10 ** decimals).toJSNumber();
 }
 
-export function scaleUpUnits(amount) {
+export function scaleUpUnits(amount: number) {
   return bigInt(amount).multiply(10 ** decimals);
 }
 
@@ -52,19 +52,19 @@ export async function setAverageBlockTime() {
   }
 }
 
-export function calculateApy(amount, reward, blocks) {
+export function calculateApy(amount: number, reward: any, blocks: number) {
   return reward === '0' ? 0 : Number((reward / amount / (blocks / blocksPerDuration({ years: 1 })) * 100).toPrecision(2));
 }
 
-export function blocksPerDuration(duration) {
+export function blocksPerDuration(duration: {[key: string]: number}) {
   return averageBlockTime === 0 ? 0 : Math.floor(Duration.fromObject(duration).as('seconds') / averageBlockTime);
 }
 
-export function blocksDurationText(blocks) {
+export function blocksDurationText(blocks: number) {
   return (blocks !== 0 ? 'Approximately ' : '') + humanizeDuration(Duration.fromObject({ seconds: blocks * averageBlockTime }), { largest: 2, round: true });
 }
 
-export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNumber) {
+export function getPendingBlocks(vestingBlocks: any, startBlockNumber: any, currentBlockNumber: number) {
   return Math.max(0, parseInt(startBlockNumber) + parseInt(vestingBlocks) - currentBlockNumber);
 }
 
@@ -72,7 +72,7 @@ export function getPendingBlocks(vestingBlocks, startBlockNumber, currentBlockNu
 
 //#region General Helpers
 
-export function handleError(err, display = true) {
+export function handleError(err: any, setStatus: any, display = true) {
   console.error(err);
 
   if (display) {
@@ -82,20 +82,20 @@ export function handleError(err, display = true) {
       message = JSON.parse(err.message.match('(?<=\')(?:\\\\.|[^\'\\\\])*(?=\')')).value.data.message;
     }
 
-    this.setState({ success: false, message });
+    setStatus({ success: false, message });
     alert(message);
   }
 }
 
-export function createEnum(values) {
-  const enumObject = {};
+export function createEnum(values: any) {
+  const enumObject: any = {};
   for (const val of values) {
     enumObject[val] = val;
   }
   return Object.freeze(enumObject);
 }
 
-export function sleep(milliseconds) {
+export function sleep(milliseconds: number) {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
 
