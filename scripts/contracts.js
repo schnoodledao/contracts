@@ -31,7 +31,7 @@ module.exports = {
     }
   },
 
-  appendList: (contractName, network) => {
+  appendList: function (contractName, network) {
     const { appendFile } = require('fs');
     const os = require("os");
 
@@ -42,7 +42,11 @@ module.exports = {
     });
   },
 
-  isProduction: (network) => {
+  isProduction: function (network) {
     return ['mainnet', 'bsc'].includes(network);
+  },
+
+  isNew: function (network) {
+    return ['develop', 'chapel', 'bsc'].includes(network);
   }
 }

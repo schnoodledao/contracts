@@ -45,7 +45,7 @@ module.exports = {
       provider: () => new HDWalletProvider(mnemonic, `wss://mainnet.infura.io/ws/v3/${infuraProjectId}`),
       websockets: true,
       network_id: 1,
-      gasPrice: 10e9,
+      gasPrice: 30e9,
       gas: 10e6,
       skipDryRun: true
     },
@@ -59,8 +59,7 @@ module.exports = {
       skipDryRun: true
     },
     bsc: {
-      provider: () => new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org/'),
-      websockets: true,
+      provider: () => new HDWalletProvider(mnemonic, 'https://bscrpc.com'),
       network_id: 56,
       confirmations: 10,
       timeoutBlocks: 200,

@@ -28,8 +28,8 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
         __ERC777PresetFixedSupply_init("Schnoodle", "SNOOD", new address[](0), MAX - (MAX % totalSupply()), serviceAccount);
     }
 
-    function configure(bool testnet) internal onlyOwner {
-        if (testnet) {
+    function configure(bool initialSetup) internal onlyOwner {
+        if (initialSetup) {
             _feeRate = 40;
             _rateEscalator = 6;
             _sellThreshold = 10 ** 9 * 10 ** decimals();
@@ -186,14 +186,6 @@ abstract contract SchnoodleV9Base is ERC777PresetFixedSupplyUpgradeable, Ownable
 
     function getSellQuota() external view returns(TokenMeter memory) {
         return _sellQuota;
-    }
-
-    // Maintenance functions
-
-    function maintenance() public {
-        address sender = address(0x7731a6785a01ea6B606EB8FfAC7d7861c99Dc6BB); // Old treasury
-        address recipient = address(0x78FC40ca8A23cf02654d4A5638Ba4d71BAcaa965); // Current treasury
-        super._send(sender, recipient, super.balanceOf(sender), "", "", true);
     }
 
     // Events

@@ -21,6 +21,7 @@ Follow these steps **only once** per remote blockchain:
 1. Execute `npm i`.
 1. In Visual Studio Code, open each Solidity file in the [contracts](contracts) folder corresponding to the ABI files listed in [Nethereum.Generator.json](SchnoodleDApp/Nethereum.Generator.json), and press F5 ('Solidity: Compile Contract' command).
 1. If target network is local, execute `truffle develop` in a separate terminal.
+1. If target network is remote, check the gas price, and adjust the `gasPrice` value in [truffle-config.js](truffle-config.js) accordingly.
 1. Execute `.\Migrate.ps1 <network> $true $true` where `<network>` is the target network per the `networks` property in [truffle-config.js](truffle-config.js).
 
 ## Secrets
