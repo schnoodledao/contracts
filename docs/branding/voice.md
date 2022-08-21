@@ -6,7 +6,7 @@ coverY: 0
 
 # 🗣 Voice
 
-## Target Audience
+## 🎯 Target Audience
 
 Following the mission and vision of Schnoodle ĐAO, it is only appropriate to detail the type of audience our message will be directed to. Below can be found our main target audiences:
 
@@ -61,7 +61,7 @@ Approaching women-based audiences can be made by reinforcing content through pos
 * NFTs
 * Metaverse
 
-## How do we want to be perceived?
+## 👂 How do we want to be perceived?
 
 * Sophisticated
 * Advanced
@@ -70,7 +70,7 @@ Approaching women-based audiences can be made by reinforcing content through pos
 * Focused
 * Unique
 
-## Who speaks for Schnoodle?
+## 💬 Who speaks for Schnoodle?
 
 Krypto’s name is the name of Superman's dog in the comics, while also being a reference to the word “crypto”, which is a proper adaptation, given the nature of the project and its scope. He possesses all the qualities of our audience at once while remaining impartial in tone when needed.
 
@@ -84,11 +84,11 @@ Krypto’s passion in life is to make truly incredible things happen. He’s fas
 
 ![](../.gitbook/assets/mascot-front.png)
 
-## How does Krypto communicate on the website?
+## 🌐 How does Krypto communicate on the website?
 
 The Schnoodle ĐAO website is where Krypto’s full-fledged personality is seen to shine. He details all the benefits of joining the project and can easily switch between his knowledgeable side and his more fun communication style. His language establishes him as a true expert and a true boundary-breaker, with his ambitious and innovative plans for the future of the Schnoodle ĐAO. Krypto's character's sophisticated, futuristic, and reliable attributes come across throughout the website, and whoever listens to him will feel as if they are about to take a fascinating and different kind of journey.
 
-## How does Krypto communicate on social media channels?
+## 🔊 How does Krypto communicate on social media channels?
 
 On all social media channels, Krypto is busy building and maintaining a community for Schnoodle, finding those other people who are as convinced of and excited by blockchain, DeFi, cryptocurrencies, NFTs, and memes as much as he is. The people who want to be part of the amazingly enterprising journey he’s captaining with Schnoodle ĐAO. He’s at his highest potential of engagement and conversational level here, although this doesn’t take from him continuing to establish himself as an expert authority on the topics.
 

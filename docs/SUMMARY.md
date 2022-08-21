@@ -4,14 +4,14 @@
 
 * [🐶 Overview](README.md)
 * [🫂 Community Ecosystem](whitepaper/community-ecosystem.md)
-* [🏛 Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md)
+* [🏗 Foundations of Schnoodle](whitepaper/foundations-of-schnoodle.md)
 * [🏭 Utilities of Schnoodle](whitepaper/utilities-of-schnoodle.md)
-* [🏗 Architecture](whitepaper/architecture.md)
+* [🏰 Architecture](whitepaper/architecture.md)
 
 ## 📚 Features
 
 * [💰 Price Support Mechanism](features/psm.md)
-* [🏆 Moon Farming Platform](features/mfp.md)
+* [🌔 Moon Farming Platform](features/mfp.md)
 
 ## 🎭 Branding
 

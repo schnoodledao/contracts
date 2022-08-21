@@ -1,9 +1,14 @@
 ---
+description: Like yield farming, but on the moon
 cover: ../.gitbook/assets/moon-banner.jpg
 coverY: 0
 ---
 
-# 🏆 Moon Farming Platform
+# 🌔 Moon Farming Platform
+
+Go straight to the Schnoodle X DApp via the link below to farm your tokens, or read on to find out more about how it works.
+
+{% embed url="https://schnoodle.farm" %}
 
 Schnoodle's revolutionary new yield farming concept, introduced in SchnoodleV7, is more advanced than any other yield farming platform in existence, which is why we call it the Moon Farming Platform (MFP). It comprises a DApp where holders may farm their tokens, and a smart contract backend which uses our bespoke Automated Superyield System (ASS) technology. Our amazing ASS is based on three subcomponents:
 
@@ -14,7 +19,7 @@ Schnoodle's revolutionary new yield farming concept, introduced in SchnoodleV7, 
 
 ![MFP Components](../.gitbook/assets/mfp-components.svg)
 
-## Automated Superyield System
+## 💎 Automated Superyield System
 
 The Vestiplier uses a highly sophisticated algorithm that calculates the yield farming reward using the weighted average of the product of the vesting blocks and unbonding blocks (the lock product) where the deposit amount is the weight. The delta between the resultant lock product weighted average (LPWA) and any given deposit's lock product value is then used in a logistic formula to form a sigmoid curve which is used to calculate a multiplier between 0 and 1. This algorithm ensures that the sigmoid curve is always centred around a fair weighted lock product value to provide a fair multiplier which is then applied to the gross reward to give a final net reward that the yield farmer receives upon withdrawing their deposit.
 
@@ -48,12 +53,12 @@ The following sources were used to assist in building the Vestiplier algorithm:
 * [How To Calculate Weighted Average](https://www.indeed.com/career-advice/career-development/how-to-calculate-weighted-average)
 {% endhint %}
 
-## ASS Burner
+## 🔥 ASS Burner
 
 Those who are observant will notice that there is always a part of every reward that is never used, that is, the difference between the gross reward and net reward. One option of course is to leave this in the farming fund to contribute to the gross reward of remaining yield farmers (the Autoregulator). But this would of course permanently result in a proportion of the farming fund never being used until the last farmer withdraws.
 
 However, this was seen as an opportunity to add an automatic deflationary component into the code. This unused part of the reward is instead burned. Therefore, every withdrawal results in a portion of the circulating supply being burned which are effectively tokens that originated from sells. This feature is called the ASS Burner (bum intended).
 
 {% hint style="info" %}
-An important point to note with the NFP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
+An important point to note with the MFP is that yield farming does not reduce your total account balance. Deposited tokens remain in the same account and are therefore subject to BARK rewards as normal. So, not only do you earn farming rewards on your deposited tokens, you also earn BARK rewards!
 {% endhint %}

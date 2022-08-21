@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 /**
  * Source: https://github.com/mattdesl/three-vignette-background
  * License: MIT

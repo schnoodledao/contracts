@@ -6,7 +6,7 @@ coverY: 0
 
 # 🧰 Toolkit
 
-## Logo
+## ♾️ Logo
 
 The Schnoodle logo is an "S" stylised in a way that makes one think of the infinity symbol. It contains two dog paw prints as a nod to Schnoodle's origins a dog-themed meme coin.
 
@@ -56,7 +56,7 @@ All versions of the logo may be upscaled proportionally to any size. Downscaling
 
 ![Examples how not to use the logo](../.gitbook/assets/logo-how-not-to-use.svg)
 
-## Colours
+## 🎨 Colours
 
 The Schnoodle brand colours have been intentionally chosen, so they should not be replaced or altered.
 
@@ -68,7 +68,7 @@ The gradients shown below are composed of the brand colours, and are the only gr
 
 ![Colour swatches](../.gitbook/assets/brand-colour-swatches.svg) ![Colour gradients](../.gitbook/assets/brand-colour-gradients.svg)
 
-## Typography
+## ✍️ Typography
 
 The primary font for titles and **bold** texts for the Schnoodle brand is Archivo, in the style called Black.
 
@@ -82,7 +82,7 @@ The font used for all other texts is Montserrat.
 Montserrat - Google Fonts
 {% endembed %}
 
-## Visuals
+## 👀 Visuals
 
 The Schnoodle brand visuals have been prepared with the idea to go precisely in line with how the brand wants to be perceived.
 
@@ -96,7 +96,7 @@ Icons and illustrations can be supplied by brand designers and illustrators when
 
 ![](../.gitbook/assets/brand-example-1.jpg) ![](../.gitbook/assets/brand-example-2.jpg) ![Examples of usage](../.gitbook/assets/brand-example-3.jpg) ![](../.gitbook/assets/brand-example-4.jpg)
 
-## Mascot
+## 🐶 Mascot
 
 The Schnoodle mascot is called Krypto, and the following template can be used for various angles when placing on memes or other visuals.
 

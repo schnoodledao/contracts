@@ -7,11 +7,14 @@ const SchnoodleGovernance = artifacts.require(contractName);
 const Schnoodle = artifacts.require("SchnoodleV1");
 
 module.exports = async function (deployer, network) {
-  if (network === 'develop') return;
+  const { isProduction } = require('../scripts/contracts.js');
+  if (!isProduction(network)) return;
 
   const { governance } = require(`../migrations-config.${network}.js`);
 
   await deployer.deploy(SchnoodleGovernance, governance.minDelay, governance.proposers, governance.executors);
+
+  // Transfer ownership of contract to SchnoodleGovernance
   const schnoodleGovernanceAddress = (await SchnoodleGovernance.deployed()).address;
   await admin.transferProxyAdminOwnership(schnoodleGovernanceAddress);
   await (await Schnoodle.deployed()).transferOwnership(schnoodleGovernanceAddress);

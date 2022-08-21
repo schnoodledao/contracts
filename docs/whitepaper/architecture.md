@@ -4,9 +4,9 @@ cover: ../.gitbook/assets/brand-background.jpg
 coverY: 0
 ---
 
-# 🏗 Architecture
+# 🏰 Architecture
 
-## Technical Backstory
+## 📑 Technical Backstory
 
 Schnoodle was incepted by our founder and CTO, Jason Payne, who decided to build Schnoodle because he was disillusioned with cryptocurrencies being released one after the other that had no real innovation, and were mostly copypasta smart contract clones of other tokens with a few tweaks. And those tweaks were typically convoluted layers of abstraction that usually benefited the dev team rather than the community.
 
@@ -38,11 +38,11 @@ _**OK, sounds like a gravy chain, but dogs love gravy on their food, right?**_
 
 Perhaps, but Crufts dogs like gourmet. So, Neo got to work and set out to revise Morpheus' reflective algorithm stripping out any superfluous code, and ensuring that he would use the best techniques, practices and leading-edge technologies the blockchain space has to offer. And so, Schnoodle was born, like a cute little puppy ready to take on the world.
 
-## Smart Contracts
+## 🧾 Smart Contracts
 
 As already mentioned, existing RFI-based tokens and meme coins use archaic technologies and lazy or bad practices. And by 'archaic', that's unnecessarily using technology that's been superseded more than 6 months prior, and in blockchain, 6 months is of course a very long time.
 
-### ERC-777 Standard
+### 🛡️ ERC-777 Standard
 
 This is why Schnoodle uses the latest [OpenZeppelin Contracts](https://openzeppelin.com/contracts/) library which is a respected and established base on which any Ethereum smart contract worth its salt is based upon. Schnoodle goes a step further and leverages the preset contract `ERC777PresetFixedSupplyUpgradeable` which provides OOTB standard [ERC-777](https://eips.ethereum.org/EIPS/eip-777) functionality, namely _operators_ to send tokens on behalf of another address—contract or regular account—and send/receive _hooks_ to offer holders more control over their tokens.
 
@@ -54,7 +54,7 @@ And the way the contracts are deployed is as separate files under the same contr
 
 _**Great you're using the latest tech. What about the Schnoodle code itself?**_
 
-### Latest Solidity
+### 🏁 Latest Solidity
 
 Indeed. Well, the Schnoodle smart contract is compiled with the latest version of Solidity (0.8.14 at the time of writing the last update) to ensure maximum efficiency in terms of gas fees, and to eliminate any possibility of known bugs in the compiler potentially leaving the contract open to exploit (unlikely, but the safety of holders' funds is Schnoodle's absolute priority, no matter how remote any given risk is). By way of a simple example, take the RFI code that SAFEMOON and HOKK both use:
 
@@ -72,7 +72,7 @@ Same outcome, way simpler, far less gas. And quite simply, beautiful, lean and c
 
 _**That sounds much better for holders. What about the algorithm itself?**_
 
-### BARK Algorithm
+### 🐕‍🦺 BARK Algorithm
 
 The RFI algorithm comprises a lot of complex proprietary code which obfuscates the business logic. The RFI algorithm stores two sets of balances for holders: their true balance (`_tOwned`), and their reflected balance (`_rOwned`). Neo's code strips away this complexity and instead leverages the existing provisions of the OpenZeppelin Contracts, namely the `ERC777Upgradeable` contract, to store all reflected balances.
 
@@ -116,7 +116,7 @@ This effectively results in a completely fair ecosystem where anyone holding SNO
 
 _**So, you launch Schnoodle and add liquidity to Uniswap. How do we know it won't be rugged?**_
 
-### Locked Liquidity
+### 🔐 Locked Liquidity
 
 Unlike other dog-themed and RFI-based coins, Schnoodle is intended to be trustless. This means that there is no requirement for you to trust that the team will do what it promises, as we ensure that everything is in the code. This ensures that you have the confidence to use Schnoodle without being concerned about promises not being fulfilled.
 
@@ -124,7 +124,7 @@ This is why we lock the initial liquidity for a minimum of 6 months in our `Schn
 
 Locked liquidity for 6 months gives peace of mind for holders, and eliminates ruggability even further.
 
-### Locked Pool Tokens
+### 🔏 Locked Pool Tokens
 
 Schnoodle uses the [EIP-1167](https://eips.ethereum.org/EIPS/eip-1167) standard to allow us to deploy as many `SchnoodleTimelock` contracts as required. These are known as minimal proxy contracts, or simply "clones", and are created through our `SchnoodleTimelockFactory` contract. As well as liquidity, we use these clones to lock the community reserves. This is an extremely gas-efficient method to create timelock contracts, which means we can lock tokens from the community pool later for individuals such as influencers who will help promote Schnoodle.
 
@@ -132,7 +132,7 @@ Schnoodle is now truly destined to be man's best friend.
 
 _**I'm sold. But you said something earlier about upgradeability...**_
 
-### Upgradeability
+### 🤖 Upgradeability
 
 Yes. Well, the idea is that the state of Schnoodle on launch is not the do all and end all. While we have gone to painstaking measures to ensure the initial Schnoodle smart contract has everything it needs to function as a fully tested production-ready coin, we have big plans for Schnoodle because we believe it will change the face of dog-themed tokens into something far greater than others trying to join the gravy train.
 
@@ -150,9 +150,9 @@ _**Wow; sounds great. But doesn't that mean you could change Schnoodle under the
 
 Well, that's where we've gone the extra mile (we're halfway to the moon right now, to be fair). Read on to learn about our Trustless Autonomous Governance (TAG) system.
 
-## Trustless Autonomous Governance
+## 👁️ Trustless Autonomous Governance
 
-### Timelocked Governance
+### ⏱️ Timelocked Governance
 
 Governance has been implemented into Schnoodle in the form of the `SchnoodleGovernance` smart contract which implements the ERC-165 standard.
 
@@ -176,7 +176,7 @@ Armed with the above, you can now view any pending upgrade before it is executed
 
 _**Cool. But you can still ignore us if we don't agree with an upgrade, right?**_
 
-### Multisig Protection
+### 🔑 Multisig Protection
 
 We would never do that. But as an additional layer of protection, we have added multisig to the process using [Gnosis Safe](https://gnosis-safe.io/). This means that upgrades cannot happen without multiple parties signing the change. Under the covers, `SchnoodleGovernance` is deployed with the proposer and executor of actions on the contract set to our [Gnosis Safe address](https://etherscan.io/address/0x81296C370418c4A9534599b5369A0c2913133599) where multiple signatory wallets are required for signing contract interactions such as upgrades. This protects you the holder against unilateral decisions or, even worse, leaked private keys like [what happened with PAID Network](https://youtu.be/v28yihfpP\_E).
 
@@ -203,7 +203,7 @@ _**I love it. But I still have a niggle. What if the whole team mutinies or goes
 
 Well, in reality, this would only happen if we were savagely attacked by flesh-eating dog zombies, and we turned into said dog zombies ourselves bent on destroying all humans. But we hear you. Enter, Schnoodle DAO...
 
-### Trustless Autonomy
+### 🚘 Trustless Autonomy
 
 Besides BARK, this is one of the key features of Schnoodle that makes it the first true DAO of the blockchain where upgrades are only permitted if the holders vote in favour of them. This is a fully automated process that really puts the 'A' in DAO.
 
