@@ -1,7 +1,7 @@
 import React from 'react';
 import { general, farming } from '../resources';
 
-const Home: React.FC<{}> = () => {
+const Home: React.FC = () => {
   return (
     <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
       <div className="h-noheader md:tw-flex">

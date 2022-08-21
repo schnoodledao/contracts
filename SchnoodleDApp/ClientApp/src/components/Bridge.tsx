@@ -4,65 +4,44 @@ import { general, bridge as resources } from '../resources';
 
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
-import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise, createEnum } from '../helpers';
+import { initializeHelpers, handleError, getWeb3, scaleUpUnits, scaleDownUnits, scaleDownPrecise } from '../helpers';
 import { IStatus } from '../types';
 
 // Third-party libraries
-import Web3 from 'web3';
 import Select, { components } from 'react-select';
 import { Puff } from 'react-loader-spinner';
-const bigInt = require('big-integer');
-
-const Network : {[key: string]: string} = createEnum(['ethereum', 'bsc']);
+import { Contract } from 'web3-eth-contract';
 // ReSharper restore InconsistentNaming
+
+enum Network {
+  Ethereum,
+  Bsc
+}
 
 // global fetch: false
 
 interface INetwork {
-  name: string,
+  name: string | undefined,
   id: number,
-  url: any,
   display: string,
   symbol: string,
-  rpcUrls: string[],
-  explorerUrls: string[],
-}
-
-interface INetworkData {
-  web3: Web3,
-  web3Eth: Web3,
-  web3Bsc: Web3,
-  schnoodleEthNetwork: any,
-  schnoodleEth: any,
-  schnoodleBscNetwork: any,
-  schnoodleBsc: any,
-  networkId: number,
-  schnoodle: any,
-  sourceNetwork?: string,
-  targetNetwork?: string,
-  selectedAddress: string,
-}
-
-interface IAmountData {
-  amount: number,
-  availableAmount: number,
+  rpcUrls: (string | undefined)[],
+  explorerUrls: (string | undefined)[],
 }
 
 const networks: {[key: string]: INetwork} =
 {
-  ethereum: {
+  [Network.Ethereum]: {
     name: process.env.REACT_APP_ETH_NET_NAME,
     id: Number(process.env.REACT_APP_ETH_NET_ID),
-    url: process.env.REACT_APP_ETH_URL,
     display: 'Ethereum',
     symbol: 'ETH',
     rpcUrls: [process.env.REACT_APP_ETH_RPC_URL],
     explorerUrls: [process.env.REACT_APP_ETH_EXPLORER_URL]
   },
-  bsc: {
+  [Network.Bsc]: {
     name: process.env.REACT_APP_BSC_NET_NAME,
     id: Number(process.env.REACT_APP_BSC_NET_ID),
-    url: process.env.REACT_APP_BSC_URL,
     display: 'BSC',
     symbol: 'BNB',
     rpcUrls: [process.env.REACT_APP_BSC_RPC_URL],
@@ -70,78 +49,159 @@ const networks: {[key: string]: INetwork} =
   }
 };
 
-const Bridge: React.FC<{}> = () => {
-  const [amounts, setAmounts] = useState<IAmountData>({availableAmount: 0, amount: 0});
-  const [busyMessage, setBusyMessage] = useState<string>();
-  const [fee, setFee] = useState<number>();
-  const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
-  const [networksData, setNetworksData] = useState<INetworkData>();
+function getNetworkById(id: number): INetwork {
+  return Object.values(networks).find(value => value.id === id) as INetwork;
+}
+
+const Bridge: React.FC = () => {
+  const [networkId, setNetworkId] = useState<number>();
+  const [schnoodle, setSchnoodle] = useState<Contract>();
+  const [fee, setFee] = useState<bigint>(0n);
+  const [availableAmount, setAvailableAmount] = useState<bigint>(0n);
+
+  const [amount, setAmount] = useState(0);
+  const [tokensPending, setTokensPending] = useState<bigint>(0n);
+  const [sourceNetworkId, setSourceNetworkId] = useState(Number(localStorage.getItem('sourceNetworkId')));
+  const [targetNetworkId, setTargetNetworkId] = useState(Number(localStorage.getItem('targetNetworkId')));
+
+  const [busySwap, setBusySwap] = useState(false);
+  const [busyReceive, setBusyReceive] = useState(false);
   const [serverError, setServerError] = useState<string>();
   const [serverStatus, setServerStatus] = useState(false);
-  const [status, setStatus] = useState<IStatus>();
-  const [tokensPending, setTokensPending] = useState<number>();
+  const [status, setStatus] = useState<IStatus>({ success: true, message: null });
+
+  const web3 = getWeb3();
+  const selectedAddress = web3.currentProvider.selectedAddress;
+
+  const changeSourceNetworkId = useCallback(async (e: any) => {
+    if (e.value === targetNetworkId || targetNetworkId === 0) {
+      setTargetNetworkId(Object.values(networks).find(value => value.id !== e.value)?.id ?? 0);
+    }
+
+    setSourceNetworkId(e.value);
+  }, [sourceNetworkId]);
+
+  const changeTargetNetworkId = useCallback(async (e: any) => {
+    if (e.value === sourceNetworkId || sourceNetworkId === 0) {
+      setSourceNetworkId(Object.values(networks).find(value => value.id !== e.value)?.id ?? 0);
+    }
+
+    setTargetNetworkId(e.value);
+  }, [targetNetworkId]);
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        const networkId = await web3.eth.net.getId();
+        const schnoodleNetwork = SchnoodleV1.networks[networkId];
+        const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleNetwork.address);
+
+        if (sourceNetworkId === 0) {
+          changeSourceNetworkId({ value: networkId });
+        }
+
+        await initializeHelpers(await schnoodle.methods.decimals().call());
+
+        setNetworkId(networkId);
+        setSchnoodle(schnoodle);
+      } catch (err) {
+        handleError(err as Error, setStatus);
+      }
+    }
+
+    initialize();
+  }, []);
+
+  window.ethereum.on('networkChanged', () => window.location.reload());
+
+  const getFee = async (networkId: number): Promise<bigint> => {
+    // Get the fee that must be paid before receiving tokens on the blockchain
+    const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetFee`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ networkId })
+      })).json();
+
+    if (json.status === 'ok') {
+      return BigInt(json.body.fee);
+    } else {
+      throw new Error(json.body.message);
+    }
+  };
 
   const getInfo = useCallback(async () => {
     let serverStatus = false;
+
     try {
       serverStatus = (await fetch(`${process.env.REACT_APP_SERVER_URL}/Alive`)).ok;
 
       if (serverStatus) {
-        const { selectedAddress, sourceNetwork, targetNetwork } = networksData;
-
-        if (selectedAddress && sourceNetwork && targetNetwork) {
+        if (selectedAddress) {
           const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetTokensPending`, {
             method: 'POST',
-            body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
+            body: JSON.stringify({ address: selectedAddress, sourceNetworkId, targetNetworkId })
           })).json();
 
           if (json.status === 'ok') {
-            setTokensPending(json.body.tokensPending);
+            setTokensPending(BigInt(json.body.tokensPending));
           } else {
             setServerError(json.body.message);
           }
         }
 
-        setFee(await getFee(targetNetwork));
+        setFee(await getFee(targetNetworkId));
       }
     } catch (err) {
-      handleError(err, setStatus, false);
+      handleError(err as Error, setStatus, false);
     }
+
     setServerStatus(serverStatus);
-  }, [networksData])
+
+    if (selectedAddress && schnoodle) {
+      setAvailableAmount(BigInt(await schnoodle.methods.unlockedBalanceOf(selectedAddress).call()));
+    }
+  }, [selectedAddress, sourceNetworkId, targetNetworkId, schnoodle]);
+
+  useEffect(() => {
+    getInfo();
+    const intervalId = setInterval(async () => {
+      await getInfo();
+    }, 10000);
+    return () => clearInterval(intervalId);
+  }, [getInfo]);
 
   //#region Handling
 
   const handleReceipt = (receipt: any) => {
     if (receipt.status) {
-      setStatus({success: true, message: receipt.transactionHash});
+      setStatus({ success: true, message: receipt.transactionHash });
     } else {
       throw new Error(receipt);
     }
-  }
+  };
   
   //#endregion
 
   const switchNetwork = async (network: INetwork, callback?: any) => {
     try {
       // Attempt to switch the user's wallet to the target network so they can receive their tokens
-      if (Number((window as any).ethereum.networkVersion) !== network.id) {
-        await (window as any).ethereum.request({
+      if (Number(window.ethereum.networkVersion) !== network.id) {
+        await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: networksData.web3.utils.toHex(network.id) }]
+          params: [{ chainId: web3.utils.toHex(network.id) }]
         });
       } else {
         await callback();
       }
-    } catch (err: any) {
+    } catch (err) {
       // This error code indicates that the chain has not been added to the wallet
-      if (err.code === 4902 || err.data?.originalError?.code === 4902) {
-        await (window as any).ethereum.request({
+      if ((err as any).code === 4902 || (err as any).data?.originalError?.code === 4902) {
+        await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [
             {
               chainName: network.name,
-              chainId: networksData.web3.utils.toHex(network.id),
+              chainId: web3.utils.toHex(network.id),
               nativeCurrency: {
                 name: network.symbol,
                 symbol: network.symbol,
@@ -156,47 +216,44 @@ const Bridge: React.FC<{}> = () => {
         throw err;
       }
     }
-  }
+  };
 
   const sendTokens = async () => {
     try {
-      setBusyMessage(resources.BUSY_MESSAGE_SWAP);
+      if (!schnoodle) return;
+      setBusySwap(true);
 
       // Ensure the user's wallet is set to the source network so they can send their tokens
-      await switchNetwork(networks[networksData.sourceNetwork], async () => {
-        const { schnoodle, selectedAddress, targetNetwork } = networksData;
-        const targetNetworkInfo = networks[targetNetwork];
+      await switchNetwork(getNetworkById(sourceNetworkId), async () => {
+        const targetNetwork = getNetworkById(targetNetworkId);
 
-        handleReceipt(await schnoodle.methods.sendTokens(targetNetworkInfo.id, scaleUpUnits(amounts.amount).toString()).send({ from: selectedAddress }));
+        handleReceipt(await schnoodle.methods.sendTokens(targetNetwork.id, scaleUpUnits(amount).toString()).send({ from: selectedAddress }));
 
         // Attempt to switch the user's wallet to the target network so they can receive their tokens
-        await switchNetwork(targetNetworkInfo);
+        await switchNetwork(targetNetwork);
       });
     } catch (err) {
-      handleError(err, setStatus);
+      handleError(err as Error, setStatus);
     }
 
-    setBusyMessage(null);
+    setBusySwap(false);
   }
 
   const receiveTokens = async () => {
     try {
-      setBusyMessage(resources.BUSY_MESSAGE_RECEIVE);
-
+      if (!schnoodle) return;
+      setBusyReceive(true);
 
       // Ensure the user's wallet is set to the target network so they can receive their tokens
-      await switchNetwork(networks[networksData.targetNetwork], async () => {
-        const { schnoodle, selectedAddress, sourceNetwork, targetNetwork } = networksData;
-
+      await switchNetwork(getNetworkById(targetNetworkId), async () => {
         // Pay the fee (suggested by the server) to the Schnoodle contract
-        const sourceNetworkId = networks[sourceNetwork].id;
-        const fee = await getFee(targetNetwork) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
+        const fee = await getFee(targetNetworkId) - await schnoodle.methods.feesPaid(selectedAddress, sourceNetworkId).call();
         if (fee > 0) handleReceipt(await schnoodle.methods.payFee(sourceNetworkId).send({ from: selectedAddress, value: fee }));
 
         // Request the server to call receiveTokens on the Schnoodle contract
         const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/ReceiveTokens`, {
           method: 'POST',
-          body: JSON.stringify({ address: selectedAddress, sourceNetwork, targetNetwork })
+          body: JSON.stringify({ address: selectedAddress, sourceNetworkId, targetNetworkId })
         })).json();
 
         if (json.status !== 'ok') {
@@ -206,179 +263,61 @@ const Bridge: React.FC<{}> = () => {
         }
       });
     } catch (err) {
-      handleError(err, setStatus);
+      handleError(err as Error, setStatus);
     }
 
-    setBusyMessage(null);
-  }
+    setBusyReceive(false);
+  };
 
   const swapNetworks = async () => {
-    const { sourceNetwork, targetNetwork } = networksData;
-    await changeSourceNetwork({ value: targetNetwork });
-    await changeTargetNetwork({ value: sourceNetwork });
-  }
+    setSourceNetworkId(targetNetworkId);
+    setTargetNetworkId(sourceNetworkId);
+  };
 
-  const changeNetwork = useCallback(async (network: string, counterNetwork: string, networkKey: string, counterNetworkKey: string) => {
-    localStorage.setItem(networkKey, network);
-    if (network === counterNetwork) {
-      await changeNetwork(Object.keys(networks).find(key => key !== counterNetwork), network, counterNetworkKey, networkKey);
-    } else {
-      setNetworksData({...networksData, [networkKey]: network, [counterNetworkKey]: counterNetwork});
+  useEffect(() => {
+    if (sourceNetworkId > 0) {
+      localStorage.setItem('sourceNetworkId', sourceNetworkId.toString());
     }
-  }, [networksData])
+  }, [sourceNetworkId]);
 
-  const changeSourceNetwork = async (e: any) => {
-    await changeNetwork(e.value, networksData.targetNetwork, 'sourceNetwork', 'targetNetwork');
-  }
-
-  const changeTargetNetwork = useCallback(async (e: any) => {
-    await changeNetwork(e.value, networksData.sourceNetwork, 'targetNetwork', 'sourceNetwork');
-  }, [changeNetwork, networksData?.sourceNetwork])
-
-  const getFee = async (network: string) => {
-    // Get the fee that must be paid before receiving tokens on the blockchain
-    const json = await (await fetch(`${process.env.REACT_APP_SERVER_URL}/GetFee`, {
-      method: 'POST',
-      body: JSON.stringify({ network })
-    })).json();
-
-    if (json.status === 'ok') {
-      return json.body.fee;
-    } else {
-      throw new Error(json.body.message);
+  useEffect(() => {
+    if (targetNetworkId > 0) {
+      localStorage.setItem('targetNetworkId', targetNetworkId.toString());
     }
-  }
+  }, [targetNetworkId]);
+
+  const setAmountLimited = useCallback(async (value: number) => {
+    setAmount(Math.min(Math.floor(value), sourceNetworkId === networkId ? scaleDownUnits(availableAmount) : Infinity));
+  }, [sourceNetworkId, networkId, availableAmount]);
 
   const updateAmount = async (e: any) => {
     const value = Number(e.target.value);
     if (!Number.isInteger(value)) return;
-    setAmount(value);
-  }
-
-  const setAmount = useCallback(async (amount: number) => {
-    setAmounts(amounts => ({...amounts, amount: Math.min(Math.floor(amount), scaleDownUnits(amounts.availableAmount))}));
-  }, [])
+    setAmountLimited(value);
+  };
 
   useEffect(() => {
-    try {
-      const initialize = async () => {
-        // Web3
-        const web3 = await getWeb3();
-        const web3Eth = new Web3(networks[Network.ethereum].url);
-        const web3Bsc = new Web3(new Web3.providers.HttpProvider(networks[Network.bsc].url));
-        const networkId = await web3.eth.net.getId();
-        const selectedAddress = web3.currentProvider.selectedAddress;
-
-        // Smart contracts
-        const schnoodleEthNetwork = (SchnoodleV1.networks as any)[networks[Network.ethereum].id];
-        const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi as any, schnoodleEthNetwork && schnoodleEthNetwork.address);
-        const schnoodleBscNetwork = (SchnoodleV1.networks as any)[networks[Network.bsc].id];
-        const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi as any, schnoodleBscNetwork && schnoodleBscNetwork.address);
-
-        let schnoodle, sourceNetwork: string;
-        switch (networkId.toString()) {
-          case process.env.REACT_APP_ETH_NET_ID:
-            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleEthNetwork && schnoodleEthNetwork.address);
-            sourceNetwork = Network.ethereum;
-            break;
-          case process.env.REACT_APP_BSC_NET_ID:
-            schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleBscNetwork && schnoodleBscNetwork.address);
-            sourceNetwork = Network.bsc;
-            break;
-          default:
-            throw new Error(`Network ID ${networkId} unsupported.`);
-        }
-
-        await initializeHelpers(await schnoodle.methods.decimals().call());
-
-        (window as any).ethereum.on('networkChanged', () => window.location.reload());
-
-        setNetworksData({
-          web3,
-          web3Eth,
-          web3Bsc,
-          schnoodleEthNetwork,
-          schnoodleEth,
-          schnoodleBscNetwork,
-          schnoodleBsc,
-          networkId,
-          schnoodle,
-          sourceNetwork,
-          selectedAddress
-        });
-        setStatus({ success: false, message: null});
-      }
-      initialize();
-    } catch (err) {
-      handleError(err, setStatus);
-    }
-  }, [])
+    setAmountLimited(Number(localStorage.getItem(`Network${sourceNetworkId}Amount`)));
+  }, [setAmountLimited, sourceNetworkId]);
 
   useEffect(() => {
-    if (amounts.amount) {
-      localStorage.setItem(`${networksData.sourceNetwork}Amount`, amounts.amount.toString());
-    }
-  }, [amounts.amount, networksData?.sourceNetwork])
-
-  useEffect(() => {
-    if (amounts.availableAmount) {
-      setAmount(parseInt(localStorage.getItem(`${networksData.sourceNetwork}Amount`)));
-    }
-  }, [amounts.availableAmount, networksData?.sourceNetwork, setAmount])
-
-  useEffect(() => {
-    const updateAvailableAmount = async () => {
-      const { sourceNetwork, schnoodleEth, schnoodleBsc, selectedAddress } = networksData;
-      let schnoodleSource;
-
-      switch (sourceNetwork) {
-        case Network.ethereum:
-          schnoodleSource = schnoodleEth;
-          break;
-        case Network.bsc:
-          schnoodleSource = schnoodleBsc;
-          break;
-        default:
-          throw new Error(`Source network ${sourceNetwork} unsupported.`);
-      }
-      const availableAmount = bigInt(await schnoodleSource.methods.unlockedBalanceOf(selectedAddress).call());
-      setAmounts(amounts => ({...amounts, availableAmount: availableAmount }));
-    }
-
-    if (networksData) {
-      if (!networksData.targetNetwork) {
-        changeTargetNetwork({ value: localStorage.getItem('targetNetwork') ?? networksData.sourceNetwork });
-        const getInfoIntervalId = setInterval(async () => await getInfo(), 10000);
-        setGetInfoIntervalId(getInfoIntervalId);
-      } else {
-        updateAvailableAmount();
-        getInfo();
-      }
-    }
-
-    return () => {
-      clearInterval(getInfoIntervalId as NodeJS.Timer);
-    }
-  }, [networksData, getInfoIntervalId, changeTargetNetwork, getInfo])
+    localStorage.setItem(`Network${sourceNetworkId}Amount`, amount.toString());
+  }, [amount, sourceNetworkId]);
 
   const styles = {
     valueContainer: () => ({ width: 120, border: 'none', display: 'grid' }),
     singleValue: (base: any) => ({ ...base, color: 'white', }),
-    control: (base: any, state: any) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
-    dropdownIndicator: (base: any, state: any) => ({ ...base, color: 'white' }),
+    control: (base: any) => ({ ...base, background: '#070c39', borderRadius: '0.5em', borderWidth: '0px', boxShadow: '0px 12px 7px rgba(0, 0, 0, 0.34)' }),
+    dropdownIndicator: (base: any) => ({ ...base, color: 'white' }),
     menuList: (base: any) => ({ ...base, background: '#070c39', color: 'white' }),
     option: (provided: any, state: any) => ({ ...provided, color: state.isSelected || state.isFocused ? '#dc20bc' : 'white', background: '#070c39' })
   }
 
-  const { Option, SingleValue } = components;  
+  const { Option, SingleValue }: any = components;  
 
-  const option = (props: any) => (
+  const option: React.FC = (props: any) => (
     <div className="tw-flex">
-      <img
-        src={`/assets/img/svg/${props.data.value}.svg`}
-        className="tw-w-1/6 tw-mx-1 plustop"
-        alt={props.data.label}
-      />
+      <img className="tw-w-1/6 tw-mx-1 plustop" src={`/assets/img/svg/${props.data.label.toLowerCase()}.svg`} alt={props.data.label} />
       <span className="plustop">{props.data.label}</span>
     </div>
   );
@@ -395,9 +334,15 @@ const Bridge: React.FC<{}> = () => {
     </Option>
   );
 
-  let bridge;
+  const busyMessage = busySwap
+    ? resources.BUSY_MESSAGE_SWAP
+    : busyReceive
+      ? resources.BUSY_MESSAGE_RECEIVE
+      : null;
 
-  if (!networksData || !networksData.web3 || !serverStatus) {
+  let bridge: any;
+
+  if (!web3 || !serverStatus) {
     return (
       <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
         <div className="h-noheader md:tw-flex">
@@ -406,7 +351,8 @@ const Bridge: React.FC<{}> = () => {
               <img className="tw-object-cover tw-w-1/2 tw-my-10" src="../../assets/img/svg/logo-schnoodle.svg" alt="Schnoodle logo" />
               <div className="maintitles tw-uppercase">{resources.BRIDGE}</div>
               <div className="tw-w-16 tw-h-1 tw-my-3 tw-bg-secondary md:tw-my-6" />
-              <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{general.LOADING}<span>.</span><span>.</span><span>.</span></p>
+              <p className="tw-text-4xl tw-font-light tw-leading-normal tw-text-accent md:tw-text-5xl loading">{
+                general.LOADING}<span>.</span><span>.</span><span>.</span></p>
               <div className="tw-px-4 tw-mt-4 fakebtn">&nbsp;</div>
             </div>
           </div>
@@ -415,11 +361,8 @@ const Bridge: React.FC<{}> = () => {
     );
   }
 
-  const { networkId, sourceNetwork, targetNetwork, selectedAddress } = networksData;
-  const { amount } = amounts;
-
-  const availableAmount = scaleDownUnits(amounts.availableAmount);
-  const sourceNetworks = Object.keys(networks).map((key) => { return { value: key, label: networks[key].display } });
+  const displayAvailableAmount = scaleDownUnits(availableAmount);
+  const sourceNetworks = Object.keys(networks).map((key) => { return { value: networks[key].id, label: networks[key].display } });
   const targetNetworks = sourceNetworks;
 
   if (busyMessage) {
@@ -443,7 +386,7 @@ const Bridge: React.FC<{}> = () => {
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
                   <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                  <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetwork)} onChange={changeSourceNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                    <Select styles={styles} options={sourceNetworks} value={sourceNetworks.find(network => network.value === sourceNetworkId)} onChange={changeSourceNetworkId} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
             </div>
@@ -457,37 +400,41 @@ const Bridge: React.FC<{}> = () => {
               <div className="tw-flex tw-items-center tw-justify-between lg:tw-p-4 tw-bg-neutral tw-rounded-lg">
                 <div>
                   <div className="purplefade tw-uppercase tw-text-xl tw-font-bold">{token}</div>
-                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetwork)} onChange={changeTargetNetwork} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
+                  <Select styles={styles} options={targetNetworks} value={targetNetworks.find(network => network.value === targetNetworkId)} onChange={changeTargetNetworkId} components={{ SingleValue: singleValue, Option: singleOption, IndicatorSeparator: () => null }} />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        {tokensPending > 0
+        {tokensPending > 0n
           ? <div className="tw-col-span-7 lg:bg-color lg:tw-px-14 tw-px-4 tw-rounded-xl tw-bg-transparent tw-flex tw-items-center tw-flex-col tw-justify-center tw-text-2xl lg:tw-text-3xl">
               <div className="tw-text-center tw-mb-14 tw-leading-normal">
                 <span className="tw-text-accent tw-font-medium">{scaleDownUnits(tokensPending)}</span> <span className="tw-text-white tw-font-bold">{`${token} ready to be received`}</span>
               </div>
-              <button type="button" onClick={receiveTokens} className="tw-w-1/2 keybtn maxbtn">{networks[targetNetwork].id === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
+              <button type="button" onClick={receiveTokens} className="tw-w-1/2 keybtn maxbtn">{targetNetworkId === networkId ? 'RECEIVE' : 'SWITCH NETWORK'}</button>
             </div>
           : <div className="md:tw-m-auto md:tw-w-1/2">
-              <div className="tw-relative tw-mb-10 tw-flex">
-                <input type="number" min="1" max={availableAmount} placeholder={`Max: ${availableAmount}`} value={amount || ''} onChange={updateAmount} className="depositinput" />
-                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount / 4)}>25%</button>
-                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount / 2)}>50%</button>
-                <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmount(availableAmount * 3 / 4)}>75%</button>
-                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount / 4)}>&frac14;</button>
-                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount / 2)}>&frac12;</button>
-                <button type="button" className="dwmbtn hidelg" onClick={() => setAmount(availableAmount * 3 / 4)}>&frac34;</button>
-                <button type="button" className="maxbtn" onClick={() => setAmount(availableAmount)}>Max</button>
-              </div>
-              <button type="button" onClick={sendTokens} disabled={amount === 0} className="keybtn maxbtn tw-w-full">{networks[sourceNetwork].id === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
+              <form>
+                <fieldset disabled={sourceNetworkId !== networkId || selectedAddress == null}>
+                  <div className="tw-relative tw-mb-10 tw-flex">
+                    <input type="number" min="1" max={displayAvailableAmount} placeholder={`Max: ${sourceNetworkId === networkId ? displayAvailableAmount : 'Switch Network'}`} value={amount || ''} onChange={updateAmount} className="depositinput" />
+                    <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmountLimited(displayAvailableAmount / 4)}>25%</button>
+                    <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmountLimited(displayAvailableAmount / 2)}>50%</button>
+                    <button type="button" className="dwmbtn hidesmmd" onClick={() => setAmountLimited(displayAvailableAmount * 3 / 4)}>75%</button>
+                    <button type="button" className="dwmbtn hidelg" onClick={() => setAmountLimited(displayAvailableAmount / 4)}>&frac14;</button>
+                    <button type="button" className="dwmbtn hidelg" onClick={() => setAmountLimited(displayAvailableAmount / 2)}>&frac12;</button>
+                    <button type="button" className="dwmbtn hidelg" onClick={() => setAmountLimited(displayAvailableAmount * 3 / 4)}>&frac34;</button>
+                    <button type="button" className="maxbtn" onClick={() => setAmountLimited(displayAvailableAmount)}>Max</button>
+                  </div>
+                </fieldset>
+              </form>
+              <button type="button" onClick={sendTokens} disabled={amount === 0 && sourceNetworkId === networkId} className="keybtn maxbtn tw-w-full">{sourceNetworkId === networkId ? 'SEND' : 'SWITCH NETWORK'}</button>
               <div className="tw-col-span-5 tw-rounded-13 lg:tw-pt-10 lg:tw-bg-violet-900 tw-bg-transparent tw-relative">
-                {fee &&
+                {fee > 0n &&
                   <div>
                     <div className="tw-flex tw-justify-center purplefade tw-mb-7">
                       Receive Fee:
-                      <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${networks[targetNetwork].symbol}`}</div>
+                      <div className="tw-ml-1.5 tw-text-white">{`${scaleDownPrecise(fee, 6)} ${getNetworkById(targetNetworkId).symbol}`}</div>
                     </div>
                   </div>
                 }
@@ -502,22 +449,18 @@ const Bridge: React.FC<{}> = () => {
   }
 
   return (
-    <form className="tw-justify-center tw-mx-auto">
-      <fieldset disabled={selectedAddress == null}>
-        <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900 tw-form-control">
-          <div className="tw-flex-grow">
-            <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
-              <div className="lg:tw-grid tw-block">
-                <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
-                {bridge}
-              </div>
-            </div>
+    <div className="tw-font-Roboto tw-flex tw-flex-col tw-min-h-screen tw-bg-violet-900">
+      <div className="tw-flex-grow">
+        <div className="tw-mx-auto tw-w-full lg:tw-max-w-5xl tw-px-4">
+          <div className="lg:tw-grid tw-block">
+            <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.BRIDGE}</h1>
+            {bridge}
           </div>
-
-          <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
         </div>
-      </fieldset>
-    </form>
+      </div>
+
+      <footer className="tw-hidden lg:tw-block tw-bg-violet-900 tw-h-9" />
+    </div>
   );
 }
 

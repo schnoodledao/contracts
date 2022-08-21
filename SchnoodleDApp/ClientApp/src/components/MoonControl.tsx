@@ -5,203 +5,214 @@ import { general, farming as resources } from '../resources';
 import SchnoodleV1 from '../contracts/SchnoodleV1.json';
 import Schnoodle from '../contracts/SchnoodleV9.json';
 import SchnoodleFarmingV1 from '../contracts/SchnoodleFarmingV1.json';
-import SchnoodleFarmingV2 from '../contracts/SchnoodleFarmingV2.json';
+import SchnoodleFarming from '../contracts/SchnoodleFarmingV2.json';
 import { initializeHelpers, handleError, getWeb3, scaleDownUnits, calculateApy, blocksPerDuration, blocksDurationText, getPendingBlocks } from '../helpers';
-import { IHelpData } from '../types';
+import { IStatus, IHelpData } from '../types';
 
 // Third-party libraries
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import chroma from 'chroma-js';
 import Globe from 'react-globe.gl';
-const bigInt = require('big-integer');
+import { Contract } from 'web3-eth-contract';
+import { GlobeMethods } from 'react-globe.gl/dist/react-globe.gl.d';
 // ReSharper restore InconsistentNaming
 
-interface IContractData {
-    web3: any,
-    schnoodle: any,
-    schnoodleFarming: any,
+interface ICoordinates {
+  lat: number,
+  lng: number,
 }
 
-interface IFactorData {
-    factoredVestingBlocks: number,
-    factoredVestingBlocksMax: number
-    factoredUnbondingBlocks: number,
-    factoredUnbondingBlocksMax: number,
-    vestingBlocksFactor: number,
-    unbondingBlocksFactor: number,
+interface IDeposit {
+  id: number,
+  amount: bigint,
+  blockNumber: number,
+  vestingBlocks: number,
+  unbondingBlocks: number,
+  multiplier: number,
 }
 
-interface IFarmData {
-    lat?: number,
-    lng?: number,
-    radius?: number,
-    altitude?: number,
-    pointColor?: any,
-    depositInfo?: any,
-    ringColor?: any,
-    maxRadius?: number,
-    propagationSpeed?: number,
-    repeatPeriod?: number,
+interface IFarm {
+  account: string,
+  deposit: IDeposit,
+  created: Date,
+  reward: bigint,
+  vestimatedApy: number,
 }
 
-interface IStatus {
-  success: boolean,
-  message: string,
-}
-
-interface IDepositInfo {
-    account: string,
-    deposit: {
-        amount: number
-    },
-    reward: number,
-    vestimatedApy: number,
+interface IFarmVisual {
+  lat: number,
+  lng: number,
+  radius: number | undefined,
+  altitude: number | undefined,
+  pointColor: string | undefined,
+  farm: IFarm | undefined,
+  ringColor: string,
+  maxRadius: number,
+  propagationSpeed: number,
+  repeatPeriod: number,
 }
 
 interface IArc {
-    startLat: number,
-    startLng: number,
-    endLat: number,
-    endLng: number,
+  startLat: number,
+  startLng: number,
+  endLat: number,
+  endLng: number,
 }
 
-const MoonControl: React.FC<{}> = () => {
-  const [globeClickPoint, setGlobeClickPoint] = useState(null);
-  const [farmingOverview, setFarmingOverview] = useState([]);
-  const [contracts, setContracts] = useState<IContractData>();
-  const [getInfoIntervalId, setGetInfoIntervalId] = useState<NodeJS.Timer | undefined>();
+const MoonControl: React.FC = () => {
+  const [initialized, setInitialized] = useState(false);
+  const [schnoodle, setSchnoodle] = useState<Contract>();
+  const [schnoodleFarming, setSchnoodleFarming] = useState<Contract>();
+  const [blockNumber, setBlockNumber] = useState(0);
+
+  const [globeClickPoint, setGlobeClickPoint] = useState<ICoordinates>({ lat: 0, lng: 0 });
+  const [farmingOverview, setFarmingOverview] = useState<IFarm[]>([]);
   const [openModal, setOpenHelpModal] = useState(false);
-  const [arcsData, setArcsData] = useState<IArc[]>();
-  const [farmData, setFarmData] = useState<IFarmData[]>();
-  const [status, setStatus] = useState<IStatus>();
-  const [factors, setFactors] = useState<IFactorData>();
-  const [blockNumber, setBlockNumber] = useState<number>();
-  const [helpInfo, setHelpInfo] = useState<IHelpData>();
-  const globeRef = useRef(null);
-  const globeEl = useRef(null);
+  const [arcsData, setArcsData] = useState<IArc[]>([]);
+  const [farmData, setFarmData] = useState<IFarmVisual[]>([]);
+
+  const [vestingBlocksFactor, setVestingBlocksFactor] = useState(0);
+  const [unbondingBlocksFactor, setUnbondingBlocksFactor] = useState(0);
+
+  const [helpData, setHelpData] = useState<IHelpData>();
+  const [status, setStatus] = useState<IStatus>({ success: true, message: null });
+
+  const web3 = getWeb3();
+
+  const globeRef = useRef<HTMLDivElement>(null);
+  const globeEl = useRef<GlobeMethods | undefined>();
   const ARC_REL_LEN = 0.4;
   const FLIGHT_TIME = 1000;
 
   useEffect(() => {
-    try {
-      const fetchData =  async () => {
-        const web3 = await getWeb3();
-        const schnoodleDeployedNetwork = (SchnoodleV1 as any).networks[await web3.eth.net.getId()];
-        const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleDeployedNetwork && schnoodleDeployedNetwork.address);
-        const schnoodleFarmingDeployedNetwork = (SchnoodleFarmingV1 as any).networks[await web3.eth.net.getId()];
-        const schnoodleFarming = new web3.eth.Contract(SchnoodleFarmingV2.abi, schnoodleFarmingDeployedNetwork && schnoodleFarmingDeployedNetwork.address);
+    const initialize = async () => {
+      try {
+        const networkId = await web3.eth.net.getId();
+        const schnoodleNetwork = SchnoodleV1.networks[networkId];
+        const schnoodle = new web3.eth.Contract(Schnoodle.abi, schnoodleNetwork.address);
+        const schnoodleFarmingNetwork = SchnoodleFarmingV1.networks[networkId];
+        const schnoodleFarming = new web3.eth.Contract(SchnoodleFarming.abi, schnoodleFarmingNetwork.address);
+
         await initializeHelpers(await schnoodle.methods.decimals().call());
 
-        (window as any).ethereum.on('networkChanged', () => window.location.reload());
-        setContracts({ web3, schnoodle, schnoodleFarming });
+        setSchnoodle(schnoodle);
+        setSchnoodleFarming(schnoodleFarming);
+      } catch (err) {
+        handleError(err as Error, setStatus);
       }
-      fetchData();
-      // Set up the moon globe
-
-    } catch (err) {
-      handleError(err, setStatus);
     }
-    return () => {
-      clearInterval(getInfoIntervalId);
-    }
-  }, [getInfoIntervalId])
 
-  const getPendingBlocksAmount = useCallback((depositInfo: any) => {
-    return getPendingBlocks(Math.floor(depositInfo.deposit.vestingBlocks * factors?.vestingBlocksFactor), depositInfo.deposit.blockNumber, blockNumber);
-  }, [blockNumber, factors?.vestingBlocksFactor])
+    initialize();
+  }, [])
 
-  const getInfo = useCallback(async () => {
-    const { web3, schnoodleFarming } = contracts;
-
-    const blockNumber = await web3.eth.getBlockNumber();
-    setBlockNumber(blockNumber);
-      
-    const fetchData = async () => {
-      const farmingStartBlock = 13761101;
-      const topicsOld = [web3.utils.sha3('Deposited(address,uint256,uint256)')];
-      const topicsNew = [web3.utils.sha3('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)')];
-      const depositedEvents = (await getPastLogs(topicsOld, farmingStartBlock, blockNumber)).concat(await getPastLogs(topicsNew, farmingStartBlock, blockNumber));
-
-      // Divide and conquer strategy to address query timeouts when getting past events (https://ethereum.stackexchange.com/a/84836/63971)
-      async function getPastLogs(topics: any, fromBlock: any, toBlock: any) {
-        try {
-          return await web3.eth.getPastLogs({ fromBlock, toBlock, address: schnoodleFarming._address, topics });
-        } catch (err) {
-          const midBlock = (fromBlock + toBlock) >> 1;
-          const arr1: any = await getPastLogs(topics, fromBlock, midBlock);
-          const arr2: any = await getPastLogs(topics, midBlock + 1, toBlock);
-          return [...arr1, ...arr2];
-        }
-      }
-
-      const accounts = [...new Set<string>(await depositedEvents.map((depositedEvent: any) => `0x${depositedEvent.topics[1].slice(26)}`))];
-      const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
-      const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
-
-      const farmingOverview = (await Promise.all(accounts.map(async (account) => {
-        return (await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward: any) => {
-          try {
-            const deposit = depositReward.deposit;
-            const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
-            const vestimatedApy = calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber);
-            const created = new Date((await web3.eth.getBlock(deposit.blockNumber)).timestamp * 1000);
-            return { account: account, deposit: deposit, created: created, reward: bigInt(depositReward.reward), vestimatedApy: vestimatedApy };
-          } catch (err) {
-            if ((err as any).message.includes('deposit not found')) {
-              return null;
-            }
-            throw err;
-          }
-        }))).filter(depositInfo => depositInfo != null);
-      }))).flat();
-
-      const farmCounts: {[key: string]: number} = {};
-      const farmData = farmingOverview.map((depositInfo: IDepositInfo) => {
-        // Track the number of farms for each account so that they can be clustered around each other on the Metamoon
-        if (!(depositInfo.account in farmCounts)) {
-          farmCounts[depositInfo.account] = 0;
-        } else {
-          farmCounts[depositInfo.account]++;
-        }
-
-        const farmPoint = getFarmPoint(depositInfo.account);
-
-        return {
-          lat: farmPoint.lat + 2 * (farmCounts[depositInfo.account] / 3),
-          lng: farmPoint.lng + 2 * (farmCounts[depositInfo.account] % 3),
-          radius: Math.log10(scaleDownUnits(depositInfo.deposit.amount)) ** 2 / 10 / (2 * Math.PI), // Base the radius on the order of magnitude of the deposit
-          altitude: depositInfo.reward / depositInfo.deposit.amount,
-          pointColor: depositInfo.account.slice(depositInfo.account.length - 6),
-          depositInfo: depositInfo,
-          ringColor: chroma.scale(['green', 'red'])(getPendingBlocksAmount(depositInfo) / blocksPerDuration({ months: 3 })).toString(),
-          maxRadius: Math.min(depositInfo.vestimatedApy, 20) / 2,
-          propagationSpeed: 1,
-          repeatPeriod: 700
-        }
-      });
-      setFactors(factors => ({...factors, vestingBlocksFactor: vestingBlocksFactor, unbondingBlocksFactor: unbondingBlocksFactor }));
-      setFarmData(farmData);
-      setFarmingOverview(farmingOverview);
-    };
-    fetchData();
-  }, [contracts, getPendingBlocksAmount]);
+  const getPendingBlocksAmount = useCallback((farm: IFarm): number => {
+    return getPendingBlocks(Math.floor(farm.deposit.vestingBlocks * vestingBlocksFactor), farm.deposit.blockNumber, blockNumber);
+  }, [blockNumber, vestingBlocksFactor])
 
   useEffect(() => {
-    if (contracts) {
-      getInfo();
-      const getInfoIntervalId = setInterval(async () => await getInfo(), 60000);
-      setGetInfoIntervalId(getInfoIntervalId);
-      const globeElControls = (globeEl as any).current.controls();
+    if (!initialized) {
+      (async function getInfo() {
+        if (!schnoodleFarming) return;
+        setInitialized(true);
+
+        const blockNumber = await web3.eth.getBlockNumber();
+        setBlockNumber(blockNumber);
+
+        const farmingStartBlock = Number(process.env.REACT_APP_FARMING_START_BLOCK);
+        const topicsOld = [web3.utils.sha3('Deposited(address,uint256,uint256)')];
+        const topicsNew = [web3.utils.sha3('Deposited(address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)')];
+        const depositedEvents = (await getPastLogs(topicsOld, farmingStartBlock, blockNumber)).concat(await getPastLogs(topicsNew, farmingStartBlock, blockNumber));
+
+        // Divide and conquer strategy to address query timeouts when getting past events (https://ethereum.stackexchange.com/a/84836/63971)
+        async function getPastLogs(topics: any, fromBlock: any, toBlock: any) {
+          try {
+            if (!schnoodleFarming) return;
+            return await web3.eth.getPastLogs({ fromBlock, toBlock, address: schnoodleFarming['_address'], topics });
+          } catch (err) {
+            const midBlock = (fromBlock + toBlock) >> 1;
+            const arr1: any = await getPastLogs(topics, fromBlock, midBlock);
+            const arr2: any = await getPastLogs(topics, midBlock + 1, toBlock);
+            return [...arr1, ...arr2];
+          }
+        }
+
+        const accounts = [...new Set<string>(await depositedEvents.map((depositedEvent: any) => `0x${depositedEvent.topics[1].slice(26)}`))];
+        const vestingBlocksFactor = await schnoodleFarming.methods.getVestingBlocksFactor().call() / 1000;
+        const unbondingBlocksFactor = await schnoodleFarming.methods.getUnbondingBlocksFactor().call() / 1000;
+
+        const farmingOverview = (await Promise.all(accounts.map(async (account) => {
+          return (await Promise.all((await schnoodleFarming.methods.getFarmingSummary(account).call()).map(async (depositReward: any): Promise<IFarm | null> => {
+            try {
+              const deposit = depositReward.deposit;
+              const rewardBlock = Math.max(parseInt(deposit.blockNumber) + parseInt(deposit.vestingBlocks), blockNumber);
+              return {
+                account,
+                deposit: {
+                  id: Number(deposit.id),
+                  amount: BigInt(deposit.amount),
+                  blockNumber: Number(deposit.blockNumber),
+                  vestingBlocks: Number(deposit.vestingBlocks),
+                  unbondingBlocks: Number(deposit.unbondingBlocks),
+                  multiplier: Number(deposit.id)
+                },
+                created: new Date((await web3.eth.getBlock(deposit.blockNumber)).timestamp * 1000),
+                reward: BigInt(depositReward.reward),
+                vestimatedApy: calculateApy(deposit.amount, await schnoodleFarming.methods.getReward(account, deposit.id, rewardBlock).call(), rewardBlock - deposit.blockNumber)
+              };
+            } catch (err) {
+              if ((err as any).message.includes('deposit not found')) {
+                return null;
+              }
+              throw err;
+            }
+          }))).filter(farm => farm != null);
+        }))).flat();
+
+        const farmCounts: { [key: string]: number } = {};
+        const farmData = farmingOverview.map((farm: IFarm) => {
+          // Track the number of farms for each account so that they can be clustered around each other on the Metamoon
+          if (!(farm.account in farmCounts)) {
+            farmCounts[farm.account] = 0;
+          } else {
+            farmCounts[farm.account]++;
+          }
+
+          const farmPoint = getFarmPoint(farm.account);
+
+          return {
+            lat: farmPoint.lat + 2 * (farmCounts[farm.account] / 3),
+            lng: farmPoint.lng + 2 * (farmCounts[farm.account] % 3),
+            radius: Math.log10(scaleDownUnits(farm.deposit.amount)) ** 2 / 10 / (2 * Math.PI), // Base the radius on the order of magnitude of the deposit
+            altitude: Number(farm.reward / farm.deposit.amount),
+            pointColor: farm.account.slice(farm.account.length - 6),
+            farm,
+            ringColor: chroma.scale(['green', 'red'])(getPendingBlocksAmount(farm) / blocksPerDuration({ months: 3 })).toString(),
+            maxRadius: Math.min(farm.vestimatedApy, 20) / 2,
+            propagationSpeed: 1,
+            repeatPeriod: 700
+          }
+        });
+
+        setVestingBlocksFactor(vestingBlocksFactor);
+        setUnbondingBlocksFactor(unbondingBlocksFactor);
+        setFarmData(farmData);
+        setFarmingOverview(farmingOverview);
+        setTimeout(getInfo, 10000);
+      })();
+    }
+  }, [schnoodle, schnoodleFarming, getPendingBlocksAmount]);
+
+  useEffect(() => {
+      const globeElControls = globeEl.current?.controls() as any;
       globeElControls.autoRotate = true;
       globeElControls.autoRotateSpeed = 0.5;
-    }
-  }, [contracts, getInfo])
+    }, [])
 
   //#region Help functions
 
   const openHelpModal = (content: any) => {
-    setHelpInfo({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS });
+    setHelpData({ helpTitle: content.TITLE, helpInfo: content.INFO, helpDetails: content.DETAILS });
     setOpenHelpModal(true);
   }
 
@@ -215,21 +226,21 @@ const MoonControl: React.FC<{}> = () => {
 
   const renderMoonFarms = () => {
     return (
-      <div ref={globeRef as any} className="tw-justify-center tw-flex">
+      <div ref={globeRef} className="tw-justify-center tw-flex">
         <Globe
-          ref={globeEl as any}
+          ref={globeEl}
           globeImageUrl="../../assets/img/jpg/lunar_surface.jpg"
           bumpImageUrl="../../assets/img/jpg/lunar_bumpmap.jpg"
           backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
 
-          pointsData={farmData as any}
+          pointsData={farmData}
           pointRadius="radius"
           pointAltitude="altitude"
           pointColor="pointColor"
-          pointLabel={(d: any) => farmInfo(d.depositInfo)}
-          onPointClick={(point: any) => { onPointClick(point) }}
-          onPointRightClick={() => (globeEl as any).current.controls().autoRotate = false}
-          onPointHover={() => (globeEl as any).current.controls().autoRotate = true}
+          pointLabel={(d: any) => farmInfo(d.farm)}
+          onPointClick={(point) => { onPointClick(point) }}
+          onPointRightClick={() => (globeEl.current?.controls() as any).autoRotate = false}
+          onPointHover={() => (globeEl.current?.controls() as any).autoRotate = true}
 
           ringsData={farmData?.slice(0)}
           ringColor="ringColor"
@@ -249,22 +260,22 @@ const MoonControl: React.FC<{}> = () => {
     );
   }
 
-  const farmInfo = (depositInfo: any) => {
-    const pendingBlocks = getPendingBlocksAmount(depositInfo);
-    const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * factors.unbondingBlocksFactor);
+  const farmInfo = (farm: IFarm) => {
+    const pendingBlocks = getPendingBlocksAmount(farm);
+    const unbondingBlocks = Math.floor(farm.deposit.unbondingBlocks * unbondingBlocksFactor);
 
     return ReactDOMServer.renderToString((
       <div className="moontip">
         <span>{`${resources.MOON_FARM_DATA}`}</span>
-        <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${depositInfo.account}`}</p>
-        <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${depositInfo.deposit.blockNumber}`}</p>
-        <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${depositInfo.created.toLocaleString()}`}</p>
-        <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(depositInfo.deposit.amount).toLocaleString()}`}</p>
+        <p>{`${resources.FARMING_OVERVIEW.ACCOUNT.TITLE}: ${farm.account}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE}: ${farm.deposit.blockNumber}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.CREATED.TITLE}: ${farm.created.toLocaleString()}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE}: ${scaleDownUnits(farm.deposit.amount).toLocaleString()}`}</p>
         <p>{`${resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE}: ${pendingBlocks} (${blocksDurationText(pendingBlocks)})`}</p>
         <p>{`${resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE}: ${unbondingBlocks} (${blocksDurationText(unbondingBlocks)})`}</p>
-        <p>{`${resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE}: ${depositInfo.vestimatedApy}`}%</p>
-        <p>{`${resources.FARMING_SUMMARY.MULTIPLIER.TITLE}: ${depositInfo.deposit.multiplier / 1000}`}</p>
-        <p>{`${resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE}: ${scaleDownUnits(depositInfo.reward).toLocaleString()}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE}: ${farm.vestimatedApy}`}%</p>
+        <p>{`${resources.FARMING_SUMMARY.MULTIPLIER.TITLE}: ${farm.deposit.multiplier / 1000}`}</p>
+        <p>{`${resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE}: ${scaleDownUnits(farm.reward).toLocaleString()}`}</p>
       </div>
     ));
   }
@@ -274,8 +285,8 @@ const MoonControl: React.FC<{}> = () => {
     (globeRef as any).current.scrollIntoView({ behavior: 'smooth' });
   }
 
-  const getFarmPoint = (account: string) => {
-    const addressParts = account.match(/.{1,22}/g);
+  const getFarmPoint = (account: string): ICoordinates => {
+    const addressParts = account.match(/.{1,22}/g) as RegExpMatchArray;
     const denominator = 2 ** 80;
     return { lat: 180 * parseInt(addressParts[0]) / denominator - 90, lng: 360 * (parseInt('0x' + addressParts[1])) / denominator - 180 };
   }
@@ -291,7 +302,18 @@ const MoonControl: React.FC<{}> = () => {
 
       // add and remove target rings
       setTimeout(() => {
-        const targetRing = { lat: point.lat, lng: point.lng, ringColor: 'orange', maxRadius: 5, propagationSpeed: 5, repeatPeriod: FLIGHT_TIME * ARC_REL_LEN / 3 };
+        const targetRing = {
+          lat: Number(point.lat),
+          lng: Number(point.lng),
+          ringColor: 'orange',
+          maxRadius: 5,
+          propagationSpeed: 5,
+          repeatPeriod: FLIGHT_TIME * ARC_REL_LEN / 3,
+          radius: undefined,
+          altitude: undefined,
+          pointColor: undefined,
+          farm: undefined
+        };
         setFarmData([...farmData, targetRing]);
         setTimeout(() => setFarmData(farmData.filter((r: any) => r !== targetRing)), FLIGHT_TIME);
       }, FLIGHT_TIME);
@@ -356,22 +378,22 @@ const MoonControl: React.FC<{}> = () => {
           </div>
         </div>
         <div role="rowgroup" className="text-secondary">
-          {farmingOverview.map((depositInfo: any) => {
-            const amount = scaleDownUnits(depositInfo.deposit.amount);
-            const pendingBlocks = getPendingBlocksAmount(depositInfo);
-            const unbondingBlocks = Math.floor(depositInfo.deposit.unbondingBlocks * factors.unbondingBlocksFactor);
+          {farmingOverview.map((farm: IFarm) => {
+            const amount = scaleDownUnits(farm.deposit.amount);
+            const pendingBlocks = getPendingBlocksAmount(farm);
+            const unbondingBlocks = Math.floor(farm.deposit.unbondingBlocks * unbondingBlocksFactor);
 
             return (
-              <div role="row" key={depositInfo.deposit.blockNumber}>
-                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} className="tw-border-l-0 tw-cursor-pointer wider" onClick={() => showMoonFarm(depositInfo.account)}>{depositInfo.account}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} className="tw-border-l-0 narrow">{depositInfo.deposit.blockNumber}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"} className="narrow" title={depositInfo.created.toLocaleTimeString()}>{depositInfo.created.toLocaleDateString()}</span>
+              <div role="row" key={farm.deposit.blockNumber}>
+                <span role="cell" data-header={resources.FARMING_OVERVIEW.ACCOUNT.TITLE + ":"} className="tw-border-l-0 tw-cursor-pointer wider" onClick={() => showMoonFarm(farm.account)}>{farm.account}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.BLOCK_NUMBER.TITLE + ":"} className="tw-border-l-0 narrow">{farm.deposit.blockNumber}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CREATED.TITLE + ":"} className="narrow" title={farm.created.toLocaleTimeString()}>{farm.created.toLocaleDateString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.DEPOSIT_AMOUNT.TITLE + ":"} >{amount.toLocaleString()}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.PENDING_BLOCKS.TITLE + ":"} className="narrow" title={blocksDurationText(pendingBlocks)}>{pendingBlocks}</span>
                 <span role="cell" data-header={resources.FARMING_SUMMARY.UNBONDING_BLOCKS.TITLE + ":"} className="narrow" title={blocksDurationText(unbondingBlocks)}>{unbondingBlocks}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} className="narrow">{depositInfo.vestimatedApy}%</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} className="narrow">{depositInfo.deposit.multiplier / 1000}</span>
-                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} className="wide">{scaleDownUnits(depositInfo.reward).toLocaleString()}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.VESTIMATED_APY.TITLE + ":"} className="narrow">{farm.vestimatedApy}%</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.MULTIPLIER.TITLE + ":"} className="narrow">{farm.deposit.multiplier / 1000}</span>
+                <span role="cell" data-header={resources.FARMING_SUMMARY.CURRENT_REWARD.TITLE + ":"} className="wide">{scaleDownUnits(farm.reward).toLocaleString()}</span>
               </div>
             );
           })}
@@ -383,7 +405,7 @@ const MoonControl: React.FC<{}> = () => {
   const subtitle1 = 'All moon farms.';
   const subtitle2 = 'One single view.';
 
-  if (!contracts?.web3) {
+  if (!web3) {
     return (
       <div className="tw-overflow-hidden tw-antialiased tw-font-roboto tw-mx-4">
         <div className="tw-h-noheader md:tw-flex">
@@ -408,23 +430,18 @@ const MoonControl: React.FC<{}> = () => {
             <div className="tw-text-base-200 tw-w-full">
               <h1 className="tw-mt-10 tw-mb-2 maintitles tw-leading-tight tw-text-center md:tw-text-left tw-uppercase">{resources.MOON_CONTROL}</h1>
               <p className="tw-my-2 tw-text-2xl md:tw-text-3xl tw-leading-tight titlefont tw-w-2/3 md:tw-w-full tw-m-auto md:tw-mx-0 textfade tw-from-green-400 tw-to-purple-500">
-                  <span className="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
-                  <span className="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
+                <span className="tw-block md:tw-hidden tw-text-center">{subtitle1}<br />{subtitle2}</span>
+                <span className="tw-hidden md:tw-block tw-text-left">{subtitle1} {subtitle2}</span>
               </p>
-
               {renderMoonFarms()}
-
               {farmingOverview.length > 0 &&
-                  <div className="summarytable">
+                <div className="summarytable">
                   <h3 className="tw-mb-5 headingfont sectiontitle tw-mt-10">{resources.FARMING_OVERVIEW.TITLE}</h3>
-                  <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">
-                      {renderFarmingOverviewTable(farmingOverview)}
-                  </div>
-                  </div>
+                  <div className="tw-overflow-x-auto tw-text-secondary tw-my-5 ">{renderFarmingOverviewTable(farmingOverview)}</div>
+                </div>
               }
-
               <div className="tw-my-5">
-                  <p style={{ color: status?.success ? 'green' : 'red' }}>{status?.message}</p>
+                <p style={{ color: status?.success ? 'green' : 'red' }}>{status?.message}</p>
               </div>
             </div>
           </div>
@@ -432,15 +449,16 @@ const MoonControl: React.FC<{}> = () => {
         
         <div>
           <Modal open={openModal} onClose={closeHelpModal} center classNames={{ overlay: 'customOverlay', modal: 'customModal' }}>
-              <h1>{helpInfo?.helpTitle}</h1>
-              <p>{helpInfo?.helpInfo}</p>
-              <br />
-              <p>{helpInfo?.helpDetails}</p>
+            <h1>{helpData?.helpTitle}</h1>
+            <p>{helpData?.helpInfo}</p>
+            <br />
+            <p>{helpData?.helpDetails}</p>
           </Modal>
         </div>
       </div>
     </div>
   );
+
   //#endregion
 }
 

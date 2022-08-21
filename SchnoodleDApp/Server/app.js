@@ -8,19 +8,14 @@ const BigNumber = require('bignumber.js');
 const { initializeApp } = require('firebase/app');
 const { getDatabase, ref, get, set, child, increment, onValue } = require('firebase/database');
 
-const { SecretClient } = require("@azure/keyvault-secrets");
-const { DefaultAzureCredential } = require("@azure/identity");
+const { SecretClient } = require('@azure/keyvault-secrets');
+const { DefaultAzureCredential } = require('@azure/identity');
 
 const SchnoodleV1 = require('./contracts/SchnoodleV1.json');
 const Schnoodle = require('./contracts/SchnoodleV9.json');
 
 const web3Eth = new Web3(process.env.ETH_CHAIN);
 const web3Bsc = new Web3(new Web3.providers.HttpProvider(process.env.BSC_CHAIN));
-
-const schnoodleEthDeployedNetwork = SchnoodleV1.networks[process.env.NETID_ETH];
-const schnoodleEth = new web3Eth.eth.Contract(Schnoodle.abi, schnoodleEthDeployedNetwork && schnoodleEthDeployedNetwork.address);
-const schnoodleBscDeployedNetwork = SchnoodleV1.networks[process.env.NETID_BSC];
-const schnoodleBsc = new web3Bsc.eth.Contract(Schnoodle.abi, schnoodleBscDeployedNetwork && schnoodleBscDeployedNetwork.address);
 
 // Firebase
 const database = getDatabase(initializeApp({
@@ -67,7 +62,7 @@ function build(opts = {}) {
     var data = JSON.parse(request.body);
 
     try {
-      sendReply(reply, 'ok', { fee: fees[data.network] });
+      sendReply(reply, 'ok', { fee: fees[data.networkId] });
     } catch (err) {
       console.log(err);
       sendReply(reply, 'error', { message: err.message });
@@ -92,19 +87,18 @@ function build(opts = {}) {
     console.log('Data:', data);
 
     try {
-      const web3 = getWeb3(data.targetNetwork);
+      const web3 = getWeb3(data.targetNetworkId);
       const privateKey = (await decryptMessage()).toString(CryptoJS.enc.Utf8);
-      const schnoodleReceiver = getContract(data.targetNetwork);
+      const schnoodleReceiver = getContract(data.targetNetworkId);
       const tokensPending = await getTokensPending(data, true);
-      const sourceNetworkId = await getNetworkId(data.sourceNetwork);
-      const feePaid = await schnoodleReceiver.methods.feesPaid(data.address, sourceNetworkId).call();
+      const feePaid = await schnoodleReceiver.methods.feesPaid(data.address, data.sourceNetworkId).call();
 
       // Build transaction to call receiveTokens
       const txReceive = {
         from: web3.eth.accounts.privateKeyToAccount(privateKey).address,
         to: schnoodleReceiver.options.address,
         gasPrice: (new BigNumber(await web3.eth.getGasPrice())).times(1.2).toFixed(0),
-        data: schnoodleReceiver.methods.receiveTokens(data.address, sourceNetworkId, tokensPending, fees[data.targetNetwork]).encodeABI()
+        data: schnoodleReceiver.methods.receiveTokens(data.address, data.sourceNetworkId, tokensPending, fees[data.targetNetworkId]).encodeABI()
       };
 
       txReceive.gasLimit = await web3.eth.estimateGas(txReceive) * 2;
@@ -124,45 +118,44 @@ function build(opts = {}) {
   return app;
 
   async function getTokensPending(data, log) {
-    const tokensSent = new BigNumber(await getContract(data.sourceNetwork).methods.tokensSent(data.address, await getNetworkId(data.targetNetwork)).call());
-    const tokensReceived = new BigNumber(await getContract(data.targetNetwork).methods.tokensReceived(data.address, await getNetworkId(data.sourceNetwork)).call());
+    const tokensSent = new BigNumber(await getContract(data.sourceNetworkId).methods.tokensSent(data.address, data.targetNetworkId).call());
+    const tokensReceived = new BigNumber(await getContract(data.targetNetworkId).methods.tokensReceived(data.address, data.sourceNetworkId).call());
     const tokensPending = tokensSent.minus(tokensReceived);
 
     if (tokensPending > 0 && log) {
-      console.log(`${tokensPending} tokens pending to bridge from ${data.sourceNetwork} to ${data.targetNetwork} (${tokensSent} sent less ${tokensReceived} received).`);
+      console.log(`${tokensPending} tokens pending to bridge from network ID ${data.sourceNetworkId} to network ID ${data.targetNetworkId} (${tokensSent} sent less ${tokensReceived} received).`);
     }
 
     return tokensPending;
   }
 
-  function getWeb3(network) {
-    switch (network) {
-      case 'ethereum':
+  function getWeb3(networkId) {
+    switch (networkId) {
+      case process.env.NETID_ETH:
         return web3Eth;
-      case 'bsc':
+      case process.env.NETID_BSC:
         return web3Bsc;
       default:
-        throw `Network not supported: ${network}`;
-    }
+        throw `Network ID ${networkId} not supported.`;
+      }
   }
 
   async function getNetworkId(network) {
     return await getWeb3(network).eth.net.getId();
   }
 
-  function getContract(network) {
-    switch (network) {
-      case 'ethereum':
-        return schnoodleEth;
-      case 'bsc':
-        return schnoodleBsc;
-      default:
-        throw `Network not supported: ${network}`;
+  function getContract(networkId) {
+    const schnoodleNetwork = SchnoodleV1.networks[networkId];
+
+    if (schnoodleNetwork) {
+      return new getWeb3(networkId).eth.Contract(Schnoodle.abi, schnoodleNetwork.address);
+    } else {
+      throw `Network ID ${networkId} not supported.`;
     }
   }
 
   async function decryptMessage() {
-    const { message } = require(`./encrypted.json`);
+    const { message } = require('./encrypted.json');
     const keySize = 256;
     const iterations = 100;
     const password = process.env.BRIDGE_PASSWORD || (await client.getSecret('bridgePassword')).value;
@@ -179,4 +172,4 @@ function build(opts = {}) {
   }
 }
 
-module.exports = build
+module.exports = build;

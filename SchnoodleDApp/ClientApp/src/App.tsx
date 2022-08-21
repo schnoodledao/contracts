@@ -10,7 +10,7 @@ const Farming = React.lazy(() => import('./components/Farming'));
 const MoonControl = React.lazy(() => import('./components/MoonControl'));
 const Moontron = React.lazy(() => import('./components/Moontron'));
 
-const App: React.FC<{}> = () => {
+const App: React.FC = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Layout>

@@ -1,31 +1,25 @@
 // ReSharper disable InconsistentNaming
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Collapse, Navbar, NavbarBrand, NavbarToggler, NavItem, NavLink } from 'reactstrap';
 import { Link } from 'react-router-dom';
 import './NavMenu.css';
-import { bridge, farming } from '../resources';
+import { bridge, farming, moontron } from '../resources';
 import { getWeb3 } from '../helpers';
 // ReSharper restore InconsistentNaming
 
-const NavMenu: React.FC<{}> = () => {
+const NavMenu: React.FC = () => {
+  const web3 = getWeb3();
   const [collapsed, setCollapsed] = useState<boolean>(true);
-  const [account, setAccount] = useState<string>(null);
+  const [account, setAccount] = useState<string>(web3.currentProvider.selectedAddress);
+
+  window.ethereum.on('accountsChanged', () => window.location.reload());
+
   const toggleNavbar = () => {
     setCollapsed(!collapsed);
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const web3 = await getWeb3();
-      (window as any).ethereum.on('accountsChanged', () => window.location.reload());
-      setAccount((web3 as any).currentProvider.selectedAddress);
-    }
-    fetchData();
-    return () => {}
-  },[])
-
   const connect = async () => {
-    const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     let account = null;
 
     if (accounts.length > 0) {
@@ -57,14 +51,14 @@ const NavMenu: React.FC<{}> = () => {
             <NavItem>
             <NavLink tag={Link} className="text-light tw-uppercase" to="/mooncontrol" onClick={toggleNavbar}>{farming.MOON_CONTROL}</NavLink>
             </NavItem>
-            {/* <NavItem>
+            <NavItem>
             <NavLink tag={Link} className="text-light tw-uppercase" to="/moontron" onClick={toggleNavbar}>{moontron.MOONTRON}</NavLink>
-            </NavItem> */}
+            </NavItem>
           </ul>
         </Collapse>
         {account == null
-        ? <button onClick={connect}>Connect</button>
-        : <div>{account.slice(0, 6) + '...' + account.slice(-6)}</div>
+          ? <button onClick={connect}>Connect</button>
+          : <div>{account.slice(0, 6) + '...' + account.slice(-6)}</div>
         }
       </Navbar>
     </header>
