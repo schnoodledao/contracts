@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 // ReSharper disable IdentifierTypo
 // ReSharper disable InconsistentNaming
 // ReSharper disable StringLiteralTypo
 // ReSharper disable CommentTypo
+
 import {
   AmbientLight,
   AnimationMixer,
@@ -30,6 +32,8 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+
 import { GUI } from 'dat.gui';
 
 import { environments } from './environments/index.js';
@@ -43,25 +47,11 @@ const KTX2_LOADER = new KTX2Loader( MANAGER ).setTranscoderPath( `${THREE_PATH}/
 
 const IS_IOS = isIOS();
 
-// glTF texture types. `envMap` is deliberately omitted, as it's used internally
-// by the loader but not part of the glTF format.
-const MAP_NAMES = [
-  'map',
-  'aoMap',
-  'emissiveMap',
-  'glossinessMap',
-  'metalnessMap',
-  'normalMap',
-  'roughnessMap',
-  'specularMap'
-];
-
 const Preset = {ASSET_GENERATOR: 'assetgenerator'};
 
 Cache.enabled = true;
 
 export class Viewer {
-
   constructor (el, options) {
     this.el = el;
     this.options = options;
@@ -120,6 +110,8 @@ export class Viewer {
     this.pmremGenerator = new PMREMGenerator( this.renderer );
     this.pmremGenerator.compileEquirectangularShader();
 
+    this.neutralEnvironment = this.pmremGenerator.fromScene(new RoomEnvironment()).texture;
+
     this.controls = new OrbitControls( this.defaultCamera, this.renderer.domElement );
     this.controls.autoRotate = false;
     this.controls.autoRotateSpeed = -10;
@@ -155,7 +147,6 @@ export class Viewer {
   }
 
   animate (time) {
-
     requestAnimationFrame( this.animate );
 
     const dt = (time - this.prevTime) / 1000;
@@ -166,11 +157,9 @@ export class Viewer {
     this.render();
 
     this.prevTime = time;
-
   }
 
   render () {
-
     this.renderer.render( this.scene, this.activeCamera );
     if (this.state.grid) {
       this.axesCamera.position.copy(this.defaultCamera.position);
@@ -180,12 +169,10 @@ export class Viewer {
   }
 
   encode (type) {
-
     return this.renderer.domElement.toDataURL(type);
   }
 
   resize () {
-
     const {clientHeight, clientWidth} = this.el.parentElement;
 
     this.defaultCamera.aspect = clientWidth / clientHeight;
@@ -199,12 +186,10 @@ export class Viewer {
   }
 
   load ( url, rootPath, assetMap ) {
-
     const baseURL = LoaderUtils.extractUrlBase(url);
 
     // Load.
     return new Promise((resolve, reject) => {
-
       const blobURLs = [];
 
       // Intercept and override relative URLs.
@@ -225,7 +210,6 @@ export class Viewer {
         }
 
         return (path || '') + url;
-
       });
 
       const loader = new GLTFLoader( MANAGER )
@@ -242,8 +226,7 @@ export class Viewer {
         if (!scene) {
           // Valid, but not supported by this viewer.
           throw new Error(
-            'This model contains no scene, and cannot be viewed here. However,'
-            + ' it may contain individual 3D resources.'
+            'This model contains no scene, and cannot be viewed here. However, it may contain individual 3D resources.'
           );
         }
 
@@ -257,9 +240,7 @@ export class Viewer {
         resolve(gltf);
 
       }, undefined, reject);
-
     });
-
   }
 
   /**
@@ -285,18 +266,14 @@ export class Viewer {
     this.defaultCamera.updateProjectionMatrix();
 
     if (this.options.cameraPosition) {
-
       this.defaultCamera.position.fromArray( this.options.cameraPosition );
       this.defaultCamera.lookAt( new Vector3() );
-
     } else {
-
       this.defaultCamera.position.copy(center);
       this.defaultCamera.position.x += size / 2.0;
       this.defaultCamera.position.y += size / 5.0;
       this.defaultCamera.position.z += size / 2.0;
       this.defaultCamera.lookAt(center);
-
     }
 
     this.setCamera(DEFAULT_CAMERA);
@@ -309,10 +286,8 @@ export class Viewer {
     this.axesCorner.scale.set(size, size, size);
 
     this.controls.saveState();
-
     this.scene.add(object);
     this.content = object;
-
     this.state.addLights = true;
 
     this.content.traverse((node) => {
@@ -441,14 +416,11 @@ export class Viewer {
   }
 
   removeLights () {
-
     this.lights.forEach((light) => light.parent.remove(light));
     this.lights.length = 0;
-
   }
 
   updateEnvironment () {
-
     const environment = environments.filter((entry) => entry.name === this.state.environment)[0];
 
     this.getCubeMapTexture( environment ).then(( { envMap } ) => {
@@ -460,27 +432,30 @@ export class Viewer {
       }
       this.scene.environment = envMap;
       this.scene.background = this.state.background ? envMap : null;
-
     });
-
   }
 
   getCubeMapTexture ( environment ) {
-    const { path } = environment;
-    // no envmap
-    if ( ! path ) return Promise.resolve( { envMap: null } );
-    return new Promise( ( resolve, reject ) => {
+    const { id, path } = environment;
+
+    // neutral (THREE.RoomEnvironment)
+    if (id === 'neutral') {
+      return Promise.resolve({ envMap: this.neutralEnvironment });
+    }
+
+    // none
+    if (id === '') {
+      return Promise.resolve({ envMap: null });
+    }
+
+    return new Promise((resolve, reject) => {
       new RGBELoader()
         .load(path, (texture) => {
           const envMap = this.pmremGenerator.fromEquirectangular( texture ).texture;
           this.pmremGenerator.dispose();
-
           resolve( { envMap } );
-
         }, undefined, reject );
-
     });
-
   }
 
   updateDisplay () {
@@ -704,34 +679,26 @@ export class Viewer {
   }
 
   clear () {
-
     if ( !this.content ) return;
 
     this.scene.remove( this.content );
 
     // dispose geometry
     this.content.traverse((node) => {
-
       if ( !node.isMesh ) return;
-
       node.geometry.dispose();
-
-    } );
+    });
 
     // dispose textures
     traverseMaterials( this.content, (material) => {
-
-      MAP_NAMES.forEach( (map) => {
-
-        if (material[ map ]) material[ map ].dispose();
-
-      } );
-
-    } );
-
+      for (const key in material) {
+        if (key !== 'envMap' && material[key] && material[key].isTexture) {
+          material[key].dispose();
+        }
+      }
+    });
   }
-
-};
+}
 
 function traverseMaterials (object, callback) {
   object.traverse((node) => {
@@ -756,6 +723,7 @@ function isIOS() {
   // iPad on iOS 13 detection
   || (navigator.userAgent.includes('Mac') && 'ontouchend' in document);
 }
+
 // ReSharper restore IdentifierTypo
 // ReSharper restore InconsistentNaming
 // ReSharper restore StringLiteralTypo
